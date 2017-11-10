@@ -2,32 +2,51 @@
 #include <codi.hpp>
 #include <iostream>
 
+struct System {
+  // Generator
+  double x_d;
+  double x_q;
+  double x_dp;
+  double x_qp;
+  double x_ddp;
+  double x_qdp;
+  double xl;
+  double H;
+  double T_d0p;
+  double T_q0p;
+  double T_d0dp;
+  double T_q0dp;
+  // oinfinite bus
+  double v0m;
+  double v0a;
+  double xline;
+};
+
 void residual_beuler(const codi::RealForward* x, double* xold,
-    codi::RealForward* F) {
+    System* sys, double h, codi::RealForward* F) {
 
   // (TEMP): Just put all the parameters here for now.
 
-  double h = 0.0;
   double e_fd = 0.0;
   double p_m = 0.0;
 
-  double x_d = 1.575; 
-  double x_q = 1.512;
-  double x_dp = 0.29;
-  double x_qp = 0.39 ;
-  double x_ddp = 0.1733; 
-  double x_qdp = 0.1733;
-  double xl = 0.0787;
-  double H = 3.38; 
-  double T_d0p = 6.09;
-  double T_q0p = 1.0;
-  double T_d0dp = 0.05;
-  double T_q0dp = 0.15;
+  double x_d = sys->x_d; 
+  double x_q = sys->x_q;
+  double x_dp = sys->x_dp;
+  double x_qp = sys->x_qp;
+  double x_ddp = sys->x_ddp; 
+  double x_qdp = sys->x_qdp;
+  double xl = sys->xl;
+  double H = sys->H; 
+  double T_d0p = sys->T_d0p;
+  double T_q0p = sys->T_q0p;
+  double T_d0dp = sys->T_d0dp;
+  double T_q0dp = sys->T_q0dp;
 
   // infinite bus
-  double v0m = 1.0162384;
-  double v0a = -0.05807256;
-  double xline = 0.0576;
+  double v0m = sys->v0m;
+  double v0a = sys->v0a;
+  double xline = sys->xline;
 
   codi::RealForward e_qp     = x[1];
   codi::RealForward e_dp     = x[2];
@@ -87,12 +106,37 @@ void residual_beuler(const codi::RealForward* x, double* xold,
 
 int main(int nargs, char** args) {
   
+  
+  // Define state arrays
   size_t dim = 12;
   
   codi::RealForward x[dim];
   codi::RealForward y[dim];
   double xold[dim];
   
+  // System parameters.
+
+  System sys;
+
+  sys.x_d = 1.575; 
+  sys.x_q = 1.512;
+  sys.x_dp = 0.29;
+  sys.x_qp = 0.39 ;
+  sys.x_ddp = 0.1733; 
+  sys.x_qdp = 0.1733;
+  sys.xl = 0.0787;
+  sys.H = 3.38; 
+  sys.T_d0p = 6.09;
+  sys.T_q0p = 1.0;
+  sys.T_d0dp = 0.05;
+  sys.T_q0dp = 0.15;
+  sys.v0m = 1.0162384;
+  sys.v0a = -0.05807256;
+  sys.xline = 0.0576;
+
+
+  // Initial values for state array.
+
   xold[0] = 1.06512;
   xold[1] = 0.5182;
   xold[2] = 0.850584;
@@ -113,7 +157,7 @@ int main(int nargs, char** args) {
 
   x[7].setGradient(1.0);
   for (size_t i = 0; i < dim; ++i) {
-    residual_beuler(x, xold, y);
+    residual_beuler(x, xold, &sys, 0.004, y);
     std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
   }
   x[7].setGradient(0.0);
