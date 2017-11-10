@@ -153,14 +153,26 @@ int main(int nargs, char** args) {
   for (size_t i = 0; i < dim; ++i)
     x[i] = xold[i];
 
-  // Evaluate something
+  // Evaluate jacobian
+  double J[dim][dim];
 
-  x[7].setGradient(1.0);
-  for (size_t i = 0; i < dim; ++i) {
-    residual_beuler(x, xold, &sys, 0.004, y);
-    std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
+  for (size_t j = 0; j < dim; ++j) {
+    x[j].setGradient(1.0);
+    for (size_t i = 0; i < dim; ++i) {
+      residual_beuler(x, xold, &sys, 0.004, y);
+      J[i][j] = y[i].getGradient();
+      //std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
+    }
+    x[j].setGradient(0.0);
   }
-  x[7].setGradient(0.0);
+
+  // Print jacobian
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
+      std::cout << J[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
 
   return 0;
 }
