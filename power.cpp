@@ -221,6 +221,15 @@ void jac_beuler(const codi::RealForward* x, double* xold,
 
 }
 
+void integrate(const codi::RealForward* xold,
+    System* sys, double h, codi::RealForward* xnext) {
+
+    double eps = 1e-9;
+    int iteration = 0;
+
+
+}
+
 int main(int nargs, char** args) {
   
   
@@ -304,6 +313,7 @@ int main(int nargs, char** args) {
     std::cout << std::endl;
   }
 
+  std::cout << "integrate" << std::endl;
 
   return 0;
 }
