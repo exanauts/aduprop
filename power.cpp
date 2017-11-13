@@ -225,7 +225,7 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
 
 }
 
-void integrate(active* x, size_t dim, System* sys, double h) {
+void t1_integrate(active* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
   int iteration = 0;
@@ -234,7 +234,7 @@ void integrate(active* x, size_t dim, System* sys, double h) {
   for (size_t i = 0; i < dim; ++i) {
     xold[i] = x[i];
   }
-  residual_beuler(x, xold, sys, h, y);
+  residual_beuler<active>(x, xold, sys, h, y);
   
   active **J = new active* [dim];
   J[0] = new active [dim*dim];
@@ -268,6 +268,37 @@ void integrate(active* x, size_t dim, System* sys, double h) {
   }
   for(size_t i = 0; i < dim; ++i) {
     y[i] = py[i];
+  }
+  std::cout << "New x and step" << std::endl;
+  for(size_t i = 0; i < dim; ++i) {
+    x[i]=xold[i]-y[i];
+    std::cout << x[i] << " " << y[i] << " " << std::endl;
+  }
+  std::cout << std::endl;
+}
+
+void integrate(double* x, size_t dim, System* sys, double h) {
+  
+  double eps = 1e-9;
+  int iteration = 0;
+  double *xold = new double[dim];
+  double *y = new double[dim];
+  for (size_t i = 0; i < dim; ++i) {
+    xold[i] = x[i];
+  }
+  residual_beuler<double>(x, xold, sys, h, y);
+  
+  double **J = new double* [dim];
+  J[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    J[i] = J[0] + dim * i;
+  }
+  
+  jac_beuler<double>(x, xold, sys, 0.0004, &J[0][0]);
+  int ierr = solve(J,y,dim);
+  if(ierr) {
+    std::cout << "Linear solver error: " << ierr << std::endl;
+    exit(1);
   }
   std::cout << "New x and step" << std::endl;
   for(size_t i = 0; i < dim; ++i) {
@@ -371,7 +402,8 @@ int main(int nargs, char** args) {
   
   jactest(xold, dim, &sys, h);
   for(int i = 0; i < dim ; ++i) axold[i] = xold[i];
-  integrate(axold, dim, &sys, h);
+  t1_integrate(axold, dim, &sys, h);
+  integrate(xold, dim, &sys, h);
   
   return 0;
 }
