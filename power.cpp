@@ -1,6 +1,10 @@
-#include <math.h>
+#include <cmath>
 #include <codi.hpp>
 #include <iostream>
+#include "linsolve.hpp"
+
+
+typedef codi::RealForward active;
 
 struct System {
   // Generator
@@ -22,8 +26,8 @@ struct System {
   double xline;
 };
 
-void residual_beuler(const codi::RealForward* x, double* xold,
-    System* sys, double h, codi::RealForward* F) {
+void residual_beuler(const active* x, double* xold,
+    System* sys, double h, active* F) {
 
   // (TEMP): Just put all the parameters here for now.
 
@@ -48,21 +52,21 @@ void residual_beuler(const codi::RealForward* x, double* xold,
   double v0a = sys->v0a;
   double xline = sys->xline;
 
-  codi::RealForward e_qp     = x[0];
-  codi::RealForward e_dp     = x[1];
-  codi::RealForward phi_1d   = x[2];
-  codi::RealForward phi_2q   = x[3];
-  codi::RealForward w        = x[4];
-  codi::RealForward delta    = x[5];
-  codi::RealForward v_q      = x[6];
-  codi::RealForward v_d      = x[7];
-  codi::RealForward i_q      = x[8];
-  codi::RealForward i_d      = x[9];
-  codi::RealForward v1m      = x[10];
-  codi::RealForward v1a      = x[11];
+  active e_qp     = x[0];
+  active e_dp     = x[1];
+  active phi_1d   = x[2];
+  active phi_2q   = x[3];
+  active w        = x[4];
+  active delta    = x[5];
+  active v_q      = x[6];
+  active v_d      = x[7];
+  active i_q      = x[8];
+  active i_d      = x[9];
+  active v1m      = x[10];
+  active v1a      = x[11];
 
   // Auxiliary variables.
-  codi::RealForward psi_de, psi_qe;
+  active psi_de, psi_qe;
 
   psi_de = (x_ddp - xl)/(x_dp - xl)*e_qp + 
     (x_dp - x_ddp)/(x_dp - xl)*phi_1d;
@@ -104,8 +108,8 @@ void residual_beuler(const codi::RealForward* x, double* xold,
 }
 
 
-void jac_beuler(const codi::RealForward* x, double* xold,
-    System* sys, double h, codi::RealForward* J) {
+void jac_beuler(const active* x, double* xold,
+    System* sys, double h, active* J) {
     
 
   size_t ndim = 12;
@@ -131,22 +135,22 @@ void jac_beuler(const codi::RealForward* x, double* xold,
   double v0a = sys->v0a;
   double xline = sys->xline;
 
-  codi::RealForward e_qp     = x[0];
-  codi::RealForward e_dp     = x[1];
-  codi::RealForward phi_1d   = x[2];
-  codi::RealForward phi_2q   = x[3];
-  codi::RealForward w        = x[4];
-  codi::RealForward delta    = x[5];
-  codi::RealForward v_q      = x[6];
-  codi::RealForward v_d      = x[7];
-  codi::RealForward i_q      = x[8];
-  codi::RealForward i_d      = x[9];
-  codi::RealForward v1m      = x[10];
-  codi::RealForward v1a      = x[11];
+  active e_qp     = x[0];
+  active e_dp     = x[1];
+  active phi_1d   = x[2];
+  active phi_2q   = x[3];
+  active w        = x[4];
+  active delta    = x[5];
+  active v_q      = x[6];
+  active v_d      = x[7];
+  active i_q      = x[8];
+  active i_d      = x[9];
+  active v1m      = x[10];
+  active v1a      = x[11];
 
 
   // Auxiliary variables.
-  codi::RealForward psi_de, psi_qe;
+  active psi_de, psi_qe;
 
 
   // auxiliary variables
@@ -221,8 +225,8 @@ void jac_beuler(const codi::RealForward* x, double* xold,
 
 }
 
-void integrate(const codi::RealForward* xold,
-    System* sys, double h, codi::RealForward* xnext) {
+void integrate(const active* xold,
+    System* sys, double h, active* xnext) {
 
     double eps = 1e-9;
     int iteration = 0;
@@ -236,9 +240,19 @@ int main(int nargs, char** args) {
   // Define state arrays
   size_t dim = 12;
   
-  codi::RealForward x[dim];
-  codi::RealForward y[dim];
-  double xold[dim];
+  active *x=new active[dim];
+  for(int i=0; i<dim; i++) {
+    x[i]=0;
+  }
+  active *y=new active[dim];
+  for(int i=0; i<dim; i++) {
+    y[i]=0;
+  }
+  double *xold=new double[dim];
+  for(int i=0; i<dim; i++) {
+    xold[i]=0;
+  }
+  // double xold[dim];
   
   // System parameters.
 
@@ -303,7 +317,7 @@ int main(int nargs, char** args) {
 
   std::cout << "HC Jacobian" << std::endl;
   // Hand coded jacobian
-  codi::RealForward Jhc[12*12];
+  active Jhc[12*12];
   jac_beuler(x, xold, &sys, 0.0004, Jhc);
   // Print jacobian
   for (size_t i = 0; i < dim; ++i) {
@@ -314,6 +328,34 @@ int main(int nargs, char** args) {
   }
 
   std::cout << "integrate" << std::endl;
+  
+  // linearize Jacobian for BLAS
+  double **blasJ=new double*[dim];
+  blasJ[0] = new double[dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    blasJ[i] = blasJ[0]+dim*i;
+    for(size_t j = 0; j < dim; ++j) {
+      blasJ[i][j]=J[i][j];
+      std::cout << blasJ[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  // linearize the RHS for BLAS
+  double *F=new double[dim];
+  for(size_t i = 0; i < dim; ++i) {
+    F[i] = y[i].getValue();
+    std::cout << F[i] << " ";
+  }
+  std::cout << std::endl;
+  int ierr=solve(blasJ,F,dim);
+  if(ierr) {
+    std::cout << "Linear solver error: " << ierr << std::endl;
+    exit(1);
+  }
+  for(size_t i = 0; i < dim; ++i) {
+    std::cout << F[i] << " ";
+  }
+  std::cout << std::endl;
 
   return 0;
 }
