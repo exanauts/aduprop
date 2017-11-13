@@ -27,8 +27,8 @@ void residual_beuler(const codi::RealForward* x, double* xold,
 
   // (TEMP): Just put all the parameters here for now.
 
-  double e_fd = 0.0;
-  double p_m = 0.0;
+  double e_fd = 2.36980307368;
+  double p_m = 1.06496;
 
   double x_d = sys->x_d; 
   double x_q = sys->x_q;
@@ -48,18 +48,18 @@ void residual_beuler(const codi::RealForward* x, double* xold,
   double v0a = sys->v0a;
   double xline = sys->xline;
 
-  codi::RealForward e_qp     = x[1];
-  codi::RealForward e_dp     = x[2];
-  codi::RealForward phi_1d   = x[3];
-  codi::RealForward phi_2q   = x[4];
-  codi::RealForward w        = x[5];
-  codi::RealForward delta    = x[6];
-  codi::RealForward v_q      = x[7];
-  codi::RealForward v_d      = x[8];
-  codi::RealForward i_q      = x[9];
-  codi::RealForward i_d      = x[10];
-  codi::RealForward v1m      = x[11];
-  codi::RealForward v1a      = x[12];
+  codi::RealForward e_qp     = x[0];
+  codi::RealForward e_dp     = x[1];
+  codi::RealForward phi_1d   = x[2];
+  codi::RealForward phi_2q   = x[3];
+  codi::RealForward w        = x[4];
+  codi::RealForward delta    = x[5];
+  codi::RealForward v_q      = x[6];
+  codi::RealForward v_d      = x[7];
+  codi::RealForward i_q      = x[8];
+  codi::RealForward i_d      = x[9];
+  codi::RealForward v1m      = x[10];
+  codi::RealForward v1a      = x[11];
 
   // Auxiliary variables.
   codi::RealForward psi_de, psi_qe;
@@ -103,6 +103,123 @@ void residual_beuler(const codi::RealForward* x, double* xold,
 
 }
 
+
+void jac_beuler(const codi::RealForward* x, double* xold,
+    System* sys, double h, codi::RealForward* J) {
+    
+
+  size_t ndim = 12;
+
+  double e_fd = 2.36980307368;
+  double p_m = 1.06496;
+
+  double x_d = sys->x_d; 
+  double x_q = sys->x_q;
+  double x_dp = sys->x_dp;
+  double x_qp = sys->x_qp;
+  double x_ddp = sys->x_ddp; 
+  double x_qdp = sys->x_qdp;
+  double xl = sys->xl;
+  double H = sys->H; 
+  double T_d0p = sys->T_d0p;
+  double T_q0p = sys->T_q0p;
+  double T_d0dp = sys->T_d0dp;
+  double T_q0dp = sys->T_q0dp;
+
+  // infinite bus
+  double v0m = sys->v0m;
+  double v0a = sys->v0a;
+  double xline = sys->xline;
+
+  codi::RealForward e_qp     = x[0];
+  codi::RealForward e_dp     = x[1];
+  codi::RealForward phi_1d   = x[2];
+  codi::RealForward phi_2q   = x[3];
+  codi::RealForward w        = x[4];
+  codi::RealForward delta    = x[5];
+  codi::RealForward v_q      = x[6];
+  codi::RealForward v_d      = x[7];
+  codi::RealForward i_q      = x[8];
+  codi::RealForward i_d      = x[9];
+  codi::RealForward v1m      = x[10];
+  codi::RealForward v1a      = x[11];
+
+
+  // Auxiliary variables.
+  codi::RealForward psi_de, psi_qe;
+
+
+  // auxiliary variables
+  psi_de = (x_ddp - xl)/(x_dp - xl)*e_qp + 
+      (x_dp - x_ddp)/(x_dp - xl)*phi_1d;
+
+  psi_qe = -(x_ddp - xl)/(x_qp - xl)*e_dp + 
+      (x_qp - x_ddp)/(x_qp - xl)*phi_2q;
+
+  // Machine states
+
+    J[0*ndim + 0] = 1 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0) - 1)/T_d0p;
+    J[0*ndim + 2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0)/T_d0p;
+    J[0*ndim + 9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*std::pow(x_dp - xl, -1.0) + 1)/T_d0p;
+
+    J[1*ndim + 1] = 1 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0) - 1)/T_q0p;
+    J[1*ndim + 3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0)/T_q0p;
+    J[1*ndim + 8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*std::pow(x_qp - xl, -1.0) + 1)/T_q0p;
+
+    J[2*ndim + 0] = -h/T_d0dp;
+    J[2*ndim + 2] = 1 + h/T_d0dp;
+    J[2*ndim + 9] = -h*(-x_dp + xl)/T_d0dp;
+
+    J[3*ndim + 1] = h/T_q0dp;
+    J[3*ndim + 3] = 1 + h/T_q0dp;
+    J[3*ndim + 8] = -h*(-x_qp + xl)/T_q0dp;
+
+    J[4*ndim + 0] = 0.5*h*i_q*(x_ddp - xl)/(H*(x_dp - xl));
+    J[4*ndim + 1] = -0.5*h*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
+    J[4*ndim + 2] = 0.5*h*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
+    J[4*ndim + 3] = -0.5*h*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
+    J[4*ndim + 4] = 1;
+    J[4*ndim + 8] = -0.5*h*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
+    J[4*ndim + 9] = -0.5*h*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
+
+    J[5*ndim + 4] = -120.0*M_PI*h;
+    J[5*ndim + 5] = 1.0;
+
+    J[6*ndim + 0] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
+    J[6*ndim + 2] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
+    J[6*ndim + 6] = 1/x_ddp;
+    J[6*ndim + 9] = 1.0;
+
+    J[7*ndim + 1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
+    J[7*ndim + 3] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
+    J[7*ndim + 7] = -1/x_qdp;
+    J[7*ndim + 8] = 1.0;
+
+    J[8*ndim + 5] = -v1m*cos(delta - v1a);
+    J[8*ndim + 7] = 1.0;
+    J[8*ndim + 10] = -sin(delta - v1a);
+    J[8*ndim + 11] = v1m*cos(delta - v1a);
+
+    J[9*ndim + 5] = v1m*sin(delta - v1a);
+    J[9*ndim + 6] = 1.0;
+    J[9*ndim + 10] = -cos(delta - v1a);
+    J[9*ndim + 11] = -v1m*sin(delta - v1a);
+
+    J[10*ndim + 6] = i_q;
+    J[10*ndim + 7] = i_d;
+    J[10*ndim + 8] = v_q;
+    J[10*ndim + 9] = v_d;
+    J[10*ndim + 10] = v0m*sin(v0a - v1a)/xline;
+    J[10*ndim + 11] = -v0m*v1m*cos(v0a - v1a)/xline;
+
+    J[11*ndim + 6] = i_d;
+    J[11*ndim + 7] = -i_q;
+    J[11*ndim + 8] = -v_d;
+    J[11*ndim + 9] = v_q;
+    J[11*ndim + 10] = v0m*cos(v0a - v1a)/xline - 2.0*v1m/xline;
+    J[11*ndim + 11] = v0m*v1m*sin(v0a - v1a)/xline;
+
+}
 
 int main(int nargs, char** args) {
   
@@ -159,13 +276,14 @@ int main(int nargs, char** args) {
   for (size_t j = 0; j < dim; ++j) {
     x[j].setGradient(1.0);
     for (size_t i = 0; i < dim; ++i) {
-      residual_beuler(x, xold, &sys, 0.004, y);
+      residual_beuler(x, xold, &sys, 0.0004, y);
       J[i][j] = y[i].getGradient();
       //std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
     }
     x[j].setGradient(0.0);
   }
 
+  std::cout << "AD Jacobian" << std::endl;
   // Print jacobian
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
@@ -173,6 +291,19 @@ int main(int nargs, char** args) {
     }
     std::cout << std::endl;
   }
+
+  std::cout << "HC Jacobian" << std::endl;
+  // Hand coded jacobian
+  codi::RealForward Jhc[12*12];
+  jac_beuler(x, xold, &sys, 0.0004, Jhc);
+  // Print jacobian
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
+      std::cout << Jhc[i*12 + j] << " ";
+    }
+    std::cout << std::endl;
+  }
+
 
   return 0;
 }
