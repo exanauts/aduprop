@@ -229,39 +229,39 @@ void integrate(active* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
   int iteration = 0;
-  active *xold = new active[dim];
-  active *y = new active[dim];
+  active *xold = new active [dim];
+  active *y = new active [dim];
   for (size_t i = 0; i < dim; ++i) {
     xold[i] = x[i];
   }
   residual_beuler(x, xold, sys, h, y);
   
-  active **J=new active*[dim];
-  J[0] = new active[dim*dim];
+  active **J = new active* [dim];
+  J[0] = new active [dim*dim];
   for(size_t i = 0; i < dim; ++i) {
-    J[i] = J[0]+dim*i;
+    J[i] = J[0] + dim * i;
   }
   
   jac_beuler<active>(x, xold, sys, 0.0004, &J[0][0]);
   // linearize Jacobian for BLAS
-  double **blasJ=new double*[dim];
-  blasJ[0] = new double[dim*dim];
+  double **pJ = new double* [dim];
+  pJ[0] = new double [dim*dim];
   std::cout << "J going into BLAS" << std::endl;
   for(size_t i = 0; i < dim; ++i) {
-    blasJ[i] = blasJ[0]+dim*i;
+    pJ[i] = pJ[0] + dim * i;
     for(size_t j = 0; j < dim; ++j) {
-      blasJ[i][j]=J[i][j].getValue();
-      std::cout << blasJ[i][j] << " ";
+      pJ[i][j] = J[i][j].getValue();
+      std::cout << pJ[i][j] << " ";
     }
     std::cout << std::endl;
   }
   // linearize the RHS for BLAS
-  double *py=new double[dim];
+  double *py = new double[dim];
   for(size_t i = 0; i < dim; ++i) {
     py[i] = y[i].getValue();
   }
   std::cout << std::endl;
-  int ierr=solve(blasJ,py,dim);
+  int ierr = solve(pJ,py,dim);
   if(ierr) {
     std::cout << "Linear solver error: " << ierr << std::endl;
     exit(1);
@@ -329,8 +329,8 @@ int main(int nargs, char** args) {
   size_t dim = 12;
   double h = 0.0004;
   
-  active *axold=new active[dim];
-  double *xold=new double[dim];
+  active *axold = new active [dim];
+  double *xold = new double [dim];
   
   
   // System parameters.
