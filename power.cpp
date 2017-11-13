@@ -26,47 +26,47 @@ struct System {
   double xline;
 };
 
-void residual_beuler(const active* x, double* xold,
-    System* sys, double h, active* F) {
+template <class T> void residual_beuler(const T* const x, const T* const xold,
+    System* const sys, const double h, T* const F) {
 
   // (TEMP): Just put all the parameters here for now.
 
-  double e_fd = 2.36980307368;
-  double p_m = 1.06496;
+  const double e_fd = 2.36980307368;
+  const double p_m = 1.06496;
 
-  double x_d = sys->x_d; 
-  double x_q = sys->x_q;
-  double x_dp = sys->x_dp;
-  double x_qp = sys->x_qp;
-  double x_ddp = sys->x_ddp; 
-  double x_qdp = sys->x_qdp;
-  double xl = sys->xl;
-  double H = sys->H; 
-  double T_d0p = sys->T_d0p;
-  double T_q0p = sys->T_q0p;
-  double T_d0dp = sys->T_d0dp;
-  double T_q0dp = sys->T_q0dp;
+  const double x_d = sys->x_d; 
+  const double x_q = sys->x_q;
+  const double x_dp = sys->x_dp;
+  const double x_qp = sys->x_qp;
+  const double x_ddp = sys->x_ddp; 
+  const double x_qdp = sys->x_qdp;
+  const double xl = sys->xl;
+  const double H = sys->H; 
+  const double T_d0p = sys->T_d0p;
+  const double T_q0p = sys->T_q0p;
+  const double T_d0dp = sys->T_d0dp;
+  const double T_q0dp = sys->T_q0dp;
 
   // infinite bus
-  double v0m = sys->v0m;
-  double v0a = sys->v0a;
-  double xline = sys->xline;
+  const double v0m = sys->v0m;
+  const double v0a = sys->v0a;
+  const double xline = sys->xline;
 
-  active e_qp     = x[0];
-  active e_dp     = x[1];
-  active phi_1d   = x[2];
-  active phi_2q   = x[3];
-  active w        = x[4];
-  active delta    = x[5];
-  active v_q      = x[6];
-  active v_d      = x[7];
-  active i_q      = x[8];
-  active i_d      = x[9];
-  active v1m      = x[10];
-  active v1a      = x[11];
+  const T e_qp     = x[0];
+  const T e_dp     = x[1];
+  const T phi_1d   = x[2];
+  const T phi_2q   = x[3];
+  const T w        = x[4];
+  const T delta    = x[5];
+  const T v_q      = x[6];
+  const T v_d      = x[7];
+  const T i_q      = x[8];
+  const T i_d      = x[9];
+  const T v1m      = x[10];
+  const T v1a      = x[11];
 
   // Auxiliary variables.
-  active psi_de, psi_qe;
+  T psi_de, psi_qe;
 
   psi_de = (x_ddp - xl)/(x_dp - xl)*e_qp + 
     (x_dp - x_ddp)/(x_dp - xl)*phi_1d;
@@ -108,49 +108,49 @@ void residual_beuler(const active* x, double* xold,
 }
 
 
-void jac_beuler(const active* x, double* xold,
-    System* sys, double h, active* J) {
+template <class T> void jac_beuler(const T* const x, const T* const xold,
+    System* const sys, const double h, T* const J) {
     
 
   size_t ndim = 12;
 
-  double e_fd = 2.36980307368;
-  double p_m = 1.06496;
+  const double e_fd = 2.36980307368;
+  const double p_m = 1.06496;
 
-  double x_d = sys->x_d; 
-  double x_q = sys->x_q;
-  double x_dp = sys->x_dp;
-  double x_qp = sys->x_qp;
-  double x_ddp = sys->x_ddp; 
-  double x_qdp = sys->x_qdp;
-  double xl = sys->xl;
-  double H = sys->H; 
-  double T_d0p = sys->T_d0p;
-  double T_q0p = sys->T_q0p;
-  double T_d0dp = sys->T_d0dp;
-  double T_q0dp = sys->T_q0dp;
+  const double x_d = sys->x_d; 
+  const double x_q = sys->x_q;
+  const double x_dp = sys->x_dp;
+  const double x_qp = sys->x_qp;
+  const double x_ddp = sys->x_ddp; 
+  const double x_qdp = sys->x_qdp;
+  const double xl = sys->xl;
+  const double H = sys->H; 
+  const double T_d0p = sys->T_d0p;
+  const double T_q0p = sys->T_q0p;
+  const double T_d0dp = sys->T_d0dp;
+  const double T_q0dp = sys->T_q0dp;
 
   // infinite bus
-  double v0m = sys->v0m;
-  double v0a = sys->v0a;
-  double xline = sys->xline;
+  const double v0m = sys->v0m;
+  const double v0a = sys->v0a;
+  const double xline = sys->xline;
 
-  active e_qp     = x[0];
-  active e_dp     = x[1];
-  active phi_1d   = x[2];
-  active phi_2q   = x[3];
-  active w        = x[4];
-  active delta    = x[5];
-  active v_q      = x[6];
-  active v_d      = x[7];
-  active i_q      = x[8];
-  active i_d      = x[9];
-  active v1m      = x[10];
-  active v1a      = x[11];
+  const T e_qp     = x[0];
+  const T e_dp     = x[1];
+  const T phi_1d   = x[2];
+  const T phi_2q   = x[3];
+  const T w        = x[4];
+  const T delta    = x[5];
+  const T v_q      = x[6];
+  const T v_d      = x[7];
+  const T i_q      = x[8];
+  const T i_d      = x[9];
+  const T v1m      = x[10];
+  const T v1a      = x[11];
 
 
   // Auxiliary variables.
-  active psi_de, psi_qe;
+  T psi_de, psi_qe;
 
 
   // auxiliary variables
@@ -225,13 +225,101 @@ void jac_beuler(const active* x, double* xold,
 
 }
 
-void integrate(const active* xold,
-    System* sys, double h, active* xnext) {
+void integrate(active* x, size_t dim, System* sys, double h) {
+  
+  double eps = 1e-9;
+  int iteration = 0;
+  active *xold = new active[dim];
+  active *y = new active[dim];
+  for (size_t i = 0; i < dim; ++i) {
+    xold[i] = x[i];
+  }
+  residual_beuler(x, xold, sys, h, y);
+  
+  active **J=new active*[dim];
+  J[0] = new active[dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    J[i] = J[0]+dim*i;
+  }
+  
+  jac_beuler<active>(x, xold, sys, 0.0004, &J[0][0]);
+  // linearize Jacobian for BLAS
+  double **blasJ=new double*[dim];
+  blasJ[0] = new double[dim*dim];
+  std::cout << "J going into BLAS" << std::endl;
+  for(size_t i = 0; i < dim; ++i) {
+    blasJ[i] = blasJ[0]+dim*i;
+    for(size_t j = 0; j < dim; ++j) {
+      blasJ[i][j]=J[i][j].getValue();
+      std::cout << blasJ[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  // linearize the RHS for BLAS
+  double *py=new double[dim];
+  for(size_t i = 0; i < dim; ++i) {
+    py[i] = y[i].getValue();
+  }
+  std::cout << std::endl;
+  int ierr=solve(blasJ,py,dim);
+  if(ierr) {
+    std::cout << "Linear solver error: " << ierr << std::endl;
+    exit(1);
+  }
+  for(size_t i = 0; i < dim; ++i) {
+    y[i] = py[i];
+  }
+  std::cout << "New x and step" << std::endl;
+  for(size_t i = 0; i < dim; ++i) {
+    x[i]=xold[i]-y[i];
+    std::cout << x[i] << " " << y[i] << " " << std::endl;
+  }
+  std::cout << std::endl;
+}
 
-    double eps = 1e-9;
-    int iteration = 0;
+void jactest(double* xold, int dim, System* sys, int h) {
+  active *x = new active[dim];
+  active *axold = new active[dim];
+  active *y = new active[dim];
+  for (size_t i = 0; i < dim; ++i) {
+    axold[i] = xold[i];
+    x[i] = xold[i];
+  }
 
+  // Evaluate jacobian
+  double J[dim][dim];
 
+  for (size_t j = 0; j < dim; ++j) {
+    x[j].setGradient(1.0);
+    for (size_t i = 0; i < dim; ++i) {
+      residual_beuler(x, axold, sys, h, y);
+      J[i][j] = y[i].getGradient();
+      //std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
+    }
+    x[j].setGradient(0.0);
+  }
+
+  std::cout << "AD Jacobian" << std::endl;
+  // Print jacobian
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
+      std::cout << J[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+
+  std::cout << "HC Jacobian" << std::endl;
+  // Hand coded jacobian
+  active Jhc[12*12];
+  jac_beuler(x, axold, sys, h, Jhc);
+  // Print jacobian
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
+      std::cout << Jhc[i*12 + j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  
 }
 
 int main(int nargs, char** args) {
@@ -239,20 +327,11 @@ int main(int nargs, char** args) {
   
   // Define state arrays
   size_t dim = 12;
+  double h = 0.0004;
   
-  active *x=new active[dim];
-  for(int i=0; i<dim; i++) {
-    x[i]=0;
-  }
-  active *y=new active[dim];
-  for(int i=0; i<dim; i++) {
-    y[i]=0;
-  }
+  active *axold=new active[dim];
   double *xold=new double[dim];
-  for(int i=0; i<dim; i++) {
-    xold[i]=0;
-  }
-  // double xold[dim];
+  
   
   // System parameters.
 
@@ -290,72 +369,9 @@ int main(int nargs, char** args) {
   xold[10] = 1.04;
   xold[11] = 0.0;
   
-  for (size_t i = 0; i < dim; ++i)
-    x[i] = xold[i];
-
-  // Evaluate jacobian
-  double J[dim][dim];
-
-  for (size_t j = 0; j < dim; ++j) {
-    x[j].setGradient(1.0);
-    for (size_t i = 0; i < dim; ++i) {
-      residual_beuler(x, xold, &sys, 0.0004, y);
-      J[i][j] = y[i].getGradient();
-      //std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
-    }
-    x[j].setGradient(0.0);
-  }
-
-  std::cout << "AD Jacobian" << std::endl;
-  // Print jacobian
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      std::cout << J[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
-
-  std::cout << "HC Jacobian" << std::endl;
-  // Hand coded jacobian
-  active Jhc[12*12];
-  jac_beuler(x, xold, &sys, 0.0004, Jhc);
-  // Print jacobian
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      std::cout << Jhc[i*12 + j] << " ";
-    }
-    std::cout << std::endl;
-  }
-
-  std::cout << "integrate" << std::endl;
+  jactest(xold, dim, &sys, h);
+  for(int i = 0; i < dim ; ++i) axold[i] = xold[i];
+  integrate(axold, dim, &sys, h);
   
-  // linearize Jacobian for BLAS
-  double **blasJ=new double*[dim];
-  blasJ[0] = new double[dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    blasJ[i] = blasJ[0]+dim*i;
-    for(size_t j = 0; j < dim; ++j) {
-      blasJ[i][j]=J[i][j];
-      std::cout << blasJ[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
-  // linearize the RHS for BLAS
-  double *F=new double[dim];
-  for(size_t i = 0; i < dim; ++i) {
-    F[i] = y[i].getValue();
-    std::cout << F[i] << " ";
-  }
-  std::cout << std::endl;
-  int ierr=solve(blasJ,F,dim);
-  if(ierr) {
-    std::cout << "Linear solver error: " << ierr << std::endl;
-    exit(1);
-  }
-  for(size_t i = 0; i < dim; ++i) {
-    std::cout << F[i] << " ";
-  }
-  std::cout << std::endl;
-
   return 0;
 }
