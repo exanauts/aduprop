@@ -158,66 +158,66 @@ void jac_beuler(const codi::RealForward* x, double* xold,
 
   // Machine states
 
-    J[0*ndim + 0] = 1 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0) - 1)/T_d0p;
-    J[0*ndim + 2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0)/T_d0p;
-    J[0*ndim + 9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*std::pow(x_dp - xl, -1.0) + 1)/T_d0p;
+  J[0*ndim + 0] = 1 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0) - 1)/T_d0p;
+  J[0*ndim + 2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0)/T_d0p;
+  J[0*ndim + 9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*std::pow(x_dp - xl, -1.0) + 1)/T_d0p;
 
-    J[1*ndim + 1] = 1 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0) - 1)/T_q0p;
-    J[1*ndim + 3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0)/T_q0p;
-    J[1*ndim + 8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*std::pow(x_qp - xl, -1.0) + 1)/T_q0p;
+  J[1*ndim + 1] = 1 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0) - 1)/T_q0p;
+  J[1*ndim + 3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0)/T_q0p;
+  J[1*ndim + 8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*std::pow(x_qp - xl, -1.0) + 1)/T_q0p;
 
-    J[2*ndim + 0] = -h/T_d0dp;
-    J[2*ndim + 2] = 1 + h/T_d0dp;
-    J[2*ndim + 9] = -h*(-x_dp + xl)/T_d0dp;
+  J[2*ndim + 0] = -h/T_d0dp;
+  J[2*ndim + 2] = 1 + h/T_d0dp;
+  J[2*ndim + 9] = -h*(-x_dp + xl)/T_d0dp;
 
-    J[3*ndim + 1] = h/T_q0dp;
-    J[3*ndim + 3] = 1 + h/T_q0dp;
-    J[3*ndim + 8] = -h*(-x_qp + xl)/T_q0dp;
+  J[3*ndim + 1] = h/T_q0dp;
+  J[3*ndim + 3] = 1 + h/T_q0dp;
+  J[3*ndim + 8] = -h*(-x_qp + xl)/T_q0dp;
 
-    J[4*ndim + 0] = 0.5*h*i_q*(x_ddp - xl)/(H*(x_dp - xl));
-    J[4*ndim + 1] = -0.5*h*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
-    J[4*ndim + 2] = 0.5*h*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
-    J[4*ndim + 3] = -0.5*h*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
-    J[4*ndim + 4] = 1;
-    J[4*ndim + 8] = -0.5*h*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
-    J[4*ndim + 9] = -0.5*h*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
+  J[4*ndim + 0] = 0.5*h*i_q*(x_ddp - xl)/(H*(x_dp - xl));
+  J[4*ndim + 1] = -0.5*h*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
+  J[4*ndim + 2] = 0.5*h*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
+  J[4*ndim + 3] = -0.5*h*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
+  J[4*ndim + 4] = 1;
+  J[4*ndim + 8] = -0.5*h*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
+  J[4*ndim + 9] = -0.5*h*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
 
-    J[5*ndim + 4] = -120.0*M_PI*h;
-    J[5*ndim + 5] = 1.0;
+  J[5*ndim + 4] = -120.0*M_PI*h;
+  J[5*ndim + 5] = 1.0;
 
-    J[6*ndim + 0] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
-    J[6*ndim + 2] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
-    J[6*ndim + 6] = 1/x_ddp;
-    J[6*ndim + 9] = 1.0;
+  J[6*ndim + 0] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
+  J[6*ndim + 2] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
+  J[6*ndim + 6] = 1/x_ddp;
+  J[6*ndim + 9] = 1.0;
 
-    J[7*ndim + 1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
-    J[7*ndim + 3] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
-    J[7*ndim + 7] = -1/x_qdp;
-    J[7*ndim + 8] = 1.0;
+  J[7*ndim + 1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
+  J[7*ndim + 3] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
+  J[7*ndim + 7] = -1/x_qdp;
+  J[7*ndim + 8] = 1.0;
 
-    J[8*ndim + 5] = -v1m*cos(delta - v1a);
-    J[8*ndim + 7] = 1.0;
-    J[8*ndim + 10] = -sin(delta - v1a);
-    J[8*ndim + 11] = v1m*cos(delta - v1a);
+  J[8*ndim + 5] = -v1m*cos(delta - v1a);
+  J[8*ndim + 7] = 1.0;
+  J[8*ndim + 10] = -sin(delta - v1a);
+  J[8*ndim + 11] = v1m*cos(delta - v1a);
 
-    J[9*ndim + 5] = v1m*sin(delta - v1a);
-    J[9*ndim + 6] = 1.0;
-    J[9*ndim + 10] = -cos(delta - v1a);
-    J[9*ndim + 11] = -v1m*sin(delta - v1a);
+  J[9*ndim + 5] = v1m*sin(delta - v1a);
+  J[9*ndim + 6] = 1.0;
+  J[9*ndim + 10] = -cos(delta - v1a);
+  J[9*ndim + 11] = -v1m*sin(delta - v1a);
 
-    J[10*ndim + 6] = i_q;
-    J[10*ndim + 7] = i_d;
-    J[10*ndim + 8] = v_q;
-    J[10*ndim + 9] = v_d;
-    J[10*ndim + 10] = v0m*sin(v0a - v1a)/xline;
-    J[10*ndim + 11] = -v0m*v1m*cos(v0a - v1a)/xline;
+  J[10*ndim + 6] = i_q;
+  J[10*ndim + 7] = i_d;
+  J[10*ndim + 8] = v_q;
+  J[10*ndim + 9] = v_d;
+  J[10*ndim + 10] = v0m*sin(v0a - v1a)/xline;
+  J[10*ndim + 11] = -v0m*v1m*cos(v0a - v1a)/xline;
 
-    J[11*ndim + 6] = i_d;
-    J[11*ndim + 7] = -i_q;
-    J[11*ndim + 8] = -v_d;
-    J[11*ndim + 9] = v_q;
-    J[11*ndim + 10] = v0m*cos(v0a - v1a)/xline - 2.0*v1m/xline;
-    J[11*ndim + 11] = v0m*v1m*sin(v0a - v1a)/xline;
+  J[11*ndim + 6] = i_d;
+  J[11*ndim + 7] = -i_q;
+  J[11*ndim + 8] = -v_d;
+  J[11*ndim + 9] = v_q;
+  J[11*ndim + 10] = v0m*cos(v0a - v1a)/xline - 2.0*v1m/xline;
+  J[11*ndim + 11] = v0m*v1m*sin(v0a - v1a)/xline;
 
 }
 
