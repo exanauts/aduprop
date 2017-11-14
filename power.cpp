@@ -464,7 +464,7 @@ int main(int nargs, char** args) {
   
   // Define state arrays
   size_t dim = 12;
-  double h = 4000;
+  double h = 0.0004;
   
   double *xold = new double [dim];
   double *y = new double [dim];
