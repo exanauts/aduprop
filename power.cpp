@@ -3,6 +3,7 @@
 #include <iostream>
 #include "linsolve.hpp"
 
+using namespace std;
 
 typedef codi::RealForward active;
 
@@ -25,6 +26,15 @@ struct System {
   double v0a;
   double xline;
 };
+
+// Decremental matmul
+void decmatmul(double **A, double *x, double *y, size_t n) {
+  for(size_t i = 0; i < n; ++i) {
+    for(size_t j = 1; j < n; ++j) {
+      y[i] -= A[i][j] * x[j];
+    }
+  }
+}
 
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T* const F) {
@@ -76,9 +86,9 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
 
   // Machine states
   F[0] = (-e_qp + e_fd - (i_d - (-x_ddp + x_dp)*(-e_qp + i_d*(x_dp - xl) 
-    + phi_1d)/std::pow((x_dp - xl), 2.0))*(x_d - x_dp))/T_d0p;
+    + phi_1d)/pow((x_dp - xl), 2.0))*(x_d - x_dp))/T_d0p;
   F[1] = (-e_dp + (i_q - (-x_qdp + x_qp)*( e_dp + i_q*(x_qp - xl) 
-    + phi_2q)/std::pow((x_qp - xl), 2.0))*(x_q - x_qp))/T_q0p;
+    + phi_2q)/pow((x_qp - xl), 2.0))*(x_q - x_qp))/T_q0p;
   F[2] = ( e_qp - i_d*(x_dp - xl) - phi_1d)/T_d0dp;
   F[3] = (-e_dp - i_q*(x_qp - xl) - phi_2q)/T_q0dp;
   F[4] = (p_m - psi_de*i_q + psi_qe*i_d)/(2.0*H);
@@ -162,13 +172,13 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
 
   // Machine states
 
-  J[0*ndim + 0] = 1 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0) - 1)/T_d0p;
-  J[0*ndim + 2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*std::pow(x_dp - xl, -2.0)/T_d0p;
-  J[0*ndim + 9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*std::pow(x_dp - xl, -1.0) + 1)/T_d0p;
+  J[0*ndim + 0] = 1 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0) - 1)/T_d0p;
+  J[0*ndim + 2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0)/T_d0p;
+  J[0*ndim + 9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*pow(x_dp - xl, -1.0) + 1)/T_d0p;
 
-  J[1*ndim + 1] = 1 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0) - 1)/T_q0p;
-  J[1*ndim + 3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*std::pow(x_qp - xl, -2.0)/T_q0p;
-  J[1*ndim + 8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*std::pow(x_qp - xl, -1.0) + 1)/T_q0p;
+  J[1*ndim + 1] = 1 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0) - 1)/T_q0p;
+  J[1*ndim + 3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0)/T_q0p;
+  J[1*ndim + 8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*pow(x_qp - xl, -1.0) + 1)/T_q0p;
 
   J[2*ndim + 0] = -h/T_d0dp;
   J[2*ndim + 2] = 1 + h/T_d0dp;
@@ -241,40 +251,75 @@ void t1_integrate(active* x, size_t dim, System* sys, double h) {
   for(size_t i = 0; i < dim; ++i) {
     J[i] = J[0] + dim * i;
   }
+  for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
   
   jac_beuler<active>(x, xold, sys, 0.0004, &J[0][0]);
-  // linearize Jacobian for BLAS
+  // save one because BLAS changes the input matrix
+  double **spJ = new double* [dim];
+  spJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    spJ[i] = spJ[0] + dim * i;
+    for(size_t j = 0; j < dim; ++j) {
+      spJ[i][j] = J[i][j].getValue();
+    }
+  }
+  // Get the values and tangents out for both J and y
   double **pJ = new double* [dim];
   pJ[0] = new double [dim*dim];
-  std::cout << "J going into BLAS" << std::endl;
   for(size_t i = 0; i < dim; ++i) {
     pJ[i] = pJ[0] + dim * i;
     for(size_t j = 0; j < dim; ++j) {
       pJ[i][j] = J[i][j].getValue();
-      std::cout << pJ[i][j] << " ";
     }
-    std::cout << std::endl;
   }
-  // linearize the RHS for BLAS
-  double *py = new double[dim];
+  double **t1_pJ = new double* [dim];
+  t1_pJ[0] = new double [dim*dim];
   for(size_t i = 0; i < dim; ++i) {
-    py[i] = y[i].getValue();
+    t1_pJ[i] = t1_pJ[0] + dim * i;
+    for(size_t j = 0; j < dim; ++j) {
+      t1_pJ[i][j] = J[i][j].getGradient();
+    }
   }
-  std::cout << std::endl;
+  double *py = new double[dim];
+  double *t1_py = new double[dim];
+  for(size_t i = 0; i < dim; ++i) py[i] = y[i].getValue();
+  for(size_t i = 0; i < dim; ++i) t1_py[i] = y[i].getGradient();
+
+  // Solve 1st order system
   int ierr = solve(pJ,py,dim);
   if(ierr) {
-    std::cout << "Linear solver error: " << ierr << std::endl;
+    cout << "Linear solver error: " << ierr << endl;
     exit(1);
   }
+  // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x 
+  // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already 
+  // extracted above
+  decmatmul(t1_pJ, py, t1_py, dim);
+  // Use the saved Jacobian. The matrix is the same for the 1st order LS
+  ierr = solve(spJ,t1_py,dim);
+  // That's it, we have the tangents t1_x in t1_py of the LS Ax=b
+  if(ierr) {
+    cout << "Linear solver error: " << ierr << endl;
+    exit(1);
+  }
+  // Put x and t1_x back into the active type
   for(size_t i = 0; i < dim; ++i) {
     y[i] = py[i];
+    y[i].setGradient(t1_py[i]);
   }
-  std::cout << "New x and step" << std::endl;
+  // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
     x[i]=xold[i]-y[i];
-    std::cout << x[i] << " " << y[i] << " " << std::endl;
+    // cout << x[i] << " " << y[i] << " " << endl;
   }
-  std::cout << std::endl;
+  // cout << endl;
+  delete [] xold;
+  delete [] y;
+  delete [] py;
+  delete [] pJ[0];
+  delete [] pJ;
+  delete [] J[0];
+  delete [] J;
 }
 
 void integrate(double* x, size_t dim, System* sys, double h) {
@@ -293,19 +338,20 @@ void integrate(double* x, size_t dim, System* sys, double h) {
   for(size_t i = 0; i < dim; ++i) {
     J[i] = J[0] + dim * i;
   }
+  for(int i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
   
   jac_beuler<double>(x, xold, sys, 0.0004, &J[0][0]);
   int ierr = solve(J,y,dim);
   if(ierr) {
-    std::cout << "Linear solver error: " << ierr << std::endl;
+    cout << "Linear solver error: " << ierr << endl;
     exit(1);
   }
-  std::cout << "New x and step" << std::endl;
+  // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
     x[i]=xold[i]-y[i];
-    std::cout << x[i] << " " << y[i] << " " << std::endl;
+    // cout << x[i] << " = " << xold[i] << " - " << y[i] << " " << endl;
   }
-  std::cout << std::endl;
+  // cout << endl;
 }
 
 void jactest(double* xold, int dim, System* sys, int h) {
@@ -325,32 +371,71 @@ void jactest(double* xold, int dim, System* sys, int h) {
     for (size_t i = 0; i < dim; ++i) {
       residual_beuler(x, axold, sys, h, y);
       J[i][j] = y[i].getGradient();
-      //std::cout <<"df/dx: " << y[i].getGradient() << std::endl;
     }
     x[j].setGradient(0.0);
   }
 
-  std::cout << "AD Jacobian" << std::endl;
+  cout << "AD Jacobian" << endl;
   // Print jacobian
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
-      std::cout << J[i][j] << " ";
+      cout << J[i][j] << " ";
     }
-    std::cout << std::endl;
+    cout << endl;
   }
 
-  std::cout << "HC Jacobian" << std::endl;
+  cout << "HC Jacobian" << endl;
   // Hand coded jacobian
   active Jhc[12*12];
   jac_beuler(x, axold, sys, h, Jhc);
   // Print jacobian
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
-      std::cout << Jhc[i*12 + j] << " ";
+      cout << Jhc[i*12 + j] << " ";
     }
-    std::cout << std::endl;
+    cout << endl;
   }
+  delete [] x;
+  delete [] axold;
+  delete [] y;
+}
+
+// Driver for accumulating Jacobian using FD
+void driver(double* xic, int dim, System* sys, int h, double** J) {
+  double *xold = new double[dim];
+  double *xout = new double[dim];
+  double *xpert1 = new double[dim];
+  double *xpert2 = new double[dim];
+  double pert=1e-8;
+  for(size_t i = 0 ; i < dim ; ++i) xold[i] = xic[i];
+  integrate(xic, dim, sys, h);
+  for(size_t i = 0 ; i < dim ; ++i) xout[i] = xic[i];
   
+  for(size_t i = 0 ; i < dim ; ++i) {
+    for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xold[j];
+    for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xold[j];
+    xpert1[i] += pert/2.0;
+    xpert2[i] -= pert/2.0;
+    integrate(xpert1, dim, sys, h);
+    integrate(xpert2, dim, sys, h);
+    for(size_t j = 0 ; j < dim ; ++j) J[i][j]=(xpert1[j]-xpert2[j])/pert;
+  }
+  delete [] xold;  
+}
+
+// Driver for accumulating Jacobian using AD
+void t1_driver(double* xic, int dim, System* sys, int h, double** J) {
+  for(size_t i = 0; i < dim; ++i) {
+    active* axic = new active [dim];
+    for(size_t j = 0; j < dim ; ++j) {
+      axic[j] = xic[j];
+      axic[j].setGradient(0.0);
+    }
+    axic[i].setGradient(1.0);
+    t1_integrate(axic, dim, sys, h);
+    for(size_t j = 0; j < dim ; ++j) J[j][i] = axic[j].getGradient();
+    delete [] axic;
+  }
 }
 
 int main(int nargs, char** args) {
@@ -360,7 +445,6 @@ int main(int nargs, char** args) {
   size_t dim = 12;
   double h = 0.0004;
   
-  active *axold = new active [dim];
   double *xold = new double [dim];
   
   
@@ -400,10 +484,31 @@ int main(int nargs, char** args) {
   xold[10] = 1.04;
   xold[11] = 0.0;
   
-  jactest(xold, dim, &sys, h);
-  for(int i = 0; i < dim ; ++i) axold[i] = xold[i];
-  t1_integrate(axold, dim, &sys, h);
-  integrate(xold, dim, &sys, h);
+  // jactest(xold, dim, &sys, h);
+  cout << "At point:" << endl;
+  for(int i = 0; i < dim; ++i) cout << xold[i] << " ";
+  cout << endl;
   
+  double** J = new double*[dim]; 
+  for(int i = 0; i < dim; ++i) J[i] = new double[dim];
+  t1_driver(xold, dim, &sys, h, J);
+  cout << "Jacobian using AD" << endl;
+  for(int i = 0; i < dim; ++i) {
+    for(int j = 0; j < dim; ++j) {
+      cout << J[i][j] << " ";
+    }
+    cout << endl;
+  }
+  driver(xold, dim, &sys, h, J);
+  cout << "Jacobian using FD" << endl;
+  for(int i = 0; i < dim; ++i) {
+    for(int j = 0; j < dim; ++j) {
+      cout << J[i][j] << " ";
+    }
+    cout << endl;
+  }
+  for(int i = 0; i < dim; ++i) delete [] J[i];
+  delete [] J;
+  delete [] xold;
   return 0;
 }
