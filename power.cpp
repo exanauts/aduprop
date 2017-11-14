@@ -27,15 +27,6 @@ struct System {
   double xline;
 };
 
-// Decremental matmul
-void decmatmul(double **A, double *x, double *y, size_t n) {
-  for(size_t i = 0; i < n; ++i) {
-    for(size_t j = 0; j < n; ++j) {
-      y[i] -= A[j][i] * x[j];
-    }
-  }
-}
-
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T* const F) {
 
@@ -328,8 +319,13 @@ void t1_integrate(active* x, size_t dim, System* sys, double h) {
   delete [] xold;
   delete [] y;
   delete [] py;
+  delete [] t1_py;
   delete [] pJ[0];
   delete [] pJ;
+  delete [] spJ[0];
+  delete [] spJ;
+  delete [] t1_pJ[0];
+  delete [] t1_pJ;
   delete [] J[0];
   delete [] J;
 }
@@ -364,6 +360,10 @@ void integrate(double* x, size_t dim, System* sys, double h) {
     // cout << x[i] << " = " << xold[i] << " - " << y[i] << " " << endl;
   }
   // cout << endl;
+  delete [] xold;
+  delete [] y;
+  delete [] J[0];
+  delete [] J;
 }
 
 void jactest(double* xold, int dim, System* sys, double h) {
@@ -422,14 +422,12 @@ void jactest(double* xold, int dim, System* sys, double h) {
 // Driver for accumulating Jacobian using FD
 void driver(double* xic, int dim, System* sys, int h, double* y, double** J) {
   double *xold = new double[dim];
-  double *xout = new double[dim];
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
-  double pert=1e-12;
+  double pert=1e-8;
   for(size_t i = 0 ; i < dim ; ++i) xold[i] = xic[i];
   integrate(xic, dim, sys, h);
   for(size_t i = 0 ; i < dim ; ++i) y[i] = xic[i];
-  for(size_t i = 0 ; i < dim ; ++i) xout[i] = xic[i];
   
   for(size_t i = 0 ; i < dim ; ++i) {
     for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xold[j];
@@ -441,6 +439,8 @@ void driver(double* xic, int dim, System* sys, int h, double* y, double** J) {
     for(size_t j = 0 ; j < dim ; ++j) J[i][j]=(xpert1[j]-xpert2[j])/pert;
   }
   delete [] xold;  
+  delete [] xpert1;  
+  delete [] xpert2;  
 }
 
 // Driver for accumulating Jacobian using AD

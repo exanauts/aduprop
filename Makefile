@@ -5,7 +5,7 @@ CXX=clang++
 all: powerad
 
 powerad: power.o
-	$(CXX) -o powerad power.o -llapack 
+	$(CXX) -o powerad power.o -llapack -lblas
 
 power.o: power.cpp linsolve.hpp
 	$(CXX) $(CFLAGS) -c power.cpp

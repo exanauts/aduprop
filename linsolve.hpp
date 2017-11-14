@@ -9,7 +9,7 @@
 #endif
 #endif
 
-// declarations for LAPACK functions used to factor/solve:
+// declarations for LAPACK and BLAS functions used to factor/solve:
 
 extern "C" void FNAME(dgesv)(int *n,
       int *nrhs,
@@ -39,7 +39,34 @@ extern "C" void FNAME(dsytrs)(char *uplo,
 			double b[], 
 			int *ldb,
 			int *info);
-#endif
+extern "C" void FNAME(dgemv)(char *trans, 
+			int *m, 
+			int *n, 
+      double *alpha,
+			double A[], 
+			int *lda, 
+      double *x,
+      int *incx,
+      double *beta,
+      double *y,
+      int *incy);
+      
+// Decremental matmul
+void decmatmul(double **A, double *x, double *y, size_t n) {
+  // for(size_t i = 0; i < n; ++i) {
+  //   for(size_t j = 0; j < n; ++j) {
+  //     y[i] -= A[j][i] * x[j];
+  //   }
+  // }
+  int n_=n;
+  char trans = 'N';
+  double alpha = -1.0;
+  double beta = 1.0;
+  int incx=1;
+  int incy=1;
+  FNAME(dgemv)(&trans, &n_, &n_, &alpha, &A[0][0], &n_, x, &incx, &beta, y, &incy);
+}
+      
 int solve(double **A, double *B, int n) {
   int lda=n;
   int ldb=n;
@@ -49,3 +76,4 @@ int solve(double **A, double *B, int n) {
   FNAME(dgesv)(&n, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
   return info;
 }
+#endif
