@@ -336,32 +336,39 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
 void integrate(double* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
-  int iteration = 0;
+  int iteration = 0, ierr;
   double *xold = new double[dim];
   double *y = new double[dim];
-  for (size_t i = 0; i < dim; ++i) {
+  double **J = new double* [dim];
+  
+  for (size_t i = 0; i < dim; ++i)
     xold[i] = x[i];
-  }
+  
   residual_beuler<double>(x, xold, sys, h, y);
   
-  double **J = new double* [dim];
   J[0] = new double [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
+  
+  for(size_t i = 0; i < dim; ++i)
     J[i] = J[0] + dim * i;
-  }
-  for(int i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
+
+  for(int i = 0; i < dim*dim; ++i)
+    J[0][i] = 0;
   
   jac_beuler<double>(x, xold, sys, h, J);
-  int ierr = solve(J,y,dim);
+  
+  ierr = solve(J, y, dim);
+  
   if(ierr) {
     cout << "Linear solver error: " << ierr << endl;
     exit(1);
   }
-  // cout << "New x and step" << endl;
+
+  //cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
-    x[i]=x[i]-y[i];
-    // cout << x[i] << " = " << xold[i] << " - " << y[i] << " " << endl;
+    x[i] = x[i] - y[i];
+    //cout << x[i] << " = " << xold[i] << " - " << y[i] << " " << endl;
   }
+
   // cout << endl;
   delete [] xold;
   delete [] y;
@@ -505,7 +512,7 @@ int main(int nargs, char** args) {
   
   // Define state arrays
   size_t dim = 12;
-  double h = 0.0004;
+  double h = 0.004;
   
   double *xold = new double [dim];
   double *y = new double [dim];
