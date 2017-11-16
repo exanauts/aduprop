@@ -9,7 +9,6 @@ typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
 
-
 struct System {
   // Generator
   double x_d;
@@ -29,6 +28,8 @@ struct System {
   double v0a;
   double xline;
 };
+
+void t1s_driver(double* xic, size_t dim, System* sys, int h, double* y, double** J);
 
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T* const F) {
@@ -308,7 +309,7 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
       pJ[i][j] = J[i][j].value().value();
     }
   }
-  // ierr = solve(pJ,t2_t1_py,dim);
+  ierr = solve(pJ,t2_t1_py,dim);
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
@@ -512,30 +513,24 @@ void jactest(double* xold, size_t dim, System* sys, double h) {
 
 // Driver for accumulating Jacobian using FD
 void fdJ_driver(double* xic, size_t dim, System* sys, int h, double* y, double** J) {
-  double *xold = new double[dim];
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
   double pert=1e-8;
-  for(size_t i = 0 ; i < dim ; ++i) xold[i] = xic[i];
-  integrate(xic, dim, sys, h);
-  for(size_t i = 0 ; i < dim ; ++i) y[i] = xic[i];
   
   for(size_t i = 0 ; i < dim ; ++i) {
-    for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xold[j];
-    for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xold[j];
+    for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xic[j];
+    for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xic[j];
     xpert1[i] += pert/2.0;
     xpert2[i] -= pert/2.0;
     integrate(xpert1, dim, sys, h);
     integrate(xpert2, dim, sys, h);
     for(size_t j = 0 ; j < dim ; ++j) J[i][j]=(xpert1[j]-xpert2[j])/pert;
   }
-  delete [] xold;  
   delete [] xpert1;  
   delete [] xpert2;  
 }
 
 void fdH_driver(double* xic, size_t dim, System* sys, int h, double* y, double*** H) {
-  double *xold = new double[dim];
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
   double **Jpert1 = new double*[dim];
@@ -545,25 +540,20 @@ void fdH_driver(double* xic, size_t dim, System* sys, int h, double* y, double**
   Jpert2[0] = new double[dim*dim];
   for(size_t i = 0; i < dim; ++i) Jpert2[i] = Jpert2[0] + i*dim;
   double pert=1e-8;
-  for(size_t i = 0 ; i < dim ; ++i) xold[i] = xic[i];
-  integrate(xic, dim, sys, h);
-  for(size_t i = 0 ; i < dim ; ++i) y[i] = xic[i];
   
   for(size_t i = 0 ; i < dim ; ++i) {
-    for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xold[j];
-    for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xold[j];
+    for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xic[j];
+    for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xic[j];
     xpert1[i] += pert/2.0;
     xpert2[i] -= pert/2.0;
-    fdJ_driver(xpert1, dim, sys, h, y, Jpert1);
-    fdJ_driver(xpert2, dim, sys, h, y, Jpert2);
+    t1s_driver(xpert1, dim, sys, h, y, Jpert1);
+    t1s_driver(xpert2, dim, sys, h, y, Jpert2);
     for(size_t j = 0 ; j < dim ; ++j) {
       for(size_t k = 0 ; k < dim ; ++k) {
-        // J[i][j]=(xpert1[j]-xpert2[j])/pert;
         H[i][j][k] = (Jpert1[j][k]-Jpert2[j][k])/pert;
       } 
     }
   }
-  delete [] xold;  
   delete [] xpert1;
   delete [] xpert2;
   delete [] Jpert1[0];  
