@@ -34,8 +34,8 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
 
   // (TEMP): Just put all the parameters here for now.
 
-  const double e_fd = 2.36980307368;
-  const double p_m = 1.06496;
+  const double e_fd = 2.36980307364616349375;
+  const double p_m = 1.06496000000000012875;
 
   const double x_d = sys->x_d; 
   const double x_q = sys->x_q;
@@ -117,8 +117,8 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
 
   size_t ndim = 12;
 
-  const double e_fd = 2.36980307368;
-  const double p_m = 1.06496;
+  const double e_fd = 2.36980307364616349375;
+  const double p_m = 1.06496000000000012875;
 
   const double x_d = sys->x_d; 
   const double x_q = sys->x_q;
@@ -540,18 +540,18 @@ int main(int nargs, char** args) {
 
   // Initial values for state array.
 
-  xold[0] = 1.06512;
-  xold[1] = 0.5182;
-  xold[2] = 0.850584;
-  xold[3] = -0.661975;
-  xold[4] = -0.05;
-  xold[5] = 0.736183;
-  xold[6] = 0.770678;
-  xold[7] = 0.698323;
-  xold[8] = 0.461854;
-  xold[9] = 1.01532;
-  xold[10] = 1.04;
-  xold[11] = 0.0;
+  xold[0] = 1.06512037300928485983;
+  xold[1] = 0.51819992367912581788;
+  xold[2] = 0.85058383242985102779;
+  xold[3] = -0.66197500054304025952;
+  xold[4] = -0.05000000000000000278;
+  xold[5] = 0.73618306350367335167;
+  xold[6] = 0.77067836274882195458;
+  xold[7] = 0.69832289180288620312;
+  xold[8] = 0.46185376441989828278;
+  xold[9] = 1.01531727676021699125;
+  xold[10] = 1.0400000000000000000;
+  xold[11] = 0.00000000000000000000;
   
   // jactest(xold, dim, &sys, h);
   cout << "At point:" << endl;
