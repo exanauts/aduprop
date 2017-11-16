@@ -6,7 +6,8 @@
 using namespace std;
 
 typedef codi::RealForwardGen<double> t1s;
-// typedef codi::RealForwardGen<t1s> t2s;
+typedef codi::RealForwardGen<t1s> t2s;
+typedef codi::RealForwardGen<t2s> t3s;
 
 
 struct System {
@@ -237,6 +238,7 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   for (size_t i = 0; i < dim; ++i) {
     xold[i] = x[i];
   }
+  
   residual_beuler<t1s>(x, xold, sys, h, y);
   
   t1s **J = new t1s* [dim];
@@ -247,48 +249,24 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
   
   jac_beuler<t1s>(x, xold, sys, h, J);
-  // save one because BLAS changes the input matrix
-  double **spJ = new double* [dim];
-  spJ[0] = new double [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    spJ[i] = spJ[0] + dim * i;
-    for(size_t j = 0; j < dim; ++j) {
-      spJ[i][j] = J[i][j].value();
-    }
-  }
+  
   // Get the values and tangents out for both J and y
-  double **pJ = new double* [dim];
-  pJ[0] = new double [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    pJ[i] = pJ[0] + dim * i;
-    for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].getValue();
-    }
-  }
-  double **t1_pJ = new double* [dim];
-  t1_pJ[0] = new double [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    t1_pJ[i] = t1_pJ[0] + dim * i;
-    for(size_t j = 0; j < dim; ++j) {
-      t1_pJ[i][j] = J[i][j].getGradient();
-      // cout << t1_pJ[i][j] << " ";
-    }
-    // cout << endl; 
-  }
   double *py = new double[dim];
   double *t1_py = new double[dim];
-  // cout << "py" << endl;
+  double **pJ = new double* [dim];
+  double **t1_pJ = new double* [dim];
+  pJ[0] = new double [dim*dim];
+  t1_pJ[0] = new double [dim*dim];
   for(size_t i = 0; i < dim; ++i) {
+    pJ[i] = pJ[0] + dim * i;
+    t1_pJ[i] = t1_pJ[0] + dim * i;
     py[i] = y[i].getValue();
-    // cout << py[i] << " ";
-  }
-  // cout << endl;
-  // cout << "t1_py" << endl;
-  for(size_t i = 0; i < dim; ++i) {
     t1_py[i] = y[i].getGradient();
-    // cout << t1_py[i] << " ";
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].getValue();
+      t1_pJ[i][j] = J[i][j].getGradient();
+    }
   }
-  // cout << endl;
 
   // Solve 1st order system
   int ierr = solve(pJ,py,dim);
@@ -301,19 +279,22 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   // extracted above
   decmatmul(t1_pJ, py, t1_py, dim);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
-  ierr = solve(spJ,t1_py,dim);
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].getValue();
+    }
+  }
+  ierr = solve(pJ,t1_py,dim);
   // That's it, we have the tangents t1_x in t1_py of the LS Ax=b
   if(ierr) {
     cout << "Linear solver error: " << ierr << endl;
     exit(1);
   }
   // Put x and t1_x back into the t1s type
+  // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
     y[i] = py[i];
     y[i].setGradient(t1_py[i]);
-  }
-  // cout << "New x and step" << endl;
-  for(size_t i = 0; i < dim; ++i) {
     x[i]=x[i]-y[i];
     // cout << x[i] << " " << y[i] << " " << endl;
   }
@@ -324,8 +305,6 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   delete [] t1_py;
   delete [] pJ[0];
   delete [] pJ;
-  delete [] spJ[0];
-  delete [] spJ;
   delete [] t1_pJ[0];
   delete [] t1_pJ;
   delete [] J[0];
@@ -506,6 +485,30 @@ void t1s_driver(double* xic, size_t dim, System* sys, int h, double* y, double**
   }
 }
 
+void t2s_t1s_driver(double* xic, size_t dim, System* sys, int h, double* y, double **J, double*** H) {
+  for(size_t i = 0; i < dim; ++i) {
+    t2s* axic = new t2s [dim];
+    for(size_t j = 0; j < dim ; ++j) {
+      for(size_t k = 0; k < dim ; ++k) {
+        axic[k].value().value()       = xic[j];
+        axic[k].gradient().gradient() = 0.0;
+        axic[k].value().gradient()    = 0.0;
+        axic[k].gradient().value()    = 0.0;
+      }
+      axic[i].value().gradient() = 1.0;
+      axic[j].gradient().value() = 1.0;
+      // t2s_t1s_integrate(axic, dim, sys, h);
+      for(size_t k = 0; k < dim ; ++k) {
+        H[i][j][k] = axic[k].gradient().gradient();
+      }
+    }
+    for(size_t j = 0; j < dim ; ++j) {
+      J[i][j] = axic[j].value().gradient();
+    }
+    delete [] axic;
+  }
+}
+
 int main(int nargs, char** args) {
   
   
@@ -561,6 +564,13 @@ int main(int nargs, char** args) {
   
   double** J = new double*[dim]; 
   for(size_t i = 0; i < dim; ++i) J[i] = new double[dim];
+  double ***H = new double**[dim];
+  for(size_t i = 0; i < dim; ++i) H[i] = new double*[dim];
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      H[i][j] = new double[dim];
+    }
+  } 
   t1s_driver(xold, dim, &sys, h, y, J);
   cout << "Function using AD" << endl;
   cout << "-----------------" << endl;
@@ -568,7 +578,8 @@ int main(int nargs, char** args) {
     cout << y[i] << " ";
   }
   cout << endl;
-  cout << "Jacobian using AD" << endl;
+  cout << endl;
+  cout << "Jacobian using 1st order AD" << endl;
   cout << "-----------------" << endl;
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
@@ -576,12 +587,34 @@ int main(int nargs, char** args) {
     }
     cout << endl;
   }
+  cout << endl;
+  cout << "Hessian and Jacobian using 2nd order AD" << endl;
+  cout << "-----------------" << endl;
+  // t2s_t1s_driver(xold, dim, &sys, h, y, J, H);
+  cout << "J" << endl;
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      cout << J[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << "H" << endl;
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      for(size_t k = 0; k < dim; ++k) {
+        cout << H[i][j][k] << " ";
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
   fdJ_driver(xold, dim, &sys, h, y, J);
   cout << "Function using FD" << endl;
   cout << "-----------------" << endl;
   for(size_t i = 0; i < dim; ++i) {
     cout << y[i] << " ";
   }
+  cout << endl;
   cout << endl;
   cout << "Jacobian using FD" << endl;
   cout << "-----------------" << endl;
@@ -591,14 +624,8 @@ int main(int nargs, char** args) {
     }
     cout << endl;
   }
-  double ***H = new double**[dim];
-  for(size_t i = 0; i < dim; ++i) H[i] = new double*[dim];
-  for(size_t i = 0; i < dim; ++i) {
-    for(size_t j = 0; j < dim; ++j) {
-      H[i][j] = new double[dim];
-    }
-  } 
   
+  cout << endl;
   cout << "Hessian using FD" << endl;
   cout << "-----------------" << endl;
   fdH_driver(xold, dim, &sys, h, y, H);
@@ -610,6 +637,7 @@ int main(int nargs, char** args) {
     }
     cout << endl;
   }
+  cout << endl;
   for(size_t i = 0; i < dim; ++i) delete [] J[i];
   delete [] J;
   for(size_t i = 0; i < dim; ++i) {
