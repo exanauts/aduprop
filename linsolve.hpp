@@ -1,5 +1,8 @@
 #ifndef LINSOLVE_HPP
 #define LINSOLVE_HPP
+#include <iostream>
+
+using namespace std;
 
 #ifndef FNAME
 #ifndef __bg__
@@ -74,6 +77,11 @@ int solve(double **A, double *B, int n) {
   int info=0;
   int ipiv[n];
   FNAME(dgesv)(&n, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
+  if(info != 0) {
+    cout << "Error in LS. Error code: " << info << endl;
+    exit(1);
+    
+  }
   return info;
 }
 #endif

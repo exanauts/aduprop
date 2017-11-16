@@ -229,6 +229,117 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
 
 }
 
+void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
+  
+  double eps = 1e-9;
+  int iteration = 0;
+  t2s *xold = new t2s [dim];
+  t2s *y = new t2s [dim];
+  for (size_t i = 0; i < dim; ++i) {
+    xold[i] = x[i];
+  }
+  
+  residual_beuler<t2s>(x, xold, sys, h, y);
+  
+  t2s **J = new t2s* [dim];
+  J[0] = new t2s [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    J[i] = J[0] + dim * i;
+  }
+  for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
+  
+  jac_beuler<t2s>(x, xold, sys, h, J);
+  
+  // Get the values and tangents out for both J and y
+  double *py = new double[dim];
+  double *t1_py = new double[dim];
+  double *t2_py = new double[dim];
+  double *t2_t1_py = new double[dim];
+  double **pJ = new double* [dim];
+  double **t1_pJ = new double* [dim];
+  double **t2_pJ = new double* [dim];
+  double **t2_t1_pJ = new double* [dim];
+  pJ[0] = new double [dim*dim];
+  t1_pJ[0] = new double [dim*dim];
+  t2_pJ[0] = new double [dim*dim];
+  t2_t1_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    pJ[i] = pJ[0] + dim * i;
+    t1_pJ[i] = t1_pJ[0] + dim * i;
+    t2_pJ[i] = t2_pJ[0] + dim * i;
+    t2_t1_pJ[i] = t2_t1_pJ[0] + dim * i;
+    py[i] = y[i].value().value();
+    t1_py[i] = y[i].value().gradient();
+    t2_py[i] = y[i].gradient().value();
+    t2_t1_py[i] = y[i].gradient().gradient();
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].value().value();
+      t1_pJ[i][j] = J[i][j].value().gradient();
+      t2_pJ[i][j] = J[i][j].gradient().value();
+      t2_t1_pJ[i][j] = J[i][j].gradient().gradient();
+    }
+  }
+
+  // Solve 1st order system for t1 and t2
+  int ierr = solve(pJ,py,dim);
+  // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x 
+  // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already 
+  // extracted above
+  decmatmul(t1_pJ, py, t1_py, dim);
+  decmatmul(t2_pJ, py, t2_py, dim);
+  // Use the saved Jacobian. The matrix is the same for the 1st order LS
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].value().value();
+    }
+  }
+  ierr = solve(pJ,t1_py,dim);
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].value().value();
+    }
+  }
+  ierr = solve(pJ,t2_py,dim);
+  decmatmul(t2_t1_pJ, py, t2_t1_py, dim);
+  decmatmul(t1_pJ, t2_py, t2_t1_py, dim);
+  decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = J[i][j].value().value();
+    }
+  }
+  // ierr = solve(pJ,t2_t1_py,dim);
+  // Put x and t1_x back into the t1s type
+  // cout << "New x and step" << endl;
+  for(size_t i = 0; i < dim; ++i) {
+    y[i] = py[i];
+    y[i].gradient().gradient() = t2_t1_py[i];
+    y[i].value().gradient() = t1_py[i];
+    y[i].gradient().value() = t2_py[i];
+    x[i]=x[i]-y[i];
+    // cout << "py: " << py[i] << " t2_t1_py: " << t2_t1_py[i];
+    // cout << " t1_py: " << t1_py[i] << " t2_py: " << t2_py[i];
+    // cout << endl;
+  }
+  // cout << endl;
+  delete [] xold;
+  delete [] y;
+  delete [] py;
+  delete [] t1_py;
+  delete [] t2_py;
+  delete [] t2_t1_py;
+  delete [] pJ[0];
+  delete [] t1_pJ[0];
+  delete [] t2_pJ[0];
+  delete [] t2_t1_pJ[0];
+  delete [] pJ;
+  delete [] t1_pJ;
+  delete [] t2_pJ;
+  delete [] t2_t1_pJ;
+  delete [] J[0];
+  delete [] J;
+}
+
 void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
@@ -270,10 +381,6 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
 
   // Solve 1st order system
   int ierr = solve(pJ,py,dim);
-  if(ierr) {
-    cout << "Linear solver error: " << ierr << endl;
-    exit(1);
-  }
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x 
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already 
   // extracted above
@@ -286,10 +393,6 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   }
   ierr = solve(pJ,t1_py,dim);
   // That's it, we have the tangents t1_x in t1_py of the LS Ax=b
-  if(ierr) {
-    cout << "Linear solver error: " << ierr << endl;
-    exit(1);
-  }
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
@@ -490,17 +593,21 @@ void t2s_t1s_driver(double* xic, size_t dim, System* sys, int h, double* y, doub
     t2s* axic = new t2s [dim];
     for(size_t j = 0; j < dim ; ++j) {
       for(size_t k = 0; k < dim ; ++k) {
-        axic[k].value().value()       = xic[j];
+        axic[k].value().value()       = xic[k];
         axic[k].gradient().gradient() = 0.0;
         axic[k].value().gradient()    = 0.0;
         axic[k].gradient().value()    = 0.0;
       }
       axic[i].value().gradient() = 1.0;
       axic[j].gradient().value() = 1.0;
-      // t2s_t1s_integrate(axic, dim, sys, h);
+      t2s_t1s_integrate(axic, dim, sys, h);
       for(size_t k = 0; k < dim ; ++k) {
         H[i][j][k] = axic[k].gradient().gradient();
       }
+      // This should give you the Jacobian too
+      // for(size_t k = 0; k < dim ; ++k) {
+      //   J[j][k] = axic[k].gradient().value();
+      // }
     }
     for(size_t j = 0; j < dim ; ++j) {
       J[i][j] = axic[j].value().gradient();
@@ -514,7 +621,7 @@ int main(int nargs, char** args) {
   
   // Define state arrays
   size_t dim = 12;
-  double h = 0.004;
+  double h = 4.0;
   
   double *xold = new double [dim];
   double *y = new double [dim];
@@ -590,7 +697,12 @@ int main(int nargs, char** args) {
   cout << endl;
   cout << "Hessian and Jacobian using 2nd order AD" << endl;
   cout << "-----------------" << endl;
-  // t2s_t1s_driver(xold, dim, &sys, h, y, J, H);
+  for(size_t i = 0; i < dim; ++i) {
+    for(size_t j = 0; j < dim; ++j) {
+      J[i][j] = 0.0;
+    }  
+  }
+  t2s_t1s_driver(xold, dim, &sys, h, y, J, H);
   cout << "J" << endl;
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
