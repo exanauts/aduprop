@@ -61,7 +61,7 @@ void decmatmul(double **A, double *x, double *y, size_t n) {
   //     y[i] -= A[j][i] * x[j];
   //   }
   // }
-  int n_=n;
+  int n_=(int) n;
   char trans = 'N';
   double alpha = -1.0;
   double beta = 1.0;
@@ -70,13 +70,18 @@ void decmatmul(double **A, double *x, double *y, size_t n) {
   FNAME(dgemv)(&trans, &n_, &n_, &alpha, &A[0][0], &n_, x, &incx, &beta, y, &incy);
 }
       
-int solve(double **A, double *B, int n) {
-  int lda=n;
-  int ldb=n;
+int solve(double **A, double *B, size_t n) {
+  int n_=(int) n;
+  int lda=n_;
+  int ldb=n_;
   int nrhs=1;
   int info=0;
-  int ipiv[n];
-  FNAME(dgesv)(&n, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
+  static bool first = true;
+  static int *ipiv;
+  
+  if(first) ipiv = new int[n];
+  
+  FNAME(dgesv)(&n_, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
   if(info != 0) {
     cout << "Error in LS. Error code: " << info << endl;
     exit(1);
