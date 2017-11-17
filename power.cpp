@@ -559,7 +559,7 @@ void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   delete [] axic;
 }
 
-void t2s_t1s_driver(double* xic, size_t dim, System* sys, int h, double **J, double*** H) {
+void t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, double*** H) {
   // t2s* axic = new t2s [dim];
   for(size_t i = 0; i < dim; ++i) {
     t2s* axic = new t2s [dim];
