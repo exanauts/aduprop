@@ -29,7 +29,7 @@ struct System {
   double xline;
 };
 
-void t1s_driver(double* xic, size_t dim, System* sys, int h, double** J);
+void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J);
 
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T* const F) {
@@ -449,7 +449,9 @@ void jactest(double* xold, size_t dim, System* sys, double h) {
   }
 
   // Evaluate jacobian
-  double J[dim][dim];
+  double** J = new double*[dim];
+  J[0] = new double[dim*dim];
+  for(size_t i = 0; i < dim ; ++i) J[i] = J[0] + i * dim;
 
   for (size_t j = 0; j < dim; ++j) {
     x[j].setGradient(1.0);
@@ -493,7 +495,7 @@ void jactest(double* xold, size_t dim, System* sys, double h) {
 }
 
 // Driver for accumulating Jacobian using FD
-void fdJ_driver(double* xic, size_t dim, System* sys, int h, double** J) {
+void fdJ_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
   double pert=1e-8;
@@ -507,11 +509,12 @@ void fdJ_driver(double* xic, size_t dim, System* sys, int h, double** J) {
     integrate(xpert2, dim, sys, h);
     for(size_t j = 0 ; j < dim ; ++j) J[i][j]=(xpert1[j]-xpert2[j])/pert;
   }
+  integrate(xic, dim, sys, h);
   delete [] xpert1;  
   delete [] xpert2;  
 }
 
-void fdH_driver(double* xic, size_t dim, System* sys, int h, double*** H) {
+void fdH_driver(double* xic, size_t dim, System* sys, double h, double*** H) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
   double **Jpert1 = new double*[dim];
@@ -541,9 +544,9 @@ void fdH_driver(double* xic, size_t dim, System* sys, int h, double*** H) {
 }
 
 // Driver for accumulating Jacobian using AD
-void t1s_driver(double* xic, size_t dim, System* sys, int h, double** J) {
+void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J) {
+  t1s* axic = new t1s [dim];
   for(size_t i = 0; i < dim; ++i) {
-    t1s* axic = new t1s [dim];
     for(size_t j = 0; j < dim ; ++j) {
       axic[j] = xic[j];
       axic[j].setGradient(0.0);
@@ -551,11 +554,13 @@ void t1s_driver(double* xic, size_t dim, System* sys, int h, double** J) {
     axic[i].setGradient(1.0);
     t1s_integrate(axic, dim, sys, h);
     for(size_t j = 0; j < dim ; ++j) J[i][j] = axic[j].getGradient();
-    delete [] axic;
   }
+  for(size_t i = 0; i < dim ; i++) xic[i] = axic[i].getValue();
+  delete [] axic;
 }
 
 void t2s_t1s_driver(double* xic, size_t dim, System* sys, int h, double **J, double*** H) {
+  // t2s* axic = new t2s [dim];
   for(size_t i = 0; i < dim; ++i) {
     t2s* axic = new t2s [dim];
     for(size_t j = 0; j < dim ; ++j) {
@@ -581,6 +586,8 @@ void t2s_t1s_driver(double* xic, size_t dim, System* sys, int h, double **J, dou
     }
     delete [] axic;
   }
+  // for(size_t i = 0; i < dim ; i++) xic[i] = axic[i].value().value();
+  // delete [] axic;
 }
 
 int main(int nargs, char** args) {
@@ -588,11 +595,10 @@ int main(int nargs, char** args) {
   
   // Define state arrays
   size_t dim = 12;
-  double h = 4.0;
+  double h = 0.004;
   
   double *xold = new double [dim];
-  double *y = new double [dim];
-  
+  double *x = new double [dim];
   
   // System parameters.
 
@@ -649,11 +655,12 @@ int main(int nargs, char** args) {
       H[i][j] = H[0][0] + i * dim * dim + j * dim;
     }
   }
-  t1s_driver(xold, dim, &sys, h, J);
+  for(size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  t1s_driver(x, dim, &sys, h, J);
   cout << "Function using AD" << endl;
   cout << "-----------------" << endl;
   for(size_t i = 0; i < dim; ++i) {
-    cout << y[i] << " ";
+    cout << xold[i] << " ";
   }
   cout << endl;
   cout << endl;
@@ -673,7 +680,8 @@ int main(int nargs, char** args) {
       J[i][j] = 0.0;
     }  
   }
-  t2s_t1s_driver(xold, dim, &sys, h, J, H);
+  for(size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  t2s_t1s_driver(x, dim, &sys, h, J, H);
   cout << "J" << endl;
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
@@ -691,11 +699,12 @@ int main(int nargs, char** args) {
     cout << endl;
   }
   cout << endl;
-  fdJ_driver(xold, dim, &sys, h, J);
+  for(size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  fdJ_driver(x, dim, &sys, h, J);
   cout << "Function using FD" << endl;
   cout << "-----------------" << endl;
   for(size_t i = 0; i < dim; ++i) {
-    cout << y[i] << " ";
+    cout << xold[i] << " ";
   }
   cout << endl;
   cout << endl;
@@ -711,7 +720,8 @@ int main(int nargs, char** args) {
   cout << endl;
   cout << "Hessian using FD" << endl;
   cout << "-----------------" << endl;
-  fdH_driver(xold, dim, &sys, h, H);
+  for(size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  fdH_driver(x, dim, &sys, h, H);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
       for(size_t k = 0; k < dim; ++k) {
@@ -727,6 +737,6 @@ int main(int nargs, char** args) {
   delete [] J[0];
   delete [] J;
   delete [] xold;
-  delete [] y;
+  delete [] x;
   return 0;
 }
