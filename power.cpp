@@ -25,6 +25,16 @@ double **t2_pJ;
 double **t3_t2_pJ;
 double **t2_t1_pJ;
 double **t3_t2_t1_pJ;
+double **tmp_pJ;
+
+t3s *t3s_xold; t3s *t3s_y;
+t3s **t3s_J;
+
+t2s *t2s_xold; t2s *t2s_y;
+t2s **t2s_J;
+
+t1s *t1s_xold; t1s *t1s_y;
+t1s **t1s_J;
 
 void init(size_t dim) {
   py = new double[dim];
@@ -44,13 +54,64 @@ void init(size_t dim) {
   t2_t1_pJ = new double* [dim];
   t3_t2_t1_pJ = new double* [dim];
   pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    pJ[i] = pJ[0] + dim * i;
+  }
   t3_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t3_pJ[i] = t3_pJ[0] + dim * i;
+  }
   t1_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t1_pJ[i] = t1_pJ[0] + dim * i;
+  }
   t3_t1_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t3_t1_pJ[i] = t3_t1_pJ[0] + dim * i;
+  }
   t2_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t2_pJ[i] = t2_pJ[0] + dim * i;
+  }
   t3_t2_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t3_t2_pJ[i] = t3_t2_pJ[0] + dim * i;
+  }
   t2_t1_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t2_t1_pJ[i] = t2_t1_pJ[0] + dim * i;
+  }
   t3_t2_t1_pJ[0] = new double [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t3_t2_t1_pJ[i] = t3_t2_t1_pJ[0] + dim * i;
+  }
+  
+  t3s_xold = new t3s [dim];
+  t3s_y = new t3s [dim];
+  t3s_J = new t3s* [dim];
+  t3s_J[0] = new t3s [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t3s_J[i] = t3s_J[0] + dim * i;
+  }
+  t2s_xold = new t2s [dim];
+  t2s_y = new t2s [dim];
+  t2s_J = new t2s* [dim];
+  t2s_J[0] = new t2s [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t2s_J[i] = t2s_J[0] + dim * i;
+  }
+  t1s_xold = new t1s [dim];
+  t1s_y = new t1s [dim];
+  t1s_J = new t1s* [dim];
+  t1s_J[0] = new t1s [dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    t1s_J[i] = t1s_J[0] + dim * i;
+  }
+  tmp_pJ = new double*[dim];
+  tmp_pJ[0] = new double[dim*dim];
+  for(size_t i = 0; i < dim; ++i) {
+    tmp_pJ[i] = tmp_pJ[0] + dim * i;
+  }
 }
 
 void destroy() {
@@ -63,6 +124,20 @@ void destroy() {
   delete [] t2_pJ; delete [] t2_t1_pJ; 
   delete [] t3_t2_pJ; delete [] t3_t2_t1_pJ; 
   
+  delete [] tmp_pJ[0];
+  delete [] tmp_pJ;
+  
+  delete [] t3s_xold; 
+  delete [] t3s_y;
+  delete [] t3s_J[0]; delete [] t3s_J;
+  
+  delete [] t2s_xold; 
+  delete [] t2s_y;
+  delete [] t2s_J[0]; delete [] t2s_J;
+  
+  delete [] t1s_xold; 
+  delete [] t1s_y;
+  delete [] t1s_J[0]; delete [] t1s_J;
 }
 
 struct System {
@@ -291,50 +366,36 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
   int iteration = 0;
-  t3s *xold = new t3s [dim];
-  t3s *y = new t3s [dim];
   for (size_t i = 0; i < dim; ++i) {
-    xold[i] = x[i];
+    t3s_xold[i] = x[i];
   }
   
-  residual_beuler<t3s>(x, xold, sys, h, y);
+  residual_beuler<t3s>(x, t3s_xold, sys, h, t3s_y);
   
-  t3s **J = new t3s* [dim];
-  J[0] = new t3s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    J[i] = J[0] + dim * i;
-  }
-  for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
+  for(size_t i = 0 ; i < dim*dim ; ++i) t3s_J[0][i]=0;
   
-  jac_beuler<t3s>(x, xold, sys, h, J);
+  jac_beuler<t3s>(x, t3s_xold, sys, h, t3s_J);
   
   // Get the values and tangents out for both J and y
   for(size_t i = 0; i < dim; ++i) {
-    pJ[i] = pJ[0] + dim * i;
-    t3_pJ[i] = t3_pJ[0] + dim * i;
-    t1_pJ[i] = t1_pJ[0] + dim * i;
-    t3_t1_pJ[i] = t3_t1_pJ[0] + dim * i;
-    t2_pJ[i] = t2_pJ[0] + dim * i;
-    t3_t2_pJ[i] = t3_t2_pJ[0] + dim * i;
-    t2_t1_pJ[i] = t2_t1_pJ[0] + dim * i;
-    t3_t2_t1_pJ[i] = t3_t2_t1_pJ[0] + dim * i;
-    py[i] = y[i].value().value().value();
-    t3_py[i] = y[i].gradient().value().value();
-    t1_py[i] = y[i].value().value().gradient();
-    t3_t1_py[i] = y[i].gradient().value().gradient();
-    t2_py[i] = y[i].value().gradient().value();
-    t3_t2_py[i] = y[i].gradient().gradient().value();
-    t2_t1_py[i] = y[i].value().gradient().gradient();
-    t3_t2_t1_py[i] = y[i].gradient().gradient().gradient();
+    py[i] = t3s_y[i].value().value().value();
+    t3_py[i] = t3s_y[i].gradient().value().value();
+    t1_py[i] = t3s_y[i].value().value().gradient();
+    t3_t1_py[i] = t3s_y[i].gradient().value().gradient();
+    t2_py[i] = t3s_y[i].value().gradient().value();
+    t3_t2_py[i] = t3s_y[i].gradient().gradient().value();
+    t2_t1_py[i] = t3s_y[i].value().gradient().gradient();
+    t3_t2_t1_py[i] = t3s_y[i].gradient().gradient().gradient();
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
-      t3_pJ[i][j] = J[i][j].gradient().value().value();
-      t1_pJ[i][j] = J[i][j].value().value().gradient();
-      t3_t1_pJ[i][j] = J[i][j].gradient().value().gradient();
-      t2_pJ[i][j] = J[i][j].value().gradient().value();
-      t3_t2_pJ[i][j] = J[i][j].gradient().gradient().value();
-      t2_t1_pJ[i][j] = J[i][j].value().gradient().gradient();
-      t3_t2_t1_pJ[i][j] = J[i][j].gradient().gradient().gradient();
+      pJ[i][j] = t3s_J[i][j].value().value().value();
+      tmp_pJ[i][j] = t3s_J[i][j].value().value().value();
+      t3_pJ[i][j] = t3s_J[i][j].gradient().value().value();
+      t1_pJ[i][j] = t3s_J[i][j].value().value().gradient();
+      t3_t1_pJ[i][j] = t3s_J[i][j].gradient().value().gradient();
+      t2_pJ[i][j] = t3s_J[i][j].value().gradient().value();
+      t3_t2_pJ[i][j] = t3s_J[i][j].gradient().gradient().value();
+      t2_t1_pJ[i][j] = t3s_J[i][j].value().gradient().gradient();
+      t3_t2_t1_pJ[i][j] = t3s_J[i][j].gradient().gradient().gradient();
     }
   }
 
@@ -349,19 +410,19 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t1_py,dim);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t2_py,dim);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t3_py,dim);
@@ -380,21 +441,21 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t2_t1_py,dim);
   
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t3_t2_py,dim);
   
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value( ).value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t3_t1_py,dim);
@@ -409,63 +470,51 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value().value();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t3_t2_t1_py,dim);
   
   // Put x and t1_x back into the t1s type
   for(size_t i = 0; i < dim; ++i) {
-    y[i].value().value().value() = py[i];
-    y[i].gradient().value().value() = t3_py[i];
-    y[i].value().gradient().gradient() = t2_t1_py[i];
-    y[i].gradient().gradient().gradient() = t3_t2_t1_py[i];
-    y[i].value().value().gradient() = t1_py[i];
-    y[i].gradient().value().gradient() = t3_t1_py[i];
-    y[i].value().gradient().value() = t2_py[i];
-    y[i].gradient().gradient().value() = t3_t2_py[i];
-    x[i]=x[i]-y[i];
+    t3s_y[i].value().value().value() = py[i];
+    t3s_y[i].gradient().value().value() = t3_py[i];
+    t3s_y[i].value().gradient().gradient() = t2_t1_py[i];
+    t3s_y[i].gradient().gradient().gradient() = t3_t2_t1_py[i];
+    t3s_y[i].value().value().gradient() = t1_py[i];
+    t3s_y[i].gradient().value().gradient() = t3_t1_py[i];
+    t3s_y[i].value().gradient().value() = t2_py[i];
+    t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
+    x[i]=x[i]-t3s_y[i];
   }
-  delete [] xold; delete [] y;
-  delete [] J[0]; delete [] J;
 }
 
 void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
   int iteration = 0;
-  t2s *xold = new t2s [dim];
-  t2s *y = new t2s [dim];
   for (size_t i = 0; i < dim; ++i) {
-    xold[i] = x[i];
+    t2s_xold[i] = x[i];
   }
   
-  residual_beuler<t2s>(x, xold, sys, h, y);
+  residual_beuler<t2s>(x, t2s_xold, sys, h, t2s_y);
   
-  t2s **J = new t2s* [dim];
-  J[0] = new t2s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    J[i] = J[0] + dim * i;
-  }
-  for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
+  for(size_t i = 0 ; i < dim*dim ; ++i) t2s_J[0][i]=0;
   
-  jac_beuler<t2s>(x, xold, sys, h, J);
+  jac_beuler<t2s>(x, t2s_xold, sys, h, t2s_J);
   
   // Get the values and tangents out for both J and y
   for(size_t i = 0; i < dim; ++i) {
-    pJ[i] = pJ[0] + dim * i;
-    t1_pJ[i] = t1_pJ[0] + dim * i;
-    t2_pJ[i] = t2_pJ[0] + dim * i;
-    t2_t1_pJ[i] = t2_t1_pJ[0] + dim * i;
-    py[i] = y[i].value().value();
-    t1_py[i] = y[i].value().gradient();
-    t2_py[i] = y[i].gradient().value();
-    t2_t1_py[i] = y[i].gradient().gradient();
+    py[i] = t2s_y[i].value().value();
+    t1_py[i] = t2s_y[i].value().gradient();
+    t2_py[i] = t2s_y[i].gradient().value();
+    t2_t1_py[i] = t2s_y[i].gradient().gradient();
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value();
-      t1_pJ[i][j] = J[i][j].value().gradient();
-      t2_pJ[i][j] = J[i][j].gradient().value();
-      t2_t1_pJ[i][j] = J[i][j].gradient().gradient();
+      pJ[i][j] = t2s_J[i][j].value().value();
+      tmp_pJ[i][j] = t2s_J[i][j].value().value();
+      t1_pJ[i][j] = t2s_J[i][j].value().gradient();
+      t2_pJ[i][j] = t2s_J[i][j].gradient().value();
+      t2_t1_pJ[i][j] = t2s_J[i][j].gradient().gradient();
     }
   }
 
@@ -479,13 +528,13 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value();
+      pJ[i][j] = tmp_pJ[i][j]; 
     }
   }
   ierr = solve(pJ,t1_py,dim);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value();
+      pJ[i][j] = tmp_pJ[i][j]; 
     }
   }
   ierr = solve(pJ,t2_py,dim);
@@ -494,57 +543,47 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
   decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].value().value();
+      pJ[i][j] = tmp_pJ[i][j]; 
     }
   }
   ierr = solve(pJ,t2_t1_py,dim);
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
-    y[i] = py[i];
-    y[i].gradient().gradient() = t2_t1_py[i];
-    y[i].value().gradient() = t1_py[i];
-    y[i].gradient().value() = t2_py[i];
-    x[i]=x[i]-y[i];
+    t2s_y[i] = py[i];
+    t2s_y[i].gradient().gradient() = t2_t1_py[i];
+    t2s_y[i].value().gradient() = t1_py[i];
+    t2s_y[i].gradient().value() = t2_py[i];
+    x[i]=x[i]-t2s_y[i];
     // cout << "py: " << py[i] << " t2_t1_py: " << t2_t1_py[i];
     // cout << " t1_py: " << t1_py[i] << " t2_py: " << t2_py[i];
     // cout << endl;
   }
   // cout << endl;
-  delete [] xold; delete [] y;
-  delete [] J[0]; delete [] J;
 }
 
 void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
   int iteration = 0;
-  t1s *xold = new t1s [dim];
-  t1s *y = new t1s [dim];
   for (size_t i = 0; i < dim; ++i) {
-    xold[i] = x[i];
+    t1s_xold[i] = x[i];
   }
   
-  residual_beuler<t1s>(x, xold, sys, h, y);
+  residual_beuler<t1s>(x, t1s_xold, sys, h, t1s_y);
   
-  t1s **J = new t1s* [dim];
-  J[0] = new t1s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    J[i] = J[0] + dim * i;
-  }
-  for(size_t i = 0 ; i < dim*dim ; ++i) J[0][i]=0;
+  for(size_t i = 0 ; i < dim*dim ; ++i) t1s_J[0][i]=0;
   
-  jac_beuler<t1s>(x, xold, sys, h, J);
+  jac_beuler<t1s>(x, t1s_xold, sys, h, t1s_J);
   
   // Get the values and tangents out for both J and y
   for(size_t i = 0; i < dim; ++i) {
-    pJ[i] = pJ[0] + dim * i;
-    t1_pJ[i] = t1_pJ[0] + dim * i;
-    py[i] = y[i].getValue();
-    t1_py[i] = y[i].getGradient();
+    py[i] = t1s_y[i].getValue();
+    t1_py[i] = t1s_y[i].getGradient();
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].getValue();
-      t1_pJ[i][j] = J[i][j].getGradient();
+      pJ[i][j] = t1s_J[i][j].getValue();
+      tmp_pJ[i][j] = t1s_J[i][j].getValue();
+      t1_pJ[i][j] = t1s_J[i][j].getGradient();
     }
   }
 
@@ -557,7 +596,7 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = J[i][j].getValue();
+      pJ[i][j] = tmp_pJ[i][j];
     }
   }
   ierr = solve(pJ,t1_py,dim);
@@ -565,14 +604,12 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
-    y[i] = py[i];
-    y[i].setGradient(t1_py[i]);
-    x[i]=x[i]-y[i];
+    t1s_y[i] = py[i];
+    t1s_y[i].setGradient(t1_py[i]);
+    x[i]=x[i]-t1s_y[i];
     // cout << x[i] << " " << y[i] << " " << endl;
   }
   // cout << endl;
-  delete [] xold; delete [] y; 
-  delete [] J[0]; delete [] J;
 }
 
 void integrate(double* x, size_t dim, System* sys, double h) {
@@ -593,7 +630,7 @@ void integrate(double* x, size_t dim, System* sys, double h) {
   for(size_t i = 0; i < dim; ++i)
     J[i] = J[0] + dim * i;
 
-  for(int i = 0; i < dim*dim; ++i)
+  for(size_t i = 0; i < dim*dim; ++i)
     J[0][i] = 0;
   
   jac_beuler<double>(x, xold, sys, h, J);
