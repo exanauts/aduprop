@@ -26,7 +26,7 @@ double **t3_t2_pJ;
 double **t2_t1_pJ;
 double **t3_t2_t1_pJ;
 
-void init(int dim) {
+void init(size_t dim) {
   py = new double[dim];
   t3_py = new double[dim];
   t1_py = new double[dim];
@@ -415,7 +415,6 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   ierr = solve(pJ,t3_t2_t1_py,dim);
   
   // Put x and t1_x back into the t1s type
-  // cout << "New x and step" << endl;
   for(size_t i = 0; i < dim; ++i) {
     y[i].value().value().value() = py[i];
     y[i].gradient().value().value() = t3_py[i];
@@ -426,11 +425,9 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
     y[i].value().gradient().value() = t2_py[i];
     y[i].gradient().gradient().value() = t3_t2_py[i];
     x[i]=x[i]-y[i];
-    // cout << "py: " << py[i] << " t2_t1_py: " << t2_t1_py[i];
-    // cout << " t1_py: " << t1_py[i] << " t2_py: " << t2_py[i];
-    // cout << endl;
   }
-  // cout << endl;
+  delete [] xold; delete [] y;
+  delete [] J[0]; delete [] J;
 }
 
 void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
@@ -514,6 +511,8 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
     // cout << endl;
   }
   // cout << endl;
+  delete [] xold; delete [] y;
+  delete [] J[0]; delete [] J;
 }
 
 void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
@@ -538,12 +537,6 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   jac_beuler<t1s>(x, xold, sys, h, J);
   
   // Get the values and tangents out for both J and y
-  double *py = new double[dim];
-  double *t1_py = new double[dim];
-  double **pJ = new double* [dim];
-  double **t1_pJ = new double* [dim];
-  pJ[0] = new double [dim*dim];
-  t1_pJ[0] = new double [dim*dim];
   for(size_t i = 0; i < dim; ++i) {
     pJ[i] = pJ[0] + dim * i;
     t1_pJ[i] = t1_pJ[0] + dim * i;
@@ -578,9 +571,8 @@ void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
     // cout << x[i] << " " << y[i] << " " << endl;
   }
   // cout << endl;
-  delete [] xold; delete [] y; delete [] py; delete [] t1_py;
-  delete [] pJ[0]; delete [] pJ; delete [] t1_pJ[0];
-  delete [] t1_pJ; delete [] J[0]; delete [] J;
+  delete [] xold; delete [] y; 
+  delete [] J[0]; delete [] J;
 }
 
 void integrate(double* x, size_t dim, System* sys, double h) {
