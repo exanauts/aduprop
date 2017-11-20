@@ -79,7 +79,10 @@ int solve(double **A, double *B, size_t n) {
   static bool first = true;
   static int *ipiv;
   
-  if(first) ipiv = new int[n];
+  if(first) {
+    ipiv = new int[n];
+    first = false;
+  }
   
   FNAME(dgesv)(&n_, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
   if(info != 0) {
