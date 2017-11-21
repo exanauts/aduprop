@@ -1,4 +1,4 @@
-CFLAGS=-g -O0 -Wall -g -std=c++11 -I${CODI_DIR}/include
+CFLAGS=-O0 -Wall -g -std=c++11 -I${CODI_DIR}/include
 
 CXX=clang++
 
