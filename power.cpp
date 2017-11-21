@@ -785,6 +785,7 @@ void fdT_driver(double* xic, size_t dim, System* sys, double h, double**** T) {
   }
   double pert=1e-8;
   for(size_t i = 0 ; i < dim ; ++i) {
+    cout << "Computing tensor. " << (double) i*(double) 100.0/(double) dim << "\% done." << endl;
     for(size_t j = 0 ; j < dim ; ++j) xpert1[j] = xic[j];
     for(size_t j = 0 ; j < dim ; ++j) xpert2[j] = xic[j];
     xpert1[i] += pert/2.0;
@@ -857,6 +858,7 @@ void t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, 
 void t3s_t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, double*** H, double ****T) {
   t3s* axic = new t3s [dim];
   for(size_t i = 0; i < dim; ++i) {
+    cout << "Computing tensor. " << (double) i*(double) 100.0/(double) dim << "\% done." << endl;
     for(size_t j = 0; j < dim ; ++j) {
       for(size_t k = 0; k < dim ; ++k) {
         for(size_t l = 0; l < dim ; ++l) {
