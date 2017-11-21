@@ -1,32 +1,62 @@
+/*!
+   \file "power.cpp"
+   \brief "Jacobian, Hessian and Tensor accumulation using Automatic
+           Differentiation."
+   \author "Adrian Maldonado and Michel Schanen"
+   \date 21/11/2017
+*/
+
 #include <cmath>
+// AD library used
 #include <codi.hpp>
 #include <iostream>
+// Rudimentary linear solver interface
 #include "linsolve.hpp"
 
 using namespace std;
 
+// First, second and third order AD datatype
 typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
 
-double *py; 
-double *t3_py;
-double *t1_py;
-double *t3_t1_py;
-double *t2_py;
-double *t3_t2_py;
-double *t2_t1_py;
-double *t3_t2_t1_py;
-double **pJ;
-double **t3_pJ;
-double **t1_pJ;
-double **t3_t1_pJ;
-double **t2_pJ;
-double **t3_t2_pJ;
-double **t2_t1_pJ;
-double **t3_t2_t1_pJ;
-double **tmp_pJ;
+/*
+ * AD notation is used. Please refer to "The Art of Differentiating Computer
+ * Programs", by Uwe Naumann.
+ * 
+ * y = f(x)
+ * 1st order tangent-linear:
+ * y = f(x)
+ * y_1 = <f'(x), x_1> 
+ * 2nd order tangent-linear:
+ * y = f(x)
+ * y_2 = <f'(x), x_2> 
+ * y_1 = <f'(x), x_1> 
+ * y_(1,2) = <f''(x), x_1, x_2> + <f'(x), x_(1,2)> 
+ * 3rd order tangent-linear: You get the idea. There will be 8 variables form
+ * original variable.
+ */
+ 
+ // Passive variables used for the linear solver interface
+double *py; // Residual value 
+double *t3_py; // y_3
+double *t1_py; // y_1
+double *t3_t1_py; // y_(1,3)
+double *t2_py; // y_2
+double *t3_t2_py; // y_(2,3)
+double *t2_t1_py; // y_(1,2)
+double *t3_t2_t1_py; // y_(1,2,3)
+double **pJ; // Jacobian returned by jac_beuler
+double **t3_pJ; // J_3
+double **t1_pJ; // J_1
+double **t3_t1_pJ; // J_(1,3)
+double **t2_pJ; // J_2
+double **t3_t2_pJ; // J_(2,3)
+double **t2_t1_pJ; // J_(1,2)
+double **t3_t2_t1_pJ; // J_(1,2,3)
+double **tmp_pJ; // buffer to extract values from J
 
+// Active variables used in the intergration
 t3s *t3s_xold; t3s *t3s_y;
 t3s **t3s_J;
 
@@ -36,6 +66,7 @@ t2s **t2s_J;
 t1s *t1s_xold; t1s *t1s_y;
 t1s **t1s_J;
 
+// Allocation of all the variables above
 void init(size_t dim) {
   py = new double[dim];
   t3_py = new double[dim];
@@ -114,6 +145,8 @@ void init(size_t dim) {
   }
 }
 
+// Destruction of all the variables
+
 void destroy() {
   delete [] py; delete [] t3_py, delete [] t1_py;
   delete [] t3_t1_py;
@@ -163,6 +196,18 @@ struct System {
 void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J);
 void t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, double*** H);
 
+/*!
+   \brief "Generic residual function written by the user. All variables that
+   are on the computational path from an independent to dependent need to be of
+   type T. All other variables may be passive (double)."
+   \param x "New x"
+   \param xold "Old x"
+   \param F "Residual"
+   \param h "Discretization step"
+   \param sys "System parameters"
+   \pre "System new state x and old state xold"
+   \post "Residual F"
+*/
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T* const F) {
 
@@ -244,7 +289,16 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
 
 }
 
-
+/*!
+   \brief "User provided Jacobian"
+   \param x "New x"
+   \param xold "Old x"
+   \param J "Jacobian"
+   \param h "Discretization step"
+   \param sys "System parameters"
+   \pre "Input states x and xold"
+   \post "Jacobian J"
+*/
 template <class T> void jac_beuler(const T* const x, const T* const xold,
     System* const sys, const double h, T** const J) {
     
@@ -362,6 +416,14 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
 
 }
 
+/*!
+   \brief "3rd order time integration"
+   \param x "3rd order active input variable"
+   \param h "Discretization"
+   \param sys "System parameters"
+   \pre "Initial conditions with input tangents"
+   \post "New state x with 3rd order tangents"
+*/
 void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
@@ -399,7 +461,7 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
     }
   }
 
-  // Solve 1st order system for t1 and t2
+  // Solve 1st order system for t1 and t2 and t3
   int ierr = solve(pJ,py,dim);
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x 
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already 
@@ -407,7 +469,7 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   decmatmul(t1_pJ, py, t1_py, dim);
   decmatmul(t2_pJ, py, t2_py, dim);
   decmatmul(t3_pJ, py, t3_py, dim);
-  // Use the saved Jacobian. The matrix is the same for the 1st order LS
+  // Use the saved Jacobian. The matrix is the same for the 1st order LSs
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
@@ -427,6 +489,8 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   }
   ierr = solve(pJ,t3_py,dim);
   
+  // Build the 2nd order RHSs
+  
   decmatmul(t2_t1_pJ, py, t2_t1_py, dim);
   decmatmul(t1_pJ, t2_py, t2_t1_py, dim);
   decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
@@ -438,6 +502,8 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   decmatmul(t3_t1_pJ, py, t3_t1_py, dim);
   decmatmul(t1_pJ, t3_py, t3_t1_py, dim);
   decmatmul(t3_pJ, t1_py, t3_t1_py, dim);
+  
+  // Solve second order systems
   
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
@@ -460,6 +526,7 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   }
   ierr = solve(pJ,t3_t1_py,dim);
   
+  // Build 3rd order RHS
   decmatmul(t3_t1_pJ, t2_py, t3_t2_t1_py, dim);
   decmatmul(t1_pJ, t3_t2_py, t3_t2_t1_py, dim);
   decmatmul(t3_t2_t1_pJ, py, t3_t2_t1_py, dim);
@@ -473,9 +540,11 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ,t3_t2_t1_py,dim);
   
-  // Put x and t1_x back into the t1s type
+  // Solve 3rd order system
+  ierr = solve(pJ,t3_t2_t1_py,dim);
+
+  // Put the computed values and tangents back into the active type  
   for(size_t i = 0; i < dim; ++i) {
     t3s_y[i].value().value().value() = py[i];
     t3s_y[i].gradient().value().value() = t3_py[i];
@@ -489,6 +558,14 @@ void t3s_t2s_t1s_integrate(t3s* x, size_t dim, System* sys, double h) {
   }
 }
 
+/*!
+   \brief "2nd order time integration"
+   \param x "2nd order active input variable"
+   \param h "Discretization"
+   \param sys "System parameters"
+   \pre "Initial conditions with input tangents"
+   \post "New state x with 2nd order tangents"
+*/
 void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
@@ -518,11 +595,10 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
     }
   }
 
-  // Solve 1st order system for t1 and t2
+  // Solve original system
   int ierr = solve(pJ,py,dim);
-  // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x 
-  // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already 
-  // extracted above
+  
+  // Build 1st order RHSs
   decmatmul(t1_pJ, py, t1_py, dim);
   decmatmul(t2_pJ, py, t2_py, dim);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
@@ -531,6 +607,8 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
       pJ[i][j] = tmp_pJ[i][j]; 
     }
   }
+  
+  // Solve 1st order LSs
   ierr = solve(pJ,t1_py,dim);
   for(size_t i = 0; i < dim; ++i) {
     for(size_t j = 0; j < dim; ++j) {
@@ -538,6 +616,8 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
     }
   }
   ierr = solve(pJ,t2_py,dim);
+  
+  // Build 2nd order RHS
   decmatmul(t2_t1_pJ, py, t2_t1_py, dim);
   decmatmul(t1_pJ, t2_py, t2_t1_py, dim);
   decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
@@ -546,6 +626,8 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
       pJ[i][j] = tmp_pJ[i][j]; 
     }
   }
+  
+  // Solve 2nd order system
   ierr = solve(pJ,t2_t1_py,dim);
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
@@ -562,6 +644,14 @@ void t2s_t1s_integrate(t2s* x, size_t dim, System* sys, double h) {
   // cout << endl;
 }
 
+/*!
+   \brief "1st order time integration"
+   \param x "1st order active input variable"
+   \param h "Discretization"
+   \param sys "System parameters"
+   \pre "Initial conditions with input tangents"
+   \post "New state x with 1st order tangents"
+*/
 void t1s_integrate(t1s* x, size_t dim, System* sys, double h) {
   
   double eps = 1e-9;
@@ -655,6 +745,11 @@ void integrate(double* x, size_t dim, System* sys, double h) {
   delete [] J;
 }
 
+/*!
+   \brief "Test the user provided implementation of the Jacobian. Outputs the
+   handwritten Jacobian and the AD generated Jacobian based on residual_beuler"
+   \param xold "State xold"
+*/
 void jactest(double* xold, size_t dim, System* sys, double h) {
   t1s *x = new t1s[dim];
   t1s *axold = new t1s[dim];
@@ -710,7 +805,15 @@ void jactest(double* xold, size_t dim, System* sys, double h) {
   delete [] y;
 }
 
-// Driver for accumulating Jacobian using FD
+/*!
+   \brief "Driver for accumulating Jacobian using finite difference"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param J "Jacobian"
+   \pre "Input system and state"
+   \post "Jacobian"
+*/
 void fdJ_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -730,6 +833,16 @@ void fdJ_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   delete [] xpert2;  
 }
 
+/*!
+   \brief "Driver for accumulating Hessian using finite difference. To avoid
+   numerical issues it relies on Jacobian generated via AD"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param H "Hessian"
+   \pre "Input system and state"
+   \post "Hessian"
+*/
 void fdH_driver(double* xic, size_t dim, System* sys, double h, double*** H) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -759,6 +872,16 @@ void fdH_driver(double* xic, size_t dim, System* sys, double h, double*** H) {
   delete [] Jpert2[0]; delete [] Jpert2;
 }
 
+/*!
+   \brief "Driver for accumulating 3rd order tensor using finite difference. To avoid
+   numerical issues it relies on Hessian generated via AD"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param T "Tensor"
+   \pre "Input system and state"
+   \post "Tensor"
+*/
 void fdT_driver(double* xic, size_t dim, System* sys, double h, double**** T) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -811,7 +934,16 @@ void fdT_driver(double* xic, size_t dim, System* sys, double h, double**** T) {
   delete [] xpert1;    delete [] xpert2;
 }
 
-// Driver for accumulating Jacobian using AD
+/*!
+   \brief "Driver for accumulating Jacobian using AD. Go over all 
+   Cartesian basis vectors of tangent t1_xic and collect one Jacobian column after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param J "Jacobian"
+   \pre "Input system and state"
+   \post "Jacobian"
+*/
 void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   t1s* axic = new t1s [dim];
   for(size_t i = 0; i < dim; ++i) {
@@ -827,6 +959,16 @@ void t1s_driver(double* xic, size_t dim, System* sys, double h, double** J) {
   delete [] axic;
 }
 
+/*!
+   \brief "Driver for accumulating Hessian using AD. Go over all 
+   Cartesian basis vectors of the tangents t1_xic and t2_xic and collect one Hessian projection after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param J "Hessian"
+   \pre "Input system and state"
+   \post "Hessian"
+*/
 void t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, double*** H) {
   for(size_t i = 0; i < dim; ++i) {
     t2s* axic = new t2s [dim];
@@ -855,6 +997,17 @@ void t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, 
   }
 }
 
+/*!
+   \brief "Driver for accumulating 3rd order tensor using AD. Go over all 
+   Cartesian basis vectors of the tangents t1_xic, t2_xic and t3_xic 
+   and collect one tensor projection after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param J "tensor"
+   \pre "Input system and state"
+   \post "tensor"
+*/
 void t3s_t2s_t1s_driver(double* xic, size_t dim, System* sys, double h, double **J, double*** H, double ****T) {
   t3s* axic = new t3s [dim];
   for(size_t i = 0; i < dim; ++i) {

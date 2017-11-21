@@ -10,6 +10,9 @@ powerad: power.o
 power.o: power.cpp linsolve.hpp
 	$(CXX) $(CFLAGS) -c power.cpp
 
+doc: power.cpp linsolve.hpp doc/Doxyfile.in doc/mainpage.md
+	cd doc ; doxygen Doxyfile.in ; cd ..
+
 clean:
 	$(RM) *.o
 
