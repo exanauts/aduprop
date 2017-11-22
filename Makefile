@@ -1,14 +1,35 @@
-CFLAGS=-O0 -Wall -g -std=c++11 -I${CODI_DIR}/include
+CXX = clang++
+CFLAGS = -O0 -Wall -g -std=c++11 -I${CODI_DIR}/include
+LDLIBS = -llapack -lblas
 
-CXX=clang++
+
+HEADERS = linsolve.hpp alg.hpp
+
 
 all: powerad
 
-powerad: power.o
-	$(CXX) -o powerad power.o -llapack -lblas
+tests: alg_test
 
-power.o: power.cpp linsolve.hpp
+# MAIN PROGRAM
+
+powerad: power.o
+	$(CXX) -o powerad power.o $(LDLIBS)
+
+power.o: power.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c power.cpp
+
+alg.o: alg.cpp $(HEADERS)
+	$(CXX) $(CFLAGS) -c alg.cpp
+
+# TESTS
+
+alg_test: alg_test.o alg.o
+	$(CXX) -o alg_test alg_test.o alg.o $(LDLIBS)
+
+alg_test.o: alg_test.cpp $(HEADERS)
+	$(CXX) $(CFLAGS) -c alg_test.cpp
+
+# DOCUMENTATION
 
 doc: power.cpp linsolve.hpp doc/Doxyfile.in doc/mainpage.md
 	cd doc ; doxygen Doxyfile.in ; cd ..

@@ -16,10 +16,6 @@
 
 using namespace std;
 
-// First, second and third order AD datatype
-typedef codi::RealForwardGen<double> t1s;
-typedef codi::RealForwardGen<t1s> t2s;
-typedef codi::RealForwardGen<t2s> t3s;
 
 /*
  * AD notation is used. Please refer to "The Art of Differentiating Computer
