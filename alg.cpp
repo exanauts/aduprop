@@ -3,6 +3,16 @@
 #include <iostream>
 #include <iomanip>
 
+pVector::pVector(size_t nvals) {
+  data = (double*)malloc(nvals*sizeof(double));
+  n = nvals;
+}
+
+pVector::~pVector() {
+  if (data) free(data);
+}
+
+
 pMatrix::pMatrix(size_t nrows, size_t ncols) {
   data = (double*)malloc(ncols*nrows*sizeof(double));
   cols = ncols;
