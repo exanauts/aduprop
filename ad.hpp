@@ -32,15 +32,6 @@ double **t2_t1_pJ;
 double **t3_t2_t1_pJ;
 double **tmp_pJ;
 
-t3s *t3s_xold; t3s *t3s_y;
-t3s **t3s_J;
-
-t2s *t2s_xold; t2s *t2s_y;
-t2s **t2s_J;
-
-t1s *t1s_xold; t1s *t1s_y;
-t1s **t1s_J;
-
 #ifndef FNAME
 #ifndef __bg__
 #define FNAME(f) f ## _ 
@@ -140,28 +131,6 @@ void init(size_t dim) {
   for(size_t i = 0; i < dim; ++i) {
     t3_t2_t1_pJ[i] = t3_t2_t1_pJ[0] + dim * i;
   }
-  
-  t3s_xold = new t3s [dim];
-  t3s_y = new t3s [dim];
-  t3s_J = new t3s* [dim];
-  t3s_J[0] = new t3s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    t3s_J[i] = t3s_J[0] + dim * i;
-  }
-  t2s_xold = new t2s [dim];
-  t2s_y = new t2s [dim];
-  t2s_J = new t2s* [dim];
-  t2s_J[0] = new t2s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    t2s_J[i] = t2s_J[0] + dim * i;
-  }
-  t1s_xold = new t1s [dim];
-  t1s_y = new t1s [dim];
-  t1s_J = new t1s* [dim];
-  t1s_J[0] = new t1s [dim*dim];
-  for(size_t i = 0; i < dim; ++i) {
-    t1s_J[i] = t1s_J[0] + dim * i;
-  }
   tmp_pJ = new double*[dim];
   tmp_pJ[0] = new double[dim*dim];
   for(size_t i = 0; i < dim; ++i) {
@@ -181,26 +150,9 @@ void destroy() {
   
   delete [] tmp_pJ[0];
   delete [] tmp_pJ;
-  
-  delete [] t3s_xold; 
-  delete [] t3s_y;
-  delete [] t3s_J[0]; delete [] t3s_J;
-  
-  delete [] t2s_xold; 
-  delete [] t2s_y;
-  delete [] t2s_J[0]; delete [] t2s_J;
-  
-  delete [] t1s_xold; 
-  delete [] t1s_y;
-  delete [] t1s_J[0]; delete [] t1s_J;
 }
 // Decremental matmul
 void decmatmul(double **A, double *x, double *y, size_t n) {
-  // for(size_t i = 0; i < n; ++i) {
-  //   for(size_t j = 0; j < n; ++j) {
-  //     y[i] -= A[j][i] * x[j];
-  //   }
-  // }
   int n_=(int) n;
   char trans = 'N';
   double alpha = -1.0;
