@@ -1,6 +1,16 @@
+/*!
+   \file "power.cpp"
+   \brief "Jacobian, Hessian and Tensor accumulation using Automatic
+           Differentiation."
+   \author "Adrian Maldonado and Michel Schanen"
+   \date 21/11/2017
+*/
+
 #include <cmath>
+// AD library used
 #include <codi.hpp>
 #include <iostream>
+// Rudimentary linear solver interface
 #include "ad.hpp"
 
 using namespace std;
@@ -50,7 +60,7 @@ int main(int nargs, char** args) {
   xold[9] = 1.01531727676021699125;
   xold[10] = 1.0400000000000000000;
   xold[11] = 0.00000000000000000000;
-
+  
   // jactest(xold, dim, &sys, h);
   cout << "At point:" << endl;
   cout << "---------" << endl;
