@@ -1,10 +1,10 @@
 #include "alg.hpp"
-#include "linsolve.hpp"
 #include <iostream>
 #include <iomanip>
+#include "linsolve.hpp"
 
 pVector::pVector(size_t nvals) {
-  data = (double*)malloc(nvals*sizeof(double));
+  data = reinterpret_cast<double*>malloc(nvals*sizeof(double));
   n = nvals;
 }
 
@@ -14,7 +14,7 @@ pVector::~pVector() {
 
 
 pMatrix::pMatrix(size_t nrows, size_t ncols) {
-  data = (double*)malloc(ncols*nrows*sizeof(double));
+  data = reinterpret_cast<double*>malloc(ncols*nrows*sizeof(double));
   cols = ncols;
   rows = nrows;
 }
