@@ -18,14 +18,14 @@ typedef codi::RealForwardGen<t2s> t3s;
 
 // Passive vector definition
 
-class pVector {
+template <typename T> class pVector {
  public:
   pVector();
   explicit pVector(const size_t nvals);
   ~pVector();
 
-  void set(const size_t i, const double val);
-  double get(const size_t i);
+  void set(const size_t i, const T val);
+  T get(const size_t i);
   size_t dim() const;
   double* get_datap() const;
   void zeros();
@@ -37,15 +37,15 @@ class pVector {
   double* data;
 };
 
-inline size_t pVector::dim() const {
+template <typename T> inline size_t pVector<T>::dim() const {
   return n;
 }
 
-inline double* pVector::get_datap() const {
+template <> inline double* pVector<double>::get_datap() const {
   return data;
 }
 
-inline void pVector::zeros() {
+template <typename T> inline void pVector<T>::zeros() {
   for (size_t i = 0; i < n; ++i) {
     data[i] = 0.0;
   }
@@ -86,8 +86,8 @@ inline double* pMatrix::get_datap() const {
 
 // Function declarations
 
-void decmatmul(const pMatrix &A, const pVector &x, pVector &y);
-void LUsolve(pMatrix &A, pVector &b);
+void decmatmul(const pMatrix &A, const pVector<double> &x, pVector<double> &y);
+void LUsolve(pMatrix &A, pVector<double> &b);
 
 } // end of namespace
 

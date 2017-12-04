@@ -9,29 +9,29 @@ namespace alg {
 
 // VECTOR FUNCTION DEFINITIONS
 
-pVector::pVector() {
+template <typename T> pVector<T>::pVector() {
   data = NULL;
   n = 0;
 }
 
-pVector::pVector(const size_t nvals) {
+template <> pVector<double>::pVector(const size_t nvals) {
   data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
   n = nvals;
 }
 
-pVector::~pVector() {
+template <> pVector<double>::~pVector() {
   if (data) free(data);
 }
 
-void pVector::set(const size_t i, const double val) {
+template <typename T> void pVector<T>::set(const size_t i, const T val) {
   data[i] = val;
 }
 
-double pVector::get(const size_t i) {
+template <typename T> T pVector<T>::get(const size_t i) {
   return data[i];
 }
 
-void pVector::display() {
+template <typename T> void pVector<T>::display() {
   for (size_t i = 0; i < n; ++i) {
     std::cout << get(i) << std::endl;
   }
@@ -77,7 +77,8 @@ void pMatrix::display() {
 
 // LINEAR ALGEBRA FUNCTIONS
 
-void decmatmul(const pMatrix &A, const pVector &x, pVector &y) {
+void decmatmul(const pMatrix &A, const pVector<double> &x, 
+    pVector<double> &y) {
   // check for dimension consistency
   assert(A.ncols() == x.dim());
   assert(A.nrows() == y.dim());
@@ -100,7 +101,7 @@ void decmatmul(const pMatrix &A, const pVector &x, pVector &y) {
 
 }
 
-void LUsolve(pMatrix &A, pVector &b) {
+void LUsolve(pMatrix &A, pVector<double> &b) {
   // check for dimension consistency
   assert(A.ncols() == b.dim());
   assert(A.ncols() == A.nrows()); // square system
@@ -118,6 +119,8 @@ void LUsolve(pMatrix &A, pVector &b) {
   FNAME(dgesv)(&n, &nrhs, A_data, &lda, ipiv, b_data, &ldb, &info);
   assert(!info);
 }
+
+template class pVector<double>;
 
 } //  End of namespace
 
