@@ -1,7 +1,8 @@
 /*!
    \file "power.cpp"
    \brief "Jacobian, Hessian and Tensor accumulation using Automatic
-           Differentiation."
+           Differentiation. This is the main function where everything comes 
+           together"
    \author "Adrian Maldonado and Michel Schanen"
    \date 21/11/2017
 */

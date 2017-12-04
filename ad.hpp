@@ -1,3 +1,30 @@
+/*!
+\file "ad.hpp"
+
+\author "Adrian Maldonado and Michel Schanen"
+
+\date 21/11/2017
+
+\brief Driver for Jacobian, Hessian and 3rd order tensor provided by
+Automatic Differentiation. The drivers call the user provided residual, Jacobian
+and integration.
+
+We use the AD notation from "The Art of Differentiating Computer
+Programs", by Uwe Naumann.
+
+y = f(x)
+1st order tangent-linear:
+y = f(x)
+y_1 = <f'(x), x_1> 
+2nd order tangent-linear:
+y = f(x)
+y_2 = <f'(x), x_2> 
+y_1 = <f'(x), x_1> 
+y_(1,2) = <f''(x), x_1, x_2> + <f'(x), x_(1,2)> 
+3rd order tangent-linear has 8 statements. There will be 8 variables for every
+original variable.
+*/
+
 #ifndef ADUPROP_AD_HPP_
 #define ADUPROP_AD_HPP_
 #include <iostream>
@@ -322,7 +349,15 @@ template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
   }
   return 0;
 }
-// Driver for accumulating Jacobian using FD
+
+/*!
+   \brief "Driver for accumulating Jacobian using finite difference"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param J "Jacobian"
+   \pre "Input system and state"
+   \post "Jacobian"
+*/
 void fdJ_driver(double* xic, size_t dim, double h, double** J) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -342,6 +377,15 @@ void fdJ_driver(double* xic, size_t dim, double h, double** J) {
   delete [] xpert2;
 }
 
+/*!
+   \brief "Driver for accumulating Hessian using finite difference. To avoid
+   numerical issues it relies on Jacobian generated via AD"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param H "Hessian"
+   \pre "Input system and state"
+   \post "Hessian"
+*/
 void fdH_driver(double* xic, size_t dim, double h, double*** H) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -371,6 +415,16 @@ void fdH_driver(double* xic, size_t dim, double h, double*** H) {
   delete [] Jpert2[0]; delete [] Jpert2;
 }
 
+/*!
+   \brief "Driver for accumulating 3rd order tensor using finite difference. To avoid
+   numerical issues it relies on Hessian generated via AD"
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param sys "System parameters"
+   \param T "Tensor"
+   \pre "Input system and state"
+   \post "Tensor"
+*/
 void fdT_driver(double* xic, size_t dim, double h, double**** T) {
   double *xpert1 = new double[dim];
   double *xpert2 = new double[dim];
@@ -424,7 +478,15 @@ void fdT_driver(double* xic, size_t dim, double h, double**** T) {
   delete [] xpert1;    delete [] xpert2;
 }
 
-// Driver for accumulating Jacobian using AD
+/*!
+   \brief "Driver for accumulating Jacobian using AD. Go over all 
+   Cartesian basis vectors of tangent t1_xic and collect one Jacobian column after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param J "Jacobian"
+   \pre "Input system and state"
+   \post "Jacobian"
+*/
 void t1s_driver(double* xic, size_t dim, double h, double** J) {
   t1s* axic = new t1s[dim];
   for (size_t i = 0; i < dim; ++i) {
@@ -440,6 +502,15 @@ void t1s_driver(double* xic, size_t dim, double h, double** J) {
   delete [] axic;
 }
 
+/*!
+   \brief "Driver for accumulating Hessian using AD. Go over all 
+   Cartesian basis vectors of the tangents t1_xic and t2_xic and collect one Hessian projection after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param J "Hessian"
+   \pre "Input system and state"
+   \post "Hessian"
+*/
 void t2s_t1s_driver(double* xic, size_t dim, double h,
     double **J, double*** H) {
   for (size_t i = 0; i < dim; ++i) {
@@ -469,6 +540,16 @@ void t2s_t1s_driver(double* xic, size_t dim, double h,
   }
 }
 
+/*!
+   \brief "Driver for accumulating 3rd order tensor using AD. Go over all 
+   Cartesian basis vectors of the tangents t1_xic, t2_xic and t3_xic 
+   and collect one tensor projection after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param J "tensor"
+   \pre "Input system and state"
+   \post "tensor"
+*/
 void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
     double **J, double*** H, double ****T) {
   t3s* axic = new t3s[dim];
@@ -507,7 +588,11 @@ void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
 }
 
 #endif
-
+/*!
+   \brief "Test the user provided implementation of the Jacobian. Outputs the
+   handwritten Jacobian and the AD generated Jacobian based on residual_beuler"
+   \param xold "State xold"
+*/
 void jactest(double* xold, size_t dim, double h) {
   pVector<t1s> x = pVector<t1s>(dim);
   pVector<t1s> axold = pVector<t1s>(dim);
