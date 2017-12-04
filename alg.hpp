@@ -25,7 +25,7 @@ template <typename T> class pVector {
   ~pVector();
 
   void set(const size_t i, const T val);
-  T get(const size_t i);
+  T get(const size_t i) const;
   size_t dim() const;
   double* get_datap() const;
   void zeros();

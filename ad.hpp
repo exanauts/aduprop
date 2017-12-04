@@ -3,13 +3,14 @@
 #include <iostream>
 #include "alg.hpp"
 #include "user.hpp"
-#include "linsolve.hpp"
+//#include "linsolve.hpp"
 
 using namespace std;
 
 typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
+
 
 void t1s_driver(double* xic, size_t dim, double h, double** J);
 void t2s_t1s_driver(double* xic, size_t dim, double h, double **J, double*** H);
@@ -107,6 +108,8 @@ void destroy() {
   delete [] tmp_pJ[0];
   delete [] tmp_pJ;
 }
+
+#if 0
 
 template <class T> int adlinsolve(T **A, T *B, size_t n) {
   T t;
@@ -501,6 +504,8 @@ void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
   delete [] axic;
 }
 
+#endif
+
 void jactest(double* xold, size_t dim, double h) {
   t1s *x = new t1s[dim];
   t1s *axold = new t1s[dim];
@@ -518,8 +523,8 @@ void jactest(double* xold, size_t dim, double h) {
   for (size_t j = 0; j < dim; ++j) {
     x[j].setGradient(1.0);
     for (size_t i = 0; i < dim; ++i) {
-      residual_beuler<t1s>(x, axold, h, y);
-      J[i][j] = y[i].getGradient();
+      //residual_beuler<t1s>(x, axold, h, y);
+      //J[i][j] = y[i].getGradient();
     }
     x[j].setGradient(0.0);
   }
@@ -532,24 +537,18 @@ void jactest(double* xold, size_t dim, double h) {
     }
     cout << endl;
   }
+  
+  
+  // Hand coded jacobian
+
+  alg::pMatrix<double> Jhc(dim, dim);
+  alg::pVector<double> xold_hc(dim);
 
   cout << "HC Jacobian" << endl;
-  // Hand coded jacobian
-  t1s **Jhc = new t1s*[dim];
-  Jhc[0] = new t1s[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    Jhc[i] = Jhc[0] + dim * i;
-  }
-  for (size_t i = 0; i < dim*dim; ++i) Jhc[0][i]=0;
+  jac_beuler<double>(xold_hc, xold_hc, h, Jhc);
 
-  jac_beuler<t1s>(x, axold, h, Jhc);
-  // Print jacobian
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << Jhc[i][j] << " ";
-    }
-    cout << endl;
-  }
+  Jhc.display();
+
   delete [] x;
   delete [] axold;
   delete [] y;

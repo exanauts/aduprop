@@ -12,8 +12,8 @@ tests: alg_test
 
 # MAIN PROGRAM
 
-powerad: power.o
-	$(CXX) -o powerad power.o $(LDLIBS)
+powerad: power.o alg.o
+	$(CXX) -o powerad power.o alg.o $(LDLIBS)
 
 power.o: power.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c power.cpp

@@ -27,7 +27,7 @@ template <typename T> void pVector<T>::set(const size_t i, const T val) {
   data[i] = val;
 }
 
-template <typename T> T pVector<T>::get(const size_t i) {
+template <typename T> T pVector<T>::get(const size_t i) const {
   return data[i];
 }
 
@@ -66,8 +66,7 @@ template <typename T> double pMatrix<T>::get(const size_t i, const size_t j) {
 template <typename T> void pMatrix<T>::display() {
   for (size_t i = 0; i < rows; ++i) {
     for (size_t j = 0; j < cols; ++j) {
-      std::cout << std::setw(5) << std::setfill(' ') << std::setprecision(2)
-                  << get(i, j);
+      std::cout << get(i, j) << " ";
     }
     std::cout << "\n";
   }
