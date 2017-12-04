@@ -544,6 +544,8 @@ void jactest(double* xold, size_t dim, double h) {
   alg::pMatrix<double> Jhc(dim, dim);
   alg::pVector<double> xold_hc(dim);
 
+  for (size_t i = 0; i < dim; ++i) xold_hc.set(i, xold[i]);
+
   cout << "HC Jacobian" << endl;
   jac_beuler<double>(xold_hc, xold_hc, h, Jhc);
 
