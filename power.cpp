@@ -59,7 +59,8 @@ int main(int nargs, char** args) {
   xold[10] = 1.0400000000000000000;
   xold[11] = 0.00000000000000000000;
 
-  // jactest(xold, dim, &sys, h);
+  jactest(xold, dim, h);
+#if 0
   cout << "At point:" << endl;
   cout << "---------" << endl;
   for (size_t i = 0; i < dim; ++i) cout << xold[i] << " ";
@@ -228,5 +229,6 @@ int main(int nargs, char** args) {
   delete [] J;
   delete [] xold;
   delete [] x;
+#endif
   return 0;
 }

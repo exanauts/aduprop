@@ -3,12 +3,13 @@
 #include <iostream>
 #include "alg.hpp"
 #include "user.hpp"
+#include "linsolve.hpp"
 
 using namespace std;
 
-//typedef codi::RealForwardGen<double> t1s;
-//typedef codi::RealForwardGen<t1s> t2s;
-//typedef codi::RealForwardGen<t2s> t3s;
+typedef codi::RealForwardGen<double> t1s;
+typedef codi::RealForwardGen<t1s> t2s;
+typedef codi::RealForwardGen<t2s> t3s;
 
 void t1s_driver(double* xic, size_t dim, double h, double** J);
 void t2s_t1s_driver(double* xic, size_t dim, double h, double **J, double*** H);
