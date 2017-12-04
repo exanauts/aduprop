@@ -542,6 +542,8 @@ void jactest(double* xold, size_t dim, double h) {
     x_hc.set(i,xold[i]);
   }
 
+  for (size_t i = 0; i < dim; ++i) xold_hc.set(i, xold[i]);
+
   cout << "HC Jacobian" << endl;
   jac_beuler<double>(x_hc, xold_hc, h, Jhc);
 
