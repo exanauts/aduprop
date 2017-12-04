@@ -100,7 +100,24 @@ void decmatmul(const pMatrix &A, const pVector &x, pVector &y) {
 
 }
 
+void LUsolve(pMatrix &A, pVector &b) {
+  // check for dimension consistency
+  assert(A.ncols() == b.dim());
+  assert(A.ncols() == A.nrows()); // square system
+  
+  // BLAS option flags
+  int n = A.ncols();
+  double* A_data = A.get_datap();
+  double* b_data = b.get_datap();
+  int nrhs = 1;
+  int info = 0;
+  int* ipiv = reinterpret_cast<int*>(calloc(n, sizeof(int)));
+  int lda = n;
+  int ldb = n;
 
+  FNAME(dgesv)(&n, &nrhs, A_data, &lda, ipiv, b_data, &ldb, &info);
+  assert(!info);
+}
 
 } //  End of namespace
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "alg.hpp"
 
+#include <cassert>
 
 int main(int nargs, char** args) {
   
@@ -22,7 +23,7 @@ int main(int nargs, char** args) {
 
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
-      A.set(i, j, static_cast<double>(i + j));
+      A.set(i, j, static_cast<double>(pow(i + 1, j)));
     }
   }
 
@@ -31,13 +32,13 @@ int main(int nargs, char** args) {
   // Decremental multiplication
 
   alg::pVector y(dim);
- 
   y.zeros();
-  
-  y.display();
-
   alg::decmatmul(A, b, y);
-
   y.display();
+
+  // LU decomp
+
+  alg::LUsolve(A, b);
+  b.display();
 
 }

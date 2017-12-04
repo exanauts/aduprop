@@ -87,6 +87,7 @@ inline double* pMatrix::get_datap() const {
 // Function declarations
 
 void decmatmul(const pMatrix &A, const pVector &x, pVector &y);
+void LUsolve(pMatrix &A, pVector &b);
 
 } // end of namespace
 
