@@ -1,8 +1,18 @@
 #include "alg.hpp"
+#include "linsolve.hpp"
 #include <iostream>
 #include <iomanip>
+#include <cassert>
+
+
+namespace alg {
 
 // VECTOR FUNCTION DEFINITIONS
+
+pVector::pVector() {
+  data = NULL;
+  n = 0;
+}
 
 pVector::pVector(const size_t nvals) {
   data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
@@ -28,6 +38,12 @@ void pVector::display() {
 }
 
 // MATRIX DEFINITIONS
+
+pMatrix::pMatrix() {
+  data = NULL;
+  cols = 0;
+  rows = 0;
+}
 
 pMatrix::pMatrix(const size_t nrows, const size_t ncols) {
   data = reinterpret_cast<double*>(malloc(ncols*nrows*sizeof(double)));
@@ -56,3 +72,36 @@ void pMatrix::display() {
     std::cout << "\n";
   }
 }
+
+
+
+// LINEAR ALGEBRA FUNCTIONS
+
+void decmatmul(const pMatrix &A, const pVector &x, pVector &y) {
+  // check for dimension consistency
+  assert(A.ncols() == x.dim());
+  assert(A.nrows() == y.dim());
+  
+  // BLAS option flags
+  int n = A.ncols();
+  int m = A.nrows();
+  char trans = 'N';
+  double alpha = -1.0;
+  double beta = 1.0;
+  int incx = 1;
+  int incy = 1;
+
+  double* A_data = A.get_datap();
+  double* x_data = x.get_datap();
+  double* y_data = y.get_datap();
+
+  FNAME(dgemv)(&trans, &m, &n, &alpha, A_data, &n, x_data,
+      &incx, &beta, y_data, &incy);
+
+}
+
+
+
+} //  End of namespace
+
+//
