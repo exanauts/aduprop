@@ -8,6 +8,7 @@
 */
 
 #include <codi.hpp>
+#include "linsolve.hpp"
 
 // First, second and third order AD datatype
 typedef codi::RealForwardGen<double> t1s;
@@ -47,20 +48,5 @@ class pMatrix {
   size_t rows, cols;
   double* data;
 };
-
-
-// First order active matrix
-
-class t1Matrix {
- public:
-};
-
-class t2Matrix {
- public:
-};
-
-
-// MatVec
-
 
 #endif  // ADUPROP_ALG_HPP_

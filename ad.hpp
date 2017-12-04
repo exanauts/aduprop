@@ -1,13 +1,14 @@
 #ifndef ADUPROP_AD_HPP_
 #define ADUPROP_AD_HPP_
 #include <iostream>
+#include "alg.hpp"
 #include "user.hpp"
 
 using namespace std;
 
-typedef codi::RealForwardGen<double> t1s;
-typedef codi::RealForwardGen<t1s> t2s;
-typedef codi::RealForwardGen<t2s> t3s;
+//typedef codi::RealForwardGen<double> t1s;
+//typedef codi::RealForwardGen<t1s> t2s;
+//typedef codi::RealForwardGen<t2s> t3s;
 
 void t1s_driver(double* xic, size_t dim, double h, double** J);
 void t2s_t1s_driver(double* xic, size_t dim, double h, double **J, double*** H);
@@ -32,56 +33,6 @@ double **t2_t1_pJ;
 double **t3_t2_t1_pJ;
 double **tmp_pJ;
 
-#ifndef FNAME
-#ifndef __bg__
-#define FNAME(f) f ## _ 
-#else
-#define FNAME(f) f  // no underscores for fortran names on bgp
-#endif
-#endif
-
-// declarations for LAPACK and BLAS functions used to factor/solve:
-
-extern "C" void FNAME(dgesv)(int *n,
-      int *nrhs,
-      double A[],
-      int *lda,
-      int ipiv[],
-      double B[],
-      int *ldb,
-      int *info);   // should be 0 on exit
-
-extern "C" void FNAME(dsytrf)(char *uplo,
-      int *n,
-      double A[],
-      int *lda,
-      int ipiv[],
-      double work[],
-      int *lwork,
-      int *info);
-
-// dsytrs_() solves the system Ax = b using the factor obtained by dsytrf_().
-extern "C" void FNAME(dsytrs)(char *uplo,
-      int *n,
-      int *nrhs,
-      double A[],
-      int *lda,
-      int ipiv[],
-      double b[],
-      int *ldb,
-      int *info);
-
-extern "C" void FNAME(dgemv)(char *trans,
-      int *m,
-      int *n,
-      double *alpha,
-      double A[],
-      int *lda,
-      double *x,
-      int *incx,
-      double *beta,
-      double *y,
-      int *incy);
 
 void init(size_t dim) {
   py = new double[dim];
@@ -154,40 +105,6 @@ void destroy() {
   delete [] t3_t2_pJ; delete [] t3_t2_t1_pJ;
   delete [] tmp_pJ[0];
   delete [] tmp_pJ;
-}
-// Decremental matmul
-void decmatmul(double **A, double *x, double *y, size_t n) {
-  int n_ = static_cast<int>(n);
-  char trans = 'N';
-  double alpha = -1.0;
-  double beta = 1.0;
-  int incx = 1;
-  int incy = 1;
-  FNAME(dgemv)(&trans, &n_, &n_, &alpha,
-      &A[0][0], &n_, x, &incx, &beta, y, &incy);
-}
-
-int solve(double **A, double *B, size_t n) {
-  int n_ = static_cast<int>(n);
-  int lda = n_;
-  int ldb = n_;
-  int nrhs = 1;
-  int info = 0;
-  static bool first = true;
-  static int *ipiv;
-
-  if (first) {
-    ipiv = new int[n];
-    first = false;
-  }
-
-  FNAME(dgesv)(&n_, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
-
-  if (info != 0) {
-    cout << "Error in LS. Error code: " << info << endl;
-    exit(1);
-  }
-  return info;
 }
 
 template <class T> int adlinsolve(T **A, T *B, size_t n) {

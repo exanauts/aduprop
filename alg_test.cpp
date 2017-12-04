@@ -7,7 +7,7 @@ int main(int nargs, char** args) {
   
   size_t dim = 10;
 
-
+  //  Vector creation
   pVector b(dim);
 
   for (size_t i = 0; i < dim; ++i) {
@@ -15,6 +15,8 @@ int main(int nargs, char** args) {
   }
 
   b.display();
+
+  // Matrix creation
 
   pMatrix A(dim, dim);
 

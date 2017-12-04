@@ -3,7 +3,7 @@ CFLAGS = -O0 -Wall -g -std=c++11 -I${CODI_DIR}/include
 LDLIBS = -llapack -lblas
 
 
-HEADERS = ad.hpp user.hpp alg.hpp
+HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp
 
 
 all: powerad
