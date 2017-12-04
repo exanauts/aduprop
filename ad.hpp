@@ -604,13 +604,13 @@ void jactest(double* xold, size_t dim, double h) {
 
   // Evaluate jacobian
   pMatrix<double> J(dim, dim);
-  for (size_t j = 0; j < dim; ++j) {
-    x.get_datap()[j].setGradient(1.0);
-    for (size_t i = 0; i < dim; ++i) {
+  for (size_t i = 0; i < dim; ++i) {
+    x.get_datap()[i].setGradient(1.0);
+    for (size_t j = 0; j < dim; ++j) {
       residual_beuler<t1s>(x, axold, h, y);
-      J.set(i, j, y.get_datap()[i].getGradient());
+      J.set(i, j, y.get_datap()[j].getGradient());
     }
-    x.get_datap()[j].setGradient(0.0);
+    x.get_datap()[i].setGradient(0.0);
   }
 
   cout << "AD Jacobian" << endl;
