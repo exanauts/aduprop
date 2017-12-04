@@ -29,8 +29,8 @@ typedef struct System {
 
 System sys;
 
-template <class T> void residual_beuler(const T* const x, const T* const xold,
-    const double h, T* const F) {
+template <class T> void residual_beuler(const alg::pVector<T> &x, const alg::pVector<T> &xold,
+    const double h, alg::pVector<T> &F) {
 
   // (TEMP): Just put all the parameters here for now.
 
@@ -55,18 +55,18 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
   const double v0a = sys.v0a;
   const double xline = sys.xline;
 
-  const T e_qp     = x[0];
-  const T e_dp     = x[1];
-  const T phi_1d   = x[2];
-  const T phi_2q   = x[3];
-  const T w        = x[4];
-  const T delta    = x[5];
-  const T v_q      = x[6];
-  const T v_d      = x[7];
-  const T i_q      = x[8];
-  const T i_d      = x[9];
-  const T v1m      = x[10];
-  const T v1a      = x[11];
+  const T e_qp     = x.get(0);
+  const T e_dp     = x.get(1);
+  const T phi_1d   = x.get(2);
+  const T phi_2q   = x.get(3);
+  const T w        = x.get(4);
+  const T delta    = x.get(5);
+  const T v_q      = x.get(6);
+  const T v_d      = x.get(7);
+  const T i_q      = x.get(8);
+  const T i_d      = x.get(9);
+  const T v1m      = x.get(10);
+  const T v1a      = x.get(11);
 
   // Auxiliary variables.
   T psi_de, psi_qe;
@@ -78,35 +78,35 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
     (x_qp - x_ddp)/(x_qp - xl)*phi_2q;
 
   // Machine states
-  F[0] = (-e_qp + e_fd - (i_d - (-x_ddp + x_dp)*(-e_qp + i_d*(x_dp - xl) 
-    + phi_1d)/pow((x_dp - xl), 2.0))*(x_d - x_dp))/T_d0p;
-  F[1] = (-e_dp + (i_q - (-x_qdp + x_qp)*( e_dp + i_q*(x_qp - xl) 
-    + phi_2q)/pow((x_qp - xl), 2.0))*(x_q - x_qp))/T_q0p;
-  F[2] = ( e_qp - i_d*(x_dp - xl) - phi_1d)/T_d0dp;
-  F[3] = (-e_dp - i_q*(x_qp - xl) - phi_2q)/T_q0dp;
-  F[4] = (p_m - psi_de*i_q + psi_qe*i_d)/(2.0*H);
-  F[5] = 2.0*M_PI*60.0*w;
+  F.set(0, (-e_qp + e_fd - (i_d - (-x_ddp + x_dp)*(-e_qp + i_d*(x_dp - xl) 
+    + phi_1d)/pow((x_dp - xl), 2.0))*(x_d - x_dp))/T_d0p);
+  F.set(1, (-e_dp + (i_q - (-x_qdp + x_qp)*( e_dp + i_q*(x_qp - xl) 
+    + phi_2q)/pow((x_qp - xl), 2.0))*(x_q - x_qp))/T_q0p);
+  F.set(2, ( e_qp - i_d*(x_dp - xl) - phi_1d)/T_d0dp);
+  F.set(3, (-e_dp - i_q*(x_qp - xl) - phi_2q)/T_q0dp);
+  F.set(4, (p_m - psi_de*i_q + psi_qe*i_d)/(2.0*H));
+  F.set(5, 2.0*M_PI*60.0*w);
 
   // Stator currents
-  F[6] = i_d - ((x_ddp - xl)/(x_dp - xl)*e_qp + 
-    (x_dp - x_ddp)/(x_dp - xl)*phi_1d - v_q)/x_ddp;
-  F[7] = i_q - (-(x_qdp - xl)/(x_qp - xl)*e_dp + 
-    (x_qp - x_qdp)/(x_qp - xl)*phi_2q + v_d)/x_qdp;
+  F.set(6, i_d - ((x_ddp - xl)/(x_dp - xl)*e_qp + 
+    (x_dp - x_ddp)/(x_dp - xl)*phi_1d - v_q)/x_ddp);
+  F.set(7, i_q - (-(x_qdp - xl)/(x_qp - xl)*e_dp + 
+    (x_qp - x_qdp)/(x_qp - xl)*phi_2q + v_d)/x_qdp);
 
   // Stator voltages
-  F[8] = v_d - v1m*sin(delta - v1a);
-  F[9] = v_q - v1m*cos(delta - v1a);
+  F.set(8, v_d - v1m*sin(delta - v1a));
+  F.set(9, v_q - v1m*cos(delta - v1a));
 
-  F[10] = v_d*i_d + v_q*i_q - ((v1m*v0m)/xline)*sin(v1a - v0a);
-  F[11] = v_q*i_d - v_d*i_q - (v1m*v1m)/xline + ((v1m*v0m)/xline)*cos(v1a - v0a);
+  F.set(10, v_d*i_d + v_q*i_q - ((v1m*v0m)/xline)*sin(v1a - v0a));
+  F.set(11, v_q*i_d - v_d*i_q - (v1m*v1m)/xline + ((v1m*v0m)/xline)*cos(v1a - v0a));
 
   // Update residual for ODE equations
-  F[0] = x[0] - xold[0] - h*F[0];
-  F[1] = x[1] - xold[1] - h*F[1];
-  F[2] = x[2] - xold[2] - h*F[2];
-  F[3] = x[3] - xold[3] - h*F[3];
-  F[4] = x[4] - xold[4] - h*F[4];
-  F[5] = x[5] - xold[5] - h*F[5];
+  F.set(0, x.get(0) - xold.get(0) - h*F.get(0));
+  F.set(1, x.get(1) - xold.get(1) - h*F.get(1));
+  F.set(2, x.get(2) - xold.get(2) - h*F.get(2));
+  F.set(3, x.get(3) - xold.get(3) - h*F.get(3));
+  F.set(4, x.get(4) - xold.get(4) - h*F.get(4));
+  F.set(5, x.get(5) - xold.get(5) - h*F.get(5));
 
 }
 
@@ -250,7 +250,7 @@ template <class T> void integrate(T *x, size_t dim, double h) {
   
   jac_beuler<T>(x, xold, h, J);
   
-  ierr = adlinsolve<T>(J, y, dim);
+  // ierr = adlinsolve<T>(J, y, dim);
   
   if(ierr) {
     cout << "Linear solver error: " << ierr << endl;

@@ -1,5 +1,5 @@
-#include "alg.hpp"
 #include "linsolve.hpp"
+#include "alg.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cassert>
@@ -19,8 +19,17 @@ template <> pVector<double>::pVector(const size_t nvals) {
   n = nvals;
 }
 
+template <typename T> pVector<T>::pVector(const size_t nvals) {
+  data = new T[nvals];
+  n = nvals;
+}
+
 template <> pVector<double>::~pVector() {
   if (data) free(data);
+}
+
+template <typename T> pVector<T>::~pVector() {
+  if (data) delete [] data;
 }
 
 template <typename T> void pVector<T>::set(const size_t i, const T val) {
@@ -59,7 +68,7 @@ template <typename T> void pMatrix<T>::set(const size_t i, const size_t j, const
   data[j*rows + i] = val;
 }
 
-template <typename T> double pMatrix<T>::get(const size_t i, const size_t j) {
+template <typename T> T pMatrix<T>::get(const size_t i, const size_t j) {
   return data[j*rows + i];
 }
 
@@ -120,7 +129,9 @@ void LUsolve(pMatrix<double> &A, pVector<double> &b) {
 }
 
 template class pVector<double>;
+template class pVector<t1s>;
 template class pMatrix<double>;
+template class pMatrix<t1s>;
 
 } //  End of namespace
 

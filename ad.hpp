@@ -7,6 +7,8 @@
 
 using namespace std;
 
+using namespace alg;
+
 typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
@@ -507,50 +509,43 @@ void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
 #endif
 
 void jactest(double* xold, size_t dim, double h) {
-  t1s *x = new t1s[dim];
-  t1s *axold = new t1s[dim];
-  t1s *y = new t1s[dim];
+  pVector<t1s> x = pVector<t1s>(dim);
+  pVector<t1s> axold = pVector<t1s>(dim);
+  pVector<t1s> y = pVector<t1s>(dim);
   for (size_t i = 0; i < dim; ++i) {
-    axold[i] = xold[i];
-    x[i] = xold[i];
+    axold.set(i,xold[i]);
+    x.set(i,xold[i]);
   }
 
   // Evaluate jacobian
-  double** J = new double*[dim];
-  J[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) J[i] = J[0] + i * dim;
-
+  pMatrix<double> J(dim, dim);
   for (size_t j = 0; j < dim; ++j) {
-    x[j].setGradient(1.0);
+    x.get_datap()[j].setGradient(1.0);
     for (size_t i = 0; i < dim; ++i) {
-      //residual_beuler<t1s>(x, axold, h, y);
-      //J[i][j] = y[i].getGradient();
+      residual_beuler<t1s>(x, axold, h, y);
+      J.set(i, j, y.get_datap()[i].getGradient());
     }
-    x[j].setGradient(0.0);
+    x.get_datap()[j].setGradient(0.0);
   }
 
   cout << "AD Jacobian" << endl;
   // Print jacobian
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << J[i][j] << " ";
-    }
-    cout << endl;
-  }
-  
+  J.display();
   
   // Hand coded jacobian
 
-  alg::pMatrix<double> Jhc(dim, dim);
-  alg::pVector<double> xold_hc(dim);
+  pMatrix<double> Jhc(dim, dim);
+  pVector<double> xold_hc(dim);
+  pVector<double> x_hc(dim);
+  for (size_t i = 0; i < dim; ++i) {
+    xold_hc.set(i,xold[i]);
+    x_hc.set(i,xold[i]);
+  }
 
   cout << "HC Jacobian" << endl;
-  jac_beuler<double>(xold_hc, xold_hc, h, Jhc);
+  jac_beuler<double>(x_hc, xold_hc, h, Jhc);
 
   Jhc.display();
 
-  delete [] x;
-  delete [] axold;
-  delete [] y;
 }
 #endif  // ADUPROP_AD_HPP_

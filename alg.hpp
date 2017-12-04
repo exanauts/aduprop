@@ -27,21 +27,21 @@ template <typename T> class pVector {
   void set(const size_t i, const T val);
   T get(const size_t i) const;
   size_t dim() const;
-  double* get_datap() const;
+  T* get_datap() const;
   void zeros();
 
   void display();
 
  private:
   size_t n;
-  double* data;
+  T* data;
 };
 
 template <typename T> inline size_t pVector<T>::dim() const {
   return n;
 }
 
-template <> inline double* pVector<double>::get_datap() const {
+template <typename T> inline T* pVector<T>::get_datap() const {
   return data;
 }
 
@@ -61,8 +61,8 @@ template <typename T> class pMatrix {
 
   void set(const size_t i, const size_t j, const T val);
   void set_col(const size_t j, const T *vals);
-  double get(const size_t i, const size_t j);
-  double* get_datap() const;
+  T get(const size_t i, const size_t j);
+  T* get_datap() const;
   size_t nrows() const;
   size_t ncols() const;
   void display();
@@ -80,7 +80,7 @@ template <typename T> inline size_t pMatrix<T>::ncols() const {
   return cols;
 }
 
-template <typename T> inline double* pMatrix<T>::get_datap() const {
+template <typename T> inline T* pMatrix<T>::get_datap() const {
   return data;
 }
 

@@ -54,42 +54,6 @@ extern "C" void FNAME(dgemv)(char *trans,
       double *y,
       int *incy);
       
-// Decremental matmul
-void decmatmul(double **A, double *x, double *y, size_t n) {
-  // for(size_t i = 0; i < n; ++i) {
-  //   for(size_t j = 0; j < n; ++j) {
-  //     y[i] -= A[j][i] * x[j];
-  //   }
-  // }
-  int n_=(int) n;
-  char trans = 'N';
-  double alpha = -1.0;
-  double beta = 1.0;
-  int incx=1;
-  int incy=1;
-  FNAME(dgemv)(&trans, &n_, &n_, &alpha, &A[0][0], &n_, x, &incx, &beta, y, &incy);
-}
-      
-int solve(double **A, double *B, size_t n) {
-  int n_=(int) n;
-  int lda=n_;
-  int ldb=n_;
-  int nrhs=1;
-  int info=0;
-  static bool first = true;
-  static int *ipiv;
-  
-  if(first) {
-    ipiv = new int[n];
-    first = false;
-  }
-  
-  FNAME(dgesv)(&n_, &nrhs, &A[0][0], &lda, ipiv, &B[0], &ldb, &info);
-  if(info != 0) {
-    cout << "Error in LS. Error code: " << info << endl;
-    exit(1);
-    
-  }
-  return info;
-}
+using namespace std;
+
 #endif
