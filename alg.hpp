@@ -53,14 +53,14 @@ template <typename T> inline void pVector<T>::zeros() {
 
 // Passive matrix definition
 
-class pMatrix {
+template <typename T> class pMatrix {
  public:
   pMatrix();
   explicit pMatrix(const size_t nrows, const size_t ncols);
   ~pMatrix();
 
-  void set(const size_t i, const size_t j, const double val);
-  void set_col(const size_t j, const double *vals);
+  void set(const size_t i, const size_t j, const T val);
+  void set_col(const size_t j, const T *vals);
   double get(const size_t i, const size_t j);
   double* get_datap() const;
   size_t nrows() const;
@@ -69,25 +69,25 @@ class pMatrix {
 
  private:
   size_t rows, cols;
-  double* data;
+  T* data;
 };
 
-inline size_t pMatrix::nrows() const {
+template <typename T> inline size_t pMatrix<T>::nrows() const {
   return rows;
 }
 
-inline size_t pMatrix::ncols() const {
+template <typename T> inline size_t pMatrix<T>::ncols() const {
   return cols;
 }
 
-inline double* pMatrix::get_datap() const {
+template <typename T> inline double* pMatrix<T>::get_datap() const {
   return data;
 }
 
 // Function declarations
 
-void decmatmul(const pMatrix &A, const pVector<double> &x, pVector<double> &y);
-void LUsolve(pMatrix &A, pVector<double> &b);
+void decmatmul(const pMatrix<double> &A, const pVector<double> &x, pVector<double> &y);
+void LUsolve(pMatrix<double> &A, pVector<double> &b);
 
 } // end of namespace
 

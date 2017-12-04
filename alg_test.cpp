@@ -19,7 +19,7 @@ int main(int nargs, char** args) {
 
   // Matrix creation
 
-  alg::pMatrix A(dim, dim);
+  alg::pMatrix<double> A(dim, dim);
 
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {

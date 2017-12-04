@@ -39,31 +39,31 @@ template <typename T> void pVector<T>::display() {
 
 // MATRIX DEFINITIONS
 
-pMatrix::pMatrix() {
+template <typename T> pMatrix<T>::pMatrix() {
   data = NULL;
   cols = 0;
   rows = 0;
 }
 
-pMatrix::pMatrix(const size_t nrows, const size_t ncols) {
+template <> pMatrix<double>::pMatrix(const size_t nrows, const size_t ncols) {
   data = reinterpret_cast<double*>(malloc(ncols*nrows*sizeof(double)));
   cols = ncols;
   rows = nrows;
 }
 
-pMatrix::~pMatrix() {
+template <> pMatrix<double>::~pMatrix() {
   if (data) free(data);
 }
 
-void pMatrix::set(const size_t i, const size_t j, const double val) {
+template <typename T> void pMatrix<T>::set(const size_t i, const size_t j, const T val) {
   data[j*rows + i] = val;
 }
 
-double pMatrix::get(const size_t i, const size_t j) {
+template <typename T> double pMatrix<T>::get(const size_t i, const size_t j) {
   return data[j*rows + i];
 }
 
-void pMatrix::display() {
+template <typename T> void pMatrix<T>::display() {
   for (size_t i = 0; i < rows; ++i) {
     for (size_t j = 0; j < cols; ++j) {
       std::cout << std::setw(5) << std::setfill(' ') << std::setprecision(2)
@@ -77,7 +77,7 @@ void pMatrix::display() {
 
 // LINEAR ALGEBRA FUNCTIONS
 
-void decmatmul(const pMatrix &A, const pVector<double> &x, 
+void decmatmul(const pMatrix<double> &A, const pVector<double> &x, 
     pVector<double> &y) {
   // check for dimension consistency
   assert(A.ncols() == x.dim());
@@ -101,7 +101,7 @@ void decmatmul(const pMatrix &A, const pVector<double> &x,
 
 }
 
-void LUsolve(pMatrix &A, pVector<double> &b) {
+void LUsolve(pMatrix<double> &A, pVector<double> &b) {
   // check for dimension consistency
   assert(A.ncols() == b.dim());
   assert(A.ncols() == A.nrows()); // square system
@@ -121,6 +121,7 @@ void LUsolve(pMatrix &A, pVector<double> &b) {
 }
 
 template class pVector<double>;
+template class pMatrix<double>;
 
 } //  End of namespace
 
