@@ -1,3 +1,9 @@
+/*!
+   \file "user.hpp"
+   \brief "This is the provided user code."
+   \author "Adrian Maldonado and Michel Schanen"
+   \date 21/11/2017
+*/
 #ifndef USER_HPP
 #define USER_HPP
 #include <iostream>
@@ -27,7 +33,17 @@ typedef struct System {
 };
 
 System sys;
-
+/*!
+   \brief "Generic residual function written by the user. All variables that
+   are on the computational path from an independent to dependent need to be of
+   type T. All other variables may be passive (double)."
+   \param x "New x"
+   \param xold "Old x"
+   \param F "Residual"
+   \param h "Discretization step"
+   \pre "System new state x and old state xold"
+   \post "Residual F"
+*/
 template <class T> void residual_beuler(const T* const x, const T* const xold,
     const double h, T* const F) {
 
@@ -109,7 +125,15 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
 
 }
 
-
+/*!
+   \brief "User provided Jacobian"
+   \param x "New x"
+   \param xold "Old x"
+   \param J "Jacobian"
+   \param h "Discretization step"
+   \pre "Input states x and xold"
+   \post "Jacobian J"
+*/
 template <class T> void jac_beuler(const T* const x, const T* const xold,
     const double h, T** const J) {
 
@@ -225,7 +249,13 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
   J[11][11] = v0m*v1m*sin(v0a - v1a)/xline;
 
 }
-
+/*!
+   \brief "User provided time integration"
+   \param x "1st order active input variable"
+   \param h "Discretization"
+   \pre "Initial conditions with input tangents"
+   \post "New state x with 1st order tangents"
+*/
 template <class T> void integrate(T *x, size_t dim, double h) {
   
   double eps = 1e-9;
