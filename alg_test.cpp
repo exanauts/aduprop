@@ -4,14 +4,25 @@
 
 
 int main(int nargs, char** args) {
-  pMatrix A(5, 5);
+  
+  size_t dim = 10;
 
-  for (size_t i = 0; i < 5; ++i) {
-    for (size_t j = 0; j < 5; ++j) {
+
+  pVector b(dim);
+
+  for (size_t i = 0; i < dim; ++i) {
+    b.set(i, 1.0);
+  }
+
+  b.display();
+
+  pMatrix A(dim, dim);
+
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
       A.set(i, j, static_cast<double>(i + 10*j));
     }
   }
 
   A.display();
-  double caca = A.get(2, 2);
 }

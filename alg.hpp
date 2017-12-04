@@ -18,12 +18,13 @@ typedef codi::RealForwardGen<t2s> t3s;
 
 class pVector {
  public:
-  explicit pVector(size_t nvals);
+  explicit pVector(const size_t nvals);
   ~pVector();
 
-  void set(size_t i, double val);
-  double get(size_t i);
+  void set(const size_t i, const double val);
+  double get(const size_t i);
 
+  void display();
 
  private:
   size_t n;
@@ -34,12 +35,12 @@ class pVector {
 
 class pMatrix {
  public:
-  explicit pMatrix(size_t nrows, size_t ncols);
+  explicit pMatrix(const size_t nrows, const size_t ncols);
   ~pMatrix();
 
-  void set(size_t i, size_t j, double val);
-  void set_col(size_t j, double *vals);
-  double get(size_t i, size_t j);
+  void set(const size_t i, const size_t j, const double val);
+  void set_col(const size_t j, const double *vals);
+  double get(const size_t i, const size_t j);
   void display();
 
  private:
