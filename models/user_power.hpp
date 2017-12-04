@@ -281,7 +281,7 @@ template <class T> void integrate(T *x, size_t dim, double h) {
   
   jac_beuler<T>(x, xold, h, J);
   
-  // ierr = adlinsolve<T>(J, y, dim);
+  ierr = adlinsolve<T>(J, y, dim);
   
   if(ierr) {
     cout << "Linear solver error: " << ierr << endl;
