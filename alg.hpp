@@ -34,6 +34,17 @@ template <typename T> class pVector {
   T& operator[] (int i) {
     return data[i];
   }
+  
+  const T& operator[] (int i) const {
+    return data[i];
+  }
+  
+  // friend std::ostream& operator<<(std::ostream& os, const pVector<T> v) {
+  //   for (size_t i = 0; i < n; ++i) {
+  //     os << data[i] << std::endl;
+  //   }
+  //   return os;
+  // }
 
  private:
   size_t n;
@@ -55,6 +66,8 @@ template <typename T> inline void pVector<T>::zeros() {
 }
 
 // Passive matrix definition
+template <typename> class pMatrix;
+template <typename T> std::ostream& operator<< (std::ostream& os, pMatrix<T> &m);
 
 template <typename T> class pMatrix {
  public:
@@ -72,9 +85,9 @@ template <typename T> class pMatrix {
   
   class row {
   public:
-    T* ptr;
-    size_t& rows;
-    row(T* ptr_, size_t& rows_) : ptr(ptr_), rows(rows_) {}; 
+    T *ptr;
+    size_t &rows;
+    row(T *ptr_, size_t &rows_) : ptr(ptr_), rows(rows_) {}; 
     T& operator[] (int i) {
       return *(ptr+i*rows);
     }
@@ -83,11 +96,21 @@ template <typename T> class pMatrix {
   row operator[] (int i) {
     return row(data+i, rows);
   }
-
+ friend std::ostream& operator<< <> ( std::ostream&, pMatrix<T>& );  
  private:
   size_t rows, cols;
   T* data;
 };
+
+template <typename T> std::ostream& operator<< (std::ostream& os, pMatrix<T> &m) {
+  for (size_t i = 0; i < m.rows; ++i) {
+    for (size_t j = 0; j < m.cols; ++j) {
+      os << m[i][j] << " ";
+    }
+    os << "\n";
+  }
+  return os;
+}
 
 template <typename T> inline size_t pMatrix<T>::nrows() const {
   return rows;

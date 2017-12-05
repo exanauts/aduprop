@@ -46,6 +46,13 @@ template <typename T> void pVector<T>::display() {
   }
 }
 
+  // friend std::ostream& operator<<(std::ostream& os, const pVector<T> v) {
+  //   for (size_t i = 0; i < n; ++i) {
+  //     os << data[i] << std::endl;
+  //   }
+  //   return os;
+  // }
+
 // MATRIX DEFINITIONS
 
 template <typename T> pMatrix<T>::pMatrix() {
