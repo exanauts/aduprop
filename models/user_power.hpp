@@ -11,7 +11,9 @@
 
 using namespace std;
 
-template <class T> int adlinsolve(T **A, T *B, size_t n);
+using namespace alg;
+
+template <class T> void adlinsolve(pMatrix<T> &A, pVector<T> &B);
 
 typedef struct System {
   // Generator
@@ -45,8 +47,8 @@ System sys;
    \pre "System new state x and old state xold"
    \post "Residual F"
 */
-template <class T> void residual_beuler(const alg::pVector<T> &x, const alg::pVector<T> &xold,
-    const double h, alg::pVector<T> &F) {
+template <class T> void residual_beuler(const pVector<T> &x, const pVector<T> &xold,
+    const double h, pVector<T> &F) {
 
   // (TEMP): Just put all the parameters here for now.
 
@@ -135,8 +137,8 @@ template <class T> void residual_beuler(const alg::pVector<T> &x, const alg::pVe
    \pre "Input states x and xold"
    \post "Jacobian J"
 */
-template <class T> void jac_beuler(const alg::pVector<T> &x, 
-    const alg::pVector<T> &xold, const double h, alg::pMatrix<T> &J) {
+template <class T> void jac_beuler(const pVector<T> &x, 
+    const pVector<T> &xold, const double h, pMatrix<T> &J) {
 
   size_t ndim = 12;
 
@@ -258,44 +260,27 @@ template <class T> void jac_beuler(const alg::pVector<T> &x,
    \pre "Initial conditions with input tangents"
    \post "New state x with 1st order tangents"
 */
-template <class T> void integrate(T *x, size_t dim, double h) {
+template <class T> void integrate(pVector<T> &x, size_t dim, double h) {
   
   double eps = 1e-9;
   int iteration = 0, ierr;
-  T *xold = new T[dim];
-  T *y = new T[dim];
-  T **J = new T* [dim];
+  pVector<T> xold(dim);
+  pVector<T> y(dim);
+  pMatrix<T> J(dim,dim);
   
-  for (size_t i = 0; i < dim; ++i)
-    xold[i] = x[i];
+  xold = x;
   
   residual_beuler<T>(x, xold, h, y);
   
-  J[0] = new T [dim*dim];
-  
-  for(size_t i = 0; i < dim; ++i)
-    J[i] = J[0] + dim * i;
-
-  for(size_t i = 0; i < dim*dim; ++i)
-    J[0][i] = 0;
-  
+  J.zeros();
   jac_beuler<T>(x, xold, h, J);
   
-  ierr = adlinsolve<T>(J, y, dim);
+  adlinsolve<T>(J, y);
   
-  if(ierr) {
-    cout << "Linear solver error: " << ierr << endl;
-    exit(1);
-  }
-
-  for(size_t i = 0; i < dim; ++i) {
-    x[i] = x[i] - y[i];
-  }
-
-  delete [] xold;
-  delete [] y;
-  delete [] J[0];
-  delete [] J;
+  // for(size_t i = 0; i < dim; ++i) {
+  //   x[i] = x[i] - y[i];
+  // }
+    x = x - y;
   
 } 
 #endif

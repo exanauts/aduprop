@@ -14,22 +14,28 @@ template <typename T> pVector<T>::pVector() {
   n = 0;
 }
 
-template <> pVector<double>::pVector(const size_t nvals) {
-  data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
-  n = nvals;
-}
+// template <> pVector<double>::pVector(const size_t nvals) {
+//   data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
+//   n = nvals;
+// }
 
 template <typename T> pVector<T>::pVector(const size_t nvals) {
   data = new T[nvals];
   n = nvals;
 }
 
-template <> pVector<double>::~pVector() {
-  if (data) free(data);
-}
+// template <> pVector<double>::~pVector() {
+//   if (data != NULL) {
+//     // free(data);
+//     data = NULL;
+//   }
+// }
 
 template <typename T> pVector<T>::~pVector() {
-  if (data) delete [] data;
+  if (data != NULL) {
+    delete [] data;
+    data = NULL;
+  } 
 }
 
 template <typename T> void pVector<T>::set(const size_t i, const T val) {
@@ -61,14 +67,30 @@ template <typename T> pMatrix<T>::pMatrix() {
   rows = 0;
 }
 
-template <> pMatrix<double>::pMatrix(const size_t nrows, const size_t ncols) {
-  data = reinterpret_cast<double*>(malloc(ncols*nrows*sizeof(double)));
+// template <> pMatrix<double>::pMatrix(const size_t nrows, const size_t ncols) {
+//   data = reinterpret_cast<double*>(malloc(ncols*nrows*sizeof(double)));
+//   cols = ncols;
+//   rows = nrows;
+// }
+
+template <typename T> pMatrix<T>::pMatrix(const size_t nrows, const size_t ncols) {
+  data = new T[ncols*nrows];
   cols = ncols;
   rows = nrows;
 }
 
-template <> pMatrix<double>::~pMatrix() {
-  if (data) free(data);
+// template <> pMatrix<double>::~pMatrix() {
+//   if (data != NULL) {
+//     // free(data);
+//     data = NULL;
+//   }
+// }
+
+template <typename T> pMatrix<T>::~pMatrix() {
+  if (data != NULL) {
+    delete [] data;
+    data = NULL;
+  }
 }
 
 template <typename T> void pMatrix<T>::set(const size_t i, const size_t j, const T val) {
@@ -124,7 +146,12 @@ void LUsolve(pMatrix<double> &A, pVector<double> &b) {
   double* b_data = b.get_datap();
   int nrhs = 1;
   int info = 0;
-  int* ipiv = reinterpret_cast<int*>(calloc(n, sizeof(int)));
+  static bool first = true;
+  static int* ipiv = NULL;
+  if(first) {  
+    ipiv = reinterpret_cast<int*>(calloc(n, sizeof(int)));
+    first = false;
+  }
   int lda = n;
   int ldb = n;
 

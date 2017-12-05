@@ -8,6 +8,7 @@
 */
 
 #include <codi.hpp>
+#include <cassert>
 
 namespace alg {
 
@@ -38,17 +39,52 @@ template <typename T> class pVector {
   const T& operator[] (int i) const {
     return data[i];
   }
+
+  pVector( const pVector &other ) {
+    if(data != NULL) delete [] data;
+    n=other.n;
+    data = new T[n];
+    for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
+  }
   
-  // friend std::ostream& operator<<(std::ostream& os, const pVector<T> v) {
-  //   for (size_t i = 0; i < n; ++i) {
-  //     os << data[i] << std::endl;
-  //   }
-  //   return os;
-  // }
+  pVector& operator=( const pVector &other ) {
+    if(data != NULL) delete [] data;
+    n=other.n;
+    data = new T[n];
+    for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
+    return *this;
+  }
+  
+  pVector operator+(const pVector& b) {
+    assert(this->n == b.n);
+    pVector<T> vec(b.n);
+    for(size_t i = 0; i < b.n ; ++i) {
+      vec.data[i] = this->data[i] + b.data[i];
+    }
+    return vec;
+  }
+  
+  pVector operator-(const pVector& b) {
+    assert(this->n == b.n);
+    pVector<T> vec(b.n);
+    for(size_t i = 0; i < b.n ; ++i) {
+      vec.data[i] = this->data[i] - b.data[i];
+    }
+    return vec;
+  }
+  
+  T operator*(const pVector& b) {
+    assert(this->n == b.n);
+    T res = 0.0;
+    for(size_t i = 0; i < b.n ; ++i) {
+      res += this->data[i] * b.data[i];
+    }
+    return res;
+  }
 
  private:
   size_t n;
-  T* data;
+  T* data = NULL;
 };
 
 template <typename T> inline size_t pVector<T>::dim() const {
@@ -79,6 +115,7 @@ template <typename T> class pMatrix {
   void set_col(const size_t j, const T *vals);
   T& get(const size_t i, const size_t j);
   T* get_datap() const;
+  void zeros();
   size_t nrows() const;
   size_t ncols() const;
   void display();
@@ -89,18 +126,41 @@ template <typename T> class pMatrix {
     size_t &rows;
     row(T *ptr_, size_t &rows_) : ptr(ptr_), rows(rows_) {}; 
     T& operator[] (int i) {
-      return *(ptr+i*rows);
+      return *(ptr+i);
     }
   
   };
   row operator[] (int i) {
-    return row(data+i, rows);
+    return row(data+i*rows, rows);
   }
- friend std::ostream& operator<< <> ( std::ostream&, pMatrix<T>& );  
+  friend std::ostream& operator<< <> ( std::ostream&, pMatrix<T>& );  
+  
+  pMatrix( const pMatrix &other ) {
+    if(data != NULL) delete [] data;
+    rows=other.rows;
+    cols=other.cols;
+    data = new T[rows*cols];
+    for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
+  }
+  pMatrix& operator=( const pMatrix &other ) {
+    if(data != NULL) delete [] data;
+    rows=other.rows;
+    cols=other.cols;
+    data = new T[rows*cols];
+    for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
+    return *this;
+  }
+  
  private:
   size_t rows, cols;
   T* data;
 };
+
+template <typename T> inline void pMatrix<T>::zeros() {
+  for (size_t i = 0; i < cols*rows; ++i) {
+    data[i] = 0.0;
+  }
+}
 
 template <typename T> std::ostream& operator<< (std::ostream& os, pMatrix<T> &m) {
   for (size_t i = 0; i < m.rows; ++i) {

@@ -46,111 +46,58 @@ void t2s_t1s_driver(double* xic, size_t dim, double h, double **J, double*** H);
 void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
     double **J, double*** H, double ****T);
 
-double *py;
-double *t3_py;
-double *t1_py;
-double *t3_t1_py;
-double *t2_py;
-double *t3_t2_py;
-double *t2_t1_py;
-double *t3_t2_t1_py;
-double **pJ;
-double **t3_pJ;
-double **t1_pJ;
-double **t3_t1_pJ;
-double **t2_pJ;
-double **t3_t2_pJ;
-double **t2_t1_pJ;
-double **t3_t2_t1_pJ;
-double **tmp_pJ;
+pVector<double> py;
+// double *t3_py;
+pVector<double> t1_py;
+// double *t3_t1_py;
+// double *t2_py;
+// double *t3_t2_py;
+// double *t2_t1_py;
+// double *t3_t2_t1_py;
+pMatrix<double> pJ;
+// double **t3_pJ;
+pMatrix<double> t1_pJ;
+// double **t3_t1_pJ;
+// double **t2_pJ;
+// double **t3_t2_pJ;
+// double **t2_t1_pJ;
+// double **t3_t2_t1_pJ;
+pMatrix<double> tmp_pJ;
 
 
 void init(size_t dim) {
-  py = new double[dim];
-  t3_py = new double[dim];
-  t1_py = new double[dim];
-  t3_t1_py = new double[dim];
-  t2_py = new double[dim];
-  t3_t2_py = new double[dim];
-  t2_t1_py = new double[dim];
-  t3_t2_t1_py = new double[dim];
-  pJ = new double*[dim];
-  t3_pJ = new double*[dim];
-  t1_pJ = new double*[dim];
-  t3_t1_pJ = new double*[dim];
-  t2_pJ = new double*[dim];
-  t3_t2_pJ = new double*[dim];
-  t2_t1_pJ = new double*[dim];
-  t3_t2_t1_pJ = new double*[dim];
-  pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    pJ[i] = pJ[0] + dim * i;
-  }
-  t3_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t3_pJ[i] = t3_pJ[0] + dim * i;
-  }
-  t1_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t1_pJ[i] = t1_pJ[0] + dim * i;
-  }
-  t3_t1_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t3_t1_pJ[i] = t3_t1_pJ[0] + dim * i;
-  }
-  t2_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t2_pJ[i] = t2_pJ[0] + dim * i;
-  }
-  t3_t2_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t3_t2_pJ[i] = t3_t2_pJ[0] + dim * i;
-  }
-  t2_t1_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t2_t1_pJ[i] = t2_t1_pJ[0] + dim * i;
-  }
-  t3_t2_t1_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    t3_t2_t1_pJ[i] = t3_t2_t1_pJ[0] + dim * i;
-  }
-  tmp_pJ = new double*[dim];
-  tmp_pJ[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    tmp_pJ[i] = tmp_pJ[0] + dim * i;
-  }
+  py = pVector<double>(dim);
+  // t3_py = new double[dim];
+  t1_py = pVector<double>(dim);
+  // t3_t1_py = new double[dim];
+  // t2_py = new double[dim];
+  // t3_t2_py = new double[dim];
+  // t2_t1_py = new double[dim];
+  // t3_t2_t1_py = new double[dim];
+  pJ = pMatrix<double>(dim,dim);
+  // t3_pJ = new double*[dim];
+  t1_pJ = pMatrix<double>(dim,dim);
+  // t3_t1_pJ = new double*[dim];
+  // t2_pJ = new double*[dim];
+  // t3_t2_pJ = new double*[dim];
+  // t2_t1_pJ = new double*[dim];
+  // t3_t2_t1_pJ = new double*[dim];
+  tmp_pJ = pMatrix<double>(dim,dim);
 }
 
-void destroy() {
-  delete [] py; delete [] t3_py, delete [] t1_py;
-  delete [] t3_t1_py;
-  delete [] t2_py; delete [] t2_t1_py;
-  delete [] pJ[0]; delete [] t1_pJ[0];
-  delete [] t3_t2_py; delete [] t3_t2_t1_py;
-  delete [] t3_pJ[0]; delete [] t3_t1_pJ[0];
-  delete [] t2_pJ[0]; delete [] t2_t1_pJ[0];
-  delete [] pJ; delete [] t1_pJ;
-  delete [] t3_t2_pJ[0]; delete [] t3_t2_t1_pJ[0];
-  delete [] t3_pJ; delete [] t3_t1_pJ;
-  delete [] t2_pJ; delete [] t2_t1_pJ;
-  delete [] t3_t2_pJ; delete [] t3_t2_t1_pJ;
-  delete [] tmp_pJ[0];
-  delete [] tmp_pJ;
-}
-
-#if 0
-
-template <class T> int adlinsolve(T **A, T *B, size_t n) {
+template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
   T t;
   cout << "adlinsolve not implemented for this type " << endl;
 }
 
-template <> int adlinsolve<double>(double **J, double *y, size_t dim) {
-  return solve(J, y, dim);
+template <> void adlinsolve<double>(pMatrix<double> &J, pVector<double> &y) {
+  LUsolve(J, y);
 }
 
-template <> int adlinsolve<t1s>(t1s **t1s_J, t1s *t1s_y, size_t dim) {
+
+template <> void adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
   // Get the values and tangents out for both J and y
+  size_t dim = t1s_y.dim();
   for (size_t i = 0; i < dim; ++i) {
     py[i] = t1s_y[i].getValue();
     t1_py[i] = t1s_y[i].getGradient();
@@ -162,18 +109,18 @@ template <> int adlinsolve<t1s>(t1s **t1s_J, t1s *t1s_y, size_t dim) {
   }
 
   // Solve 1st order system
-  int ierr = solve(pJ, py, dim);
+  LUsolve(pJ, py);
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already
   // extracted above
-  decmatmul(t1_pJ, py, t1_py, dim);
+  decmatmul(t1_pJ, py, t1_py);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t1_py, dim);
+  LUsolve(pJ, t1_py);
   // That's it, we have the tangents t1_x in t1_py of the LS Ax=b
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
@@ -181,8 +128,9 @@ template <> int adlinsolve<t1s>(t1s **t1s_J, t1s *t1s_y, size_t dim) {
     t1s_y[i] = py[i];
     t1s_y[i].setGradient(t1_py[i]);
   }
-  return 0;
 }
+
+#if 0
 
 template <> int adlinsolve<t2s>(t2s **t2s_J, t2s *t2s_y, size_t dim) {
   // Get the values and tangents out for both J and y
@@ -349,6 +297,7 @@ template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
   }
   return 0;
 }
+#endif
 
 /*!
    \brief "Driver for accumulating Jacobian using finite difference"
@@ -358,9 +307,9 @@ template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
    \pre "Input system and state"
    \post "Jacobian"
 */
-void fdJ_driver(double* xic, size_t dim, double h, double** J) {
-  double *xpert1 = new double[dim];
-  double *xpert2 = new double[dim];
+void fdJ_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) {
+  pVector<double> xpert1(dim);
+  pVector<double> xpert2(dim);
   double pert = 1e-8;
 
   for (size_t i = 0; i < dim; ++i) {
@@ -373,9 +322,8 @@ void fdJ_driver(double* xic, size_t dim, double h, double** J) {
     for (size_t j = 0; j < dim; ++j) J[i][j] = (xpert1[j] - xpert2[j])/pert;
   }
   integrate<double>(xic, dim, h);
-  delete [] xpert1;
-  delete [] xpert2;
 }
+#if 0
 
 /*!
    \brief "Driver for accumulating Hessian using finite difference. To avoid
@@ -487,8 +435,9 @@ void fdT_driver(double* xic, size_t dim, double h, double**** T) {
    \pre "Input system and state"
    \post "Jacobian"
 */
-void t1s_driver(double* xic, size_t dim, double h, double** J) {
-  t1s* axic = new t1s[dim];
+#endif
+void t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) {
+  pVector<t1s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim ; ++j) {
       axic[j] = xic[j];
@@ -499,9 +448,8 @@ void t1s_driver(double* xic, size_t dim, double h, double** J) {
     for (size_t j = 0; j < dim; ++j) J[i][j] = axic[j].getGradient();
   }
   for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
-  delete [] axic;
 }
-
+#if 0
 /*!
    \brief "Driver for accumulating Hessian using AD. Go over all 
    Cartesian basis vectors of the tangents t1_xic and t2_xic and collect one Hessian projection after the other."
@@ -593,7 +541,7 @@ void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
    handwritten Jacobian and the AD generated Jacobian based on residual_beuler"
    \param xold "State xold"
 */
-void jactest(double* xold, size_t dim, double h) {
+void jactest(pVector<double> &xold, size_t dim, double h) {
   pVector<t1s> x = pVector<t1s>(dim);
   pVector<t1s> axold = pVector<t1s>(dim);
   pVector<t1s> y = pVector<t1s>(dim);
@@ -623,16 +571,19 @@ void jactest(double* xold, size_t dim, double h) {
   pVector<double> xold_hc(dim);
   pVector<double> x_hc(dim);
   for (size_t i = 0; i < dim; ++i) {
-    xold_hc.set(i,xold[i]);
-    x_hc.set(i,xold[i]);
+    xold_hc[i]=xold[i];
+    x_hc[i]=xold[i];
+    for (size_t j = 0; j < dim; ++j) {
+      Jhc[i][j] = 0;
+    }
   }
 
-  for (size_t i = 0; i < dim; ++i) xold_hc.set(i, xold[i]);
+  // for (size_t i = 0; i < dim; ++i) xold_hc[i]=xold[i];
 
   cout << "HC Jacobian" << endl;
   jac_beuler<double>(x_hc, xold_hc, h, Jhc);
 
-  Jhc.display();
+  cout << Jhc;
 
 }
 #endif  // ADUPROP_AD_HPP_

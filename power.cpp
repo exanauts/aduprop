@@ -24,8 +24,8 @@ int main(int nargs, char** args) {
   init(dim);
   double h = 0.004;
 
-  double *xold = new double[dim];
-  double *x = new double[dim];
+  pVector<double> xold(dim);
+  pVector<double> x(dim);
 
   // System parameters.
   sys.x_d = 1.575;
@@ -61,14 +61,11 @@ int main(int nargs, char** args) {
   xold[11] = 0.00000000000000000000;
 
   jactest(xold, dim, h);
-#if 0
   cout << "At point:" << endl;
   cout << "---------" << endl;
   for (size_t i = 0; i < dim; ++i) cout << xold[i] << " ";
   cout << endl;
-  double** J = new double*[dim];
-  J[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) J[i] = J[0] + i * dim;
+  pMatrix<double> J(dim,dim);
   double ***H = new double** [dim];
   H[0] = new double* [dim*dim];
   H[0][0] = new double[dim*dim*dim];
@@ -78,6 +75,7 @@ int main(int nargs, char** args) {
       H[i][j] = H[0][0] + i * dim * dim + j * dim;
     }
   }
+#if 0
   double ****T = new double*** [dim];
   T[0] = new double** [dim*dim];
   T[0][0] = new double* [dim*dim*dim];
@@ -91,6 +89,7 @@ int main(int nargs, char** args) {
       }
     }
   }
+#endif
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
   t1s_driver(x, dim, h, J);
   cout << "Function using AD" << endl;
@@ -109,6 +108,7 @@ int main(int nargs, char** args) {
     cout << endl;
   }
   cout << endl;
+#if 0
   cout << "Hessian and Jacobian using 2nd order AD" << endl;
   cout << "-----------------" << endl;
   for (size_t i = 0; i < dim; ++i) {
@@ -172,6 +172,7 @@ int main(int nargs, char** args) {
     cout << endl;
   }
   cout << endl;
+#endif
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
   fdJ_driver(x, dim, h, J);
   cout << "Function using FD" << endl;
@@ -190,6 +191,7 @@ int main(int nargs, char** args) {
     cout << endl;
   }
   cout << endl;
+#if 0
   cout << "Hessian using FD" << endl;
   cout << "-----------------" << endl;
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
