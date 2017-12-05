@@ -615,7 +615,7 @@ void jactest(double* xold, size_t dim, double h) {
 
   cout << "AD Jacobian" << endl;
   // Print jacobian
-  J.display();
+  cout << J;
   
   // Hand coded jacobian
 
