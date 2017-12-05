@@ -75,9 +75,6 @@ template <typename T> void pMatrix<T>::set(const size_t i, const size_t j, const
   data[j*rows + i] = val;
 }
 
-template <typename T> T pMatrix<T>::get(const size_t i, const size_t j) {
-  return data[j*rows + i];
-}
 
 template <typename T> void pMatrix<T>::display() {
   for (size_t i = 0; i < rows; ++i) {

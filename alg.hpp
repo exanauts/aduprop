@@ -77,7 +77,7 @@ template <typename T> class pMatrix {
 
   void set(const size_t i, const size_t j, const T val);
   void set_col(const size_t j, const T *vals);
-  T get(const size_t i, const size_t j);
+  T& get(const size_t i, const size_t j);
   T* get_datap() const;
   size_t nrows() const;
   size_t ncols() const;
@@ -122,6 +122,10 @@ template <typename T> inline size_t pMatrix<T>::ncols() const {
 
 template <typename T> inline T* pMatrix<T>::get_datap() const {
   return data;
+}
+
+template <typename T> inline T& pMatrix<T>::get(const size_t i, const size_t j) {
+  return data[j*rows + i];
 }
 
 // Function declarations

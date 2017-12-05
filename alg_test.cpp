@@ -41,4 +41,40 @@ int main(int nargs, char** args) {
   alg::LUsolve(A, b);
   b.display();
 
+
+  // Performance test
+  
+
+  uint64_t cycleSTART, cycleEND;
+
+  size_t large_dim = 10000;
+
+  alg::pMatrix<double> B(large_dim, large_dim);
+  double foo = 0;
+
+  cycleSTART = __rdtsc();
+  // Vanilla accessor
+  for (size_t i = 0; i < large_dim; ++i) {
+    for (size_t j = 0; j < large_dim; ++j) {
+      foo += B.get(i, j);
+    }
+  }
+  cycleEND = __rdtsc();
+
+  std::cout << "Number of cycles spent in vanilla: " << cycleEND - cycleSTART << std::endl;
+
+  foo = 0;
+
+  // Operator overload
+  
+  cycleSTART = __rdtsc();
+  for (size_t i = 0; i < large_dim; ++i) {
+    for (size_t j = 0; j < large_dim; ++j) {
+      foo += B[i][j];
+    }
+  }
+  cycleEND = __rdtsc();
+  
+  std::cout << "Number of cycles spent in overload: " << cycleEND - cycleSTART << std::endl;
+
 }
