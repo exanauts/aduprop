@@ -31,6 +31,9 @@ template <typename T> class pVector {
   void zeros();
 
   void display();
+  T& operator[] (int i) {
+    return data[i];
+  }
 
  private:
   size_t n;
@@ -66,6 +69,20 @@ template <typename T> class pMatrix {
   size_t nrows() const;
   size_t ncols() const;
   void display();
+  
+  class row {
+  public:
+    T* ptr;
+    size_t& rows;
+    row(T* ptr_, size_t& rows_) : ptr(ptr_), rows(rows_) {}; 
+    T& operator[] (int i) {
+      return *(ptr+i*rows);
+    }
+  
+  };
+  row operator[] (int i) {
+    return row(data+i, rows);
+  }
 
  private:
   size_t rows, cols;
