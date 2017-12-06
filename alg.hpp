@@ -19,6 +19,9 @@ typedef codi::RealForwardGen<t2s> t3s;
 
 // Passive vector definition
 
+template <typename> class pVector;
+template <typename T> std::ostream& operator<< (std::ostream& os, pVector<T> &m);
+
 template <typename T> class pVector {
  public:
   pVector();
@@ -39,6 +42,8 @@ template <typename T> class pVector {
   const T& operator[] (int i) const {
     return data[i];
   }
+  
+  friend std::ostream& operator<< <> ( std::ostream&, pVector<T>& );  
 
   pVector( const pVector &other ) {
     if(data != NULL) delete [] data;
@@ -81,6 +86,9 @@ template <typename T> class pVector {
     }
     return res;
   }
+  T norm() {
+    return sqrt((*this) * (*this));
+  }
 
  private:
   size_t n;
@@ -99,6 +107,14 @@ template <typename T> inline void pVector<T>::zeros() {
   for (size_t i = 0; i < n; ++i) {
     data[i] = 0.0;
   }
+}
+
+template <typename T> std::ostream& operator<< (std::ostream& os, pVector<T> &v) {
+  for (size_t i = 0; i < v.n; ++i) {
+    os << v.data[i] << " ";
+  }
+  std::cout << std::endl;
+  return os;
 }
 
 // Passive matrix definition
@@ -149,6 +165,16 @@ template <typename T> class pMatrix {
     data = new T[rows*cols];
     for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
     return *this;
+  }
+  
+  T norm() {
+    T res = 0;
+    for(size_t i = 0 ; i < rows ; ++i) {
+      for(size_t j = 0 ; j < cols ; ++j) {
+        res+=(data[i*cols + j])*(data[i*cols + j]);
+      }
+    }
+    return sqrt(res);
   }
   
  private:

@@ -190,6 +190,7 @@ template <class T> void jac_beuler(const pVector<T> &x,
 
   // Machine states
 
+  J.zeros();
   J[0][0] = 1.0 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0) - 1.0)/T_d0p;
   J[2][0] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0)/T_d0p;
   J[9][0] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*pow(x_dp - xl, -1.0) + 1)/T_d0p;
@@ -263,24 +264,23 @@ template <class T> void jac_beuler(const pVector<T> &x,
 template <class T> void integrate(pVector<T> &x, size_t dim, double h) {
   
   double eps = 1e-9;
-  int iteration = 0, ierr;
+  int iteration = 0;
   pVector<T> xold(dim);
   pVector<T> y(dim);
   pMatrix<T> J(dim,dim);
   
   xold = x;
-  
   residual_beuler<T>(x, xold, h, y);
-  
   J.zeros();
-  jac_beuler<T>(x, xold, h, J);
   
-  adlinsolve<T>(J, y);
-  
-  // for(size_t i = 0; i < dim; ++i) {
-  //   x[i] = x[i] - y[i];
-  // }
-    x = x - y;
+  do {
+    iteration = iteration + 1;
+    jac_beuler<T>(x, xold, h, J);
+    residual_beuler<T>(x, xold, h, y);
+    adlinsolve<T>(J, y);
+    x = x - y;  
+    residual_beuler<T>(x, xold, h, y);
+  } while (y.norm() > eps);
   
 } 
 #endif

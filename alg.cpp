@@ -46,19 +46,6 @@ template <typename T> T pVector<T>::get(const size_t i) const {
   return data[i];
 }
 
-template <typename T> void pVector<T>::display() {
-  for (size_t i = 0; i < n; ++i) {
-    std::cout << get(i) << std::endl;
-  }
-}
-
-  // friend std::ostream& operator<<(std::ostream& os, const pVector<T> v) {
-  //   for (size_t i = 0; i < n; ++i) {
-  //     os << data[i] << std::endl;
-  //   }
-  //   return os;
-  // }
-
 // MATRIX DEFINITIONS
 
 template <typename T> pMatrix<T>::pMatrix() {
