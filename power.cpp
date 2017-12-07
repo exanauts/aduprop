@@ -63,175 +63,55 @@ int main(int nargs, char** args) {
   jactest(xold, dim, h);
   cout << "At point:" << endl;
   cout << "---------" << endl;
-  for (size_t i = 0; i < dim; ++i) cout << xold[i] << " ";
-  cout << endl;
-  pMatrix<double> J(dim,dim);
-  double ***H = new double** [dim];
-  H[0] = new double* [dim*dim];
-  H[0][0] = new double[dim*dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    H[i] = H[0] + i * dim;
-    for (size_t j = 0; j < dim; ++j) {
-      H[i][j] = H[0][0] + i * dim * dim + j * dim;
-    }
-  }
-#if 0
-  double ****T = new double*** [dim];
-  T[0] = new double** [dim*dim];
-  T[0][0] = new double* [dim*dim*dim];
-  T[0][0][0] = new double[dim*dim*dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    T[i] = T[0] + i * dim;
-    for (size_t j = 0; j < dim; ++j) {
-      T[i][j] = T[0][0] + i * dim * dim + j * dim;
-      for (size_t k = 0; k < dim; ++k) {
-        T[i][j][k] = T[0][0][0] + i * dim * dim * dim + j * dim * dim + k * dim;
-      }
-    }
-  }
-#endif
-  for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  cout << xold << endl;
+  pMatrix<double>  J(dim,dim);
+  pTensor3<double> H(dim,dim,dim);
+  pTensor4<double> T(dim,dim,dim,dim);
+  x = xold;
   t1s_driver(x, dim, h, J);
   cout << "Function using AD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    cout << xold[i] << " ";
-  }
-  cout << endl;
+  cout << xold << endl;
   cout << endl;
   cout << "Jacobian using 1st order AD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << J[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << endl;
-#if 0
+  cout << J << endl;
   cout << "Hessian and Jacobian using 2nd order AD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      J[i][j] = 0.0;
-    }
-  }
-  for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  
+  J.zeros();
+  H.zeros();
+  x = xold;
   t2s_t1s_driver(x, dim, h, J, H);
-  cout << "J" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << J[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << "H" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        cout << H[i][j][k] << " ";
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
+  cout << "J" << endl << J << endl;
+  cout << "H" << endl << H << endl;
   cout << "Tensor, Hessian and Jacobian using 3rd order AD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      J[i][j] = 0.0;
-    }
-  }
-  for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  J.zeros();
+  H.zeros();
+  x = xold;
   t3s_t2s_t1s_driver(x, dim, h, J, H, T);
-  cout << "J" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << J[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << "H" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        cout << H[i][j][k] << " ";
-      }
-    }
-    cout << endl;
-  }
-  cout << "T" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        for (size_t l = 0; l < dim; ++l) {
-          cout << T[i][j][k][l] << " ";
-        }
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
-#endif
+  cout << "J" << endl << J << endl;
+  cout << "H" << endl << H << endl;
+  cout << "T" << endl << T << endl;
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
   fdJ_driver(x, dim, h, J);
   cout << "Function using FD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    cout << xold[i] << " ";
-  }
-  cout << endl;
+  cout << xold << endl;
   cout << endl;
   cout << "Jacobian using FD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      cout << J[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << endl;
-#if 0
+  cout << "J" << endl << J << endl;
   cout << "Hessian using FD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  x = xold;
   fdH_driver(x, dim, h, H);
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        cout << H[i][j][k] << " ";
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
+  cout << H << endl;
   cout << "Tensor using FD" << endl;
   cout << "-----------------" << endl;
-  for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
+  x = xold;
   fdT_driver(x, dim, h, T);
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        for (size_t l = 0; l < dim; ++l) {
-          cout << T[i][j][k][l] << " ";
-        }
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
-  destroy();
-  delete [] T[0][0][0];
-  delete [] T[0][0];
-  delete [] T[0];
-  delete [] T;
-  delete [] H[0][0];
-  delete [] H[0];
-  delete [] H;
-  delete [] J[0];
-  delete [] J;
-  delete [] xold;
-  delete [] x;
-#endif
+  cout << T << endl;
   return 0;
 }

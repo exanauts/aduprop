@@ -9,6 +9,7 @@
 
 #include <codi.hpp>
 #include <cassert>
+#include "tensor.hpp"
 
 namespace alg {
 

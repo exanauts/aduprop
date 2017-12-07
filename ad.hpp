@@ -41,47 +41,47 @@ typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
 
 
-void t1s_driver(double* xic, size_t dim, double h, double** J);
-void t2s_t1s_driver(double* xic, size_t dim, double h, double **J, double*** H);
-void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
-    double **J, double*** H, double ****T);
+void t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J);
+void t2s_t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J, pTensor3<double> &H);
+void t3s_t2s_t1s_driver(pVector<double> &xic, size_t dim, double h, 
+  pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T);
 
 pVector<double> py;
-// double *t3_py;
+pVector<double> t3_py;
 pVector<double> t1_py;
-// double *t3_t1_py;
-// double *t2_py;
-// double *t3_t2_py;
-// double *t2_t1_py;
-// double *t3_t2_t1_py;
+pVector<double> t3_t1_py;
+pVector<double> t2_py;
+pVector<double> t3_t2_py;
+pVector<double> t2_t1_py;
+pVector<double> t3_t2_t1_py;
 pMatrix<double> pJ;
-// double **t3_pJ;
+pMatrix<double> t3_pJ;
 pMatrix<double> t1_pJ;
-// double **t3_t1_pJ;
-// double **t2_pJ;
-// double **t3_t2_pJ;
-// double **t2_t1_pJ;
-// double **t3_t2_t1_pJ;
+pMatrix<double> t3_t1_pJ;
+pMatrix<double> t2_pJ;
+pMatrix<double> t3_t2_pJ;
+pMatrix<double> t2_t1_pJ;
+pMatrix<double> t3_t2_t1_pJ;
 pMatrix<double> tmp_pJ;
 
 
 void init(size_t dim) {
   py = pVector<double>(dim);
-  // t3_py = new double[dim];
+  t3_py = pVector<double>(dim);
   t1_py = pVector<double>(dim);
-  // t3_t1_py = new double[dim];
-  // t2_py = new double[dim];
-  // t3_t2_py = new double[dim];
-  // t2_t1_py = new double[dim];
-  // t3_t2_t1_py = new double[dim];
+  t3_t1_py = pVector<double>(dim);
+  t2_py = pVector<double>(dim);
+  t3_t2_py = pVector<double>(dim);
+  t2_t1_py = pVector<double>(dim);
+  t3_t2_t1_py = pVector<double>(dim);
   pJ = pMatrix<double>(dim,dim);
-  // t3_pJ = new double*[dim];
+  t3_pJ = pMatrix<double>(dim,dim);
   t1_pJ = pMatrix<double>(dim,dim);
-  // t3_t1_pJ = new double*[dim];
-  // t2_pJ = new double*[dim];
-  // t3_t2_pJ = new double*[dim];
-  // t2_t1_pJ = new double*[dim];
-  // t3_t2_t1_pJ = new double*[dim];
+  t3_t1_pJ = pMatrix<double>(dim,dim);
+  t2_pJ = pMatrix<double>(dim,dim);
+  t3_t2_pJ = pMatrix<double>(dim,dim);
+  t2_t1_pJ = pMatrix<double>(dim,dim);
+  t3_t2_t1_pJ = pMatrix<double>(dim,dim);
   tmp_pJ = pMatrix<double>(dim,dim);
 }
 
@@ -130,10 +130,10 @@ template <> void adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
   }
 }
 
-#if 0
 
-template <> int adlinsolve<t2s>(t2s **t2s_J, t2s *t2s_y, size_t dim) {
+template <> void adlinsolve<t2s>(pMatrix<t2s>  &t2s_J, pVector<t2s> &t2s_y) {
   // Get the values and tangents out for both J and y
+  size_t dim = t2s_y.dim();
   for (size_t i = 0; i < dim; ++i) {
     py[i] = t2s_y[i].value().value();
     t1_py[i] = t2s_y[i].value().gradient();
@@ -149,34 +149,34 @@ template <> int adlinsolve<t2s>(t2s **t2s_J, t2s *t2s_y, size_t dim) {
   }
 
   // Solve 1st order system for t1 and t2
-  int ierr = solve(pJ, py, dim);
+  LUsolve(pJ, py);
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already
   // extracted above
-  decmatmul(t1_pJ, py, t1_py, dim);
-  decmatmul(t2_pJ, py, t2_py, dim);
+  decmatmul(t1_pJ, py, t1_py);
+  decmatmul(t2_pJ, py, t2_py);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t1_py, dim);
+  LUsolve(pJ, t1_py);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t2_py, dim);
-  decmatmul(t2_t1_pJ, py, t2_t1_py, dim);
-  decmatmul(t1_pJ, t2_py, t2_t1_py, dim);
-  decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
+  LUsolve(pJ, t2_py);
+  decmatmul(t2_t1_pJ, py, t2_t1_py);
+  decmatmul(t1_pJ, t2_py, t2_t1_py);
+  decmatmul(t2_pJ, t1_py, t2_t1_py);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t2_t1_py, dim);
+  LUsolve(pJ, t2_t1_py);
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
   for (size_t i = 0; i < dim; ++i) {
@@ -185,11 +185,11 @@ template <> int adlinsolve<t2s>(t2s **t2s_J, t2s *t2s_y, size_t dim) {
     t2s_y[i].value().gradient() = t1_py[i];
     t2s_y[i].gradient().value() = t2_py[i];
   }
-  return 0;
 }
 
-template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
+template <> void adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   // Get the values and tangents out for both J and y
+  size_t dim = t3s_y.dim();
   for (size_t i = 0; i < dim; ++i) {
     py[i] = t3s_y[i].value().value().value();
     t3_py[i] = t3s_y[i].gradient().value().value();
@@ -213,77 +213,77 @@ template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
   }
 
   // Solve 1st order system for t1 and t2
-  int ierr = solve(pJ, py, dim);
+  LUsolve(pJ, py);
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already
   // extracted above
-  decmatmul(t1_pJ, py, t1_py, dim);
-  decmatmul(t2_pJ, py, t2_py, dim);
-  decmatmul(t3_pJ, py, t3_py, dim);
+  decmatmul(t1_pJ, py, t1_py);
+  decmatmul(t2_pJ, py, t2_py);
+  decmatmul(t3_pJ, py, t3_py);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t1_py, dim);
+  LUsolve(pJ, t1_py);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t2_py, dim);
+  LUsolve(pJ, t2_py);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t3_py, dim);
+  LUsolve(pJ, t3_py);
 
-  decmatmul(t2_t1_pJ, py, t2_t1_py, dim);
-  decmatmul(t1_pJ, t2_py, t2_t1_py, dim);
-  decmatmul(t2_pJ, t1_py, t2_t1_py, dim);
+  decmatmul(t2_t1_pJ, py, t2_t1_py);
+  decmatmul(t1_pJ, t2_py, t2_t1_py);
+  decmatmul(t2_pJ, t1_py, t2_t1_py);
 
-  decmatmul(t3_t2_pJ, py, t3_t2_py, dim);
-  decmatmul(t3_pJ, t2_py, t3_t2_py, dim);
-  decmatmul(t2_pJ, t3_py, t3_t2_py, dim);
+  decmatmul(t3_t2_pJ, py, t3_t2_py);
+  decmatmul(t3_pJ, t2_py, t3_t2_py);
+  decmatmul(t2_pJ, t3_py, t3_t2_py);
 
-  decmatmul(t3_t1_pJ, py, t3_t1_py, dim);
-  decmatmul(t1_pJ, t3_py, t3_t1_py, dim);
-  decmatmul(t3_pJ, t1_py, t3_t1_py, dim);
-
-  for (size_t i = 0; i < dim; ++i) {
-    for (size_t j = 0; j < dim; ++j) {
-      pJ[i][j] = tmp_pJ[i][j];
-    }
-  }
-  ierr = solve(pJ, t2_t1_py, dim);
+  decmatmul(t3_t1_pJ, py, t3_t1_py);
+  decmatmul(t1_pJ, t3_py, t3_t1_py);
+  decmatmul(t3_pJ, t1_py, t3_t1_py);
 
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t3_t2_py, dim);
+  LUsolve(pJ, t2_t1_py);
+
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t3_t1_py, dim);
-  decmatmul(t3_t1_pJ, t2_py, t3_t2_t1_py, dim);
-  decmatmul(t1_pJ, t3_t2_py, t3_t2_t1_py, dim);
-  decmatmul(t3_t2_t1_pJ, py, t3_t2_t1_py, dim);
-  decmatmul(t2_t1_pJ, t3_py, t3_t2_t1_py, dim);
-  decmatmul(t3_t2_pJ, t1_py, t3_t2_t1_py, dim);
-  decmatmul(t2_pJ, t3_t1_py, t3_t2_t1_py, dim);
-  decmatmul(t3_pJ, t2_t1_py, t3_t2_t1_py, dim);
+  LUsolve(pJ, t3_t2_py);
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = tmp_pJ[i][j];
     }
   }
-  ierr = solve(pJ, t3_t2_t1_py, dim);
+  LUsolve(pJ, t3_t1_py);
+  decmatmul(t3_t1_pJ, t2_py, t3_t2_t1_py);
+  decmatmul(t1_pJ, t3_t2_py, t3_t2_t1_py);
+  decmatmul(t3_t2_t1_pJ, py, t3_t2_t1_py);
+  decmatmul(t2_t1_pJ, t3_py, t3_t2_t1_py);
+  decmatmul(t3_t2_pJ, t1_py, t3_t2_t1_py);
+  decmatmul(t2_pJ, t3_t1_py, t3_t2_t1_py);
+  decmatmul(t3_pJ, t2_t1_py, t3_t2_t1_py);
+  for (size_t i = 0; i < dim; ++i) {
+    for (size_t j = 0; j < dim; ++j) {
+      pJ[i][j] = tmp_pJ[i][j];
+    }
+  }
+  LUsolve(pJ, t3_t2_t1_py);
   // Put x and t1_x back into the t1s type
   for (size_t i = 0; i < dim; ++i) {
     t3s_y[i].value().value().value() = py[i];
@@ -295,9 +295,7 @@ template <> int adlinsolve<t3s>(t3s **t3s_J, t3s *t3s_y, size_t dim) {
     t3s_y[i].value().gradient().value() = t2_py[i];
     t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
   }
-  return 0;
 }
-#endif
 
 /*!
    \brief "Driver for accumulating Jacobian using finite difference"
@@ -323,7 +321,6 @@ void fdJ_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) 
   }
   integrate<double>(xic, dim, h);
 }
-#if 0
 
 /*!
    \brief "Driver for accumulating Hessian using finite difference. To avoid
@@ -334,17 +331,13 @@ void fdJ_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) 
    \pre "Input system and state"
    \post "Hessian"
 */
-void fdH_driver(double* xic, size_t dim, double h, double*** H) {
-  double *xpert1 = new double[dim];
-  double *xpert2 = new double[dim];
-  double **Jpert1 = new double*[dim];
-  Jpert1[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) Jpert1[i] = Jpert1[0] + i*dim;
-  double **Jpert2 = new double*[dim];
-  Jpert2[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) Jpert2[i] = Jpert2[0] + i*dim;
+void fdH_driver(pVector<double> &xic, size_t dim, double h, pTensor3<double> &H) {
+  pVector<double> xpert1(dim);
+  pVector<double> xpert2(dim);
+  pMatrix<double> Jpert1(dim,dim);
+  pMatrix<double> Jpert2(dim,dim);
   double pert = 1e-8;
-
+  
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
     for (size_t j = 0; j < dim; ++j) xpert2[j] = xic[j];
@@ -358,9 +351,6 @@ void fdH_driver(double* xic, size_t dim, double h, double*** H) {
       }
     }
   }
-  delete [] xpert1;    delete [] xpert2;
-  delete [] Jpert1[0]; delete [] Jpert1;
-  delete [] Jpert2[0]; delete [] Jpert2;
 }
 
 /*!
@@ -373,30 +363,12 @@ void fdH_driver(double* xic, size_t dim, double h, double*** H) {
    \pre "Input system and state"
    \post "Tensor"
 */
-void fdT_driver(double* xic, size_t dim, double h, double**** T) {
-  double *xpert1 = new double[dim];
-  double *xpert2 = new double[dim];
-  double **J = new double* [dim];
-  J[0] = new double[dim*dim];
-  for (size_t i = 0; i < dim; ++i) J[i] = J[0] + i*dim;
-  double ***Hpert1 = new double**[dim];
-  Hpert1[0] = new double*[dim*dim];
-  Hpert1[0][0] = new double[dim*dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    Hpert1[i] = Hpert1[0] + i * dim;
-    for (size_t j = 0; j < dim; ++j) {
-      Hpert1[i][j] = Hpert1[0][0] + i*dim*dim + j*dim;
-    }
-  }
-  double ***Hpert2 = new double**[dim];
-  Hpert2[0] = new double*[dim*dim];
-  Hpert2[0][0] = new double[dim*dim*dim];
-  for (size_t i = 0; i < dim; ++i) {
-    Hpert2[i] = Hpert2[0] + i * dim;
-    for (size_t j = 0; j < dim; ++j) {
-      Hpert2[i][j] = Hpert2[0][0] + i*dim*dim + j*dim;
-    }
-  }
+void fdT_driver(pVector<double> &xic, size_t dim, double h, pTensor4<double> &T) {
+  pVector<double> xpert1(dim);
+  pVector<double> xpert2(dim);
+  pMatrix<double> J(dim, dim);
+  pTensor3<double> Hpert1(dim, dim, dim);
+  pTensor3<double> Hpert2(dim, dim, dim);
   double pert = 1e-8;
   for (size_t i = 0; i < dim; ++i) {
     cout << "Computing tensor. "
@@ -415,15 +387,6 @@ void fdT_driver(double* xic, size_t dim, double h, double**** T) {
       }
     }
   }
-  delete [] Hpert1[0][0];
-  delete [] Hpert1[0];
-  delete [] Hpert1;
-  delete [] Hpert2[0][0];
-  delete [] Hpert2[0];
-  delete [] Hpert2;
-  delete [] J[0];
-  delete [] J;
-  delete [] xpert1;    delete [] xpert2;
 }
 
 /*!
@@ -435,7 +398,6 @@ void fdT_driver(double* xic, size_t dim, double h, double**** T) {
    \pre "Input system and state"
    \post "Jacobian"
 */
-#endif
 void t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) {
   pVector<t1s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -449,7 +411,6 @@ void t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) 
   }
   for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
-#if 0
 /*!
    \brief "Driver for accumulating Hessian using AD. Go over all 
    Cartesian basis vectors of the tangents t1_xic and t2_xic and collect one Hessian projection after the other."
@@ -459,10 +420,10 @@ void t1s_driver(pVector<double> &xic, size_t dim, double h, pMatrix<double> &J) 
    \pre "Input system and state"
    \post "Hessian"
 */
-void t2s_t1s_driver(double* xic, size_t dim, double h,
-    double **J, double*** H) {
+void t2s_t1s_driver(pVector<double> &xic, size_t dim, double h,
+    pMatrix<double> &J, pTensor3<double> &H) {
+  pVector<t2s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
-    t2s* axic = new t2s[dim];
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
         axic[k].value().value()       = xic[k];
@@ -484,7 +445,6 @@ void t2s_t1s_driver(double* xic, size_t dim, double h,
     for (size_t j = 0; j < dim; ++j) {
       J[i][j] = axic[j].value().gradient();
     }
-    delete [] axic;
   }
 }
 
@@ -498,9 +458,9 @@ void t2s_t1s_driver(double* xic, size_t dim, double h,
    \pre "Input system and state"
    \post "tensor"
 */
-void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
-    double **J, double*** H, double ****T) {
-  t3s* axic = new t3s[dim];
+void t3s_t2s_t1s_driver(pVector<double> &xic, size_t dim, double h,
+    pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T) {
+  pVector<t3s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
     cout << "Computing tensor " << (double) i*(double) 100.0/(double) dim
       << "\% done." << endl;
@@ -532,10 +492,8 @@ void t3s_t2s_t1s_driver(double* xic, size_t dim, double h,
       J[i][j] = axic[j].value().value().gradient();
     }
   }
-  delete [] axic;
 }
 
-#endif
 /*!
    \brief "Test the user provided implementation of the Jacobian. Outputs the
    handwritten Jacobian and the AD generated Jacobian based on residual_beuler"

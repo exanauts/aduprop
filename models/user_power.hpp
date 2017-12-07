@@ -273,14 +273,14 @@ template <class T> void integrate(pVector<T> &x, size_t dim, double h) {
   residual_beuler<T>(x, xold, h, y);
   J.zeros();
   
-  do {
+  // do {
     iteration = iteration + 1;
     jac_beuler<T>(x, xold, h, J);
-    residual_beuler<T>(x, xold, h, y);
+    // residual_beuler<T>(x, xold, h, y);
     adlinsolve<T>(J, y);
     x = x - y;  
     residual_beuler<T>(x, xold, h, y);
-  } while (y.norm() > eps);
+  // } while (y.norm() > eps);
   
 } 
 #endif
