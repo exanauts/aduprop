@@ -15,27 +15,52 @@ using namespace alg;
 
 template <class T> void adlinsolve(pMatrix<T> &A, pVector<T> &B);
 
-typedef struct System {
+typedef class System {
+public:
+  // System parameters.
   // Generator
-  double x_d;
-  double x_q;
-  double x_dp;
-  double x_qp;
-  double x_ddp;
-  double x_qdp;
-  double xl;
-  double H;
-  double T_d0p;
-  double T_q0p;
-  double T_d0dp;
-  double T_q0dp;
+  double const x_d = 1.575;
+  double const x_q = 1.512;
+  double const x_dp = 0.29;
+  double const x_qp = 0.39;
+  double const x_ddp = 0.1733;
+  double const x_qdp = 0.1733;
+  double const xl = 0.0787;
+  double const H = 3.38;
+  double const T_d0p = 6.09;
+  double const T_q0p = 1.0;
+  double const T_d0dp = 0.05;
+  double const T_q0dp = 0.15;
   // oinfinite bus
-  double v0m;
-  double v0a;
-  double xline;
-};
+  double const v0m = 1.0162384;
+  double const v0a = -0.05807256;
+  double const xline = 0.0576;
+  
+  const double e_fd = 2.36980307364616349375;
+  const double p_m = 1.06496000000000012875;
+  
+  const double h = 0.004; 
+  const size_t dimension = 12;
+  
+void ic(pVector<double> &x) {
+  // Initial values for state array.
 
-System sys;
+  x[0] = 1.06512037300928485983;
+  x[1] = 0.51819992367912581788;
+  x[2] = 0.85058383242985102779;
+  x[3] = -0.66197500054304025952;
+  x[4] = -0.05000000000000000278;
+  x[5] = 0.73618306350367335167;
+  x[6] = 0.77067836274882195458;
+  x[7] = 0.69832289180288620312;
+  x[8] = 0.46185376441989828278;
+  x[9] = 1.01531727676021699125;
+  x[10] = 1.0400000000000000000;
+  x[11] = 0.00000000000000000000;
+}
+
+size_t dim() { return dimension; }
+
 /*!
    \brief "Generic residual function written by the user. All variables that
    are on the computational path from an independent to dependent need to be of
@@ -48,30 +73,9 @@ System sys;
    \post "Residual F"
 */
 template <class T> void residual_beuler(const pVector<T> &x, const pVector<T> &xold,
-    const double h, pVector<T> &F) {
+    pVector<T> &F) {
 
   // (TEMP): Just put all the parameters here for now.
-
-  const double e_fd = 2.36980307364616349375;
-  const double p_m = 1.06496000000000012875;
-
-  const double x_d = sys.x_d; 
-  const double x_q = sys.x_q;
-  const double x_dp = sys.x_dp;
-  const double x_qp = sys.x_qp;
-  const double x_ddp = sys.x_ddp; 
-  const double x_qdp = sys.x_qdp;
-  const double xl = sys.xl;
-  const double H = sys.H; 
-  const double T_d0p = sys.T_d0p;
-  const double T_q0p = sys.T_q0p;
-  const double T_d0dp = sys.T_d0dp;
-  const double T_q0dp = sys.T_q0dp;
-
-  // infinite bus
-  const double v0m = sys.v0m;
-  const double v0a = sys.v0a;
-  const double xline = sys.xline;
 
   const T e_qp     = x[0];
   const T e_dp     = x[1];
@@ -138,30 +142,7 @@ template <class T> void residual_beuler(const pVector<T> &x, const pVector<T> &x
    \post "Jacobian J"
 */
 template <class T> void jac_beuler(const pVector<T> &x, 
-    const pVector<T> &xold, const double h, pMatrix<T> &J) {
-
-  size_t ndim = 12;
-
-  const double e_fd = 2.36980307364616349375;
-  const double p_m = 1.06496000000000012875;
-
-  const double x_d = sys.x_d; 
-  const double x_q = sys.x_q;
-  const double x_dp = sys.x_dp;
-  const double x_qp = sys.x_qp;
-  const double x_ddp = sys.x_ddp; 
-  const double x_qdp = sys.x_qdp;
-  const double xl = sys.xl;
-  const double H = sys.H; 
-  const double T_d0p = sys.T_d0p;
-  const double T_q0p = sys.T_q0p;
-  const double T_d0dp = sys.T_d0dp;
-  const double T_q0dp = sys.T_q0dp;
-
-  // infinite bus
-  const double v0m = sys.v0m;
-  const double v0a = sys.v0a;
-  const double xline = sys.xline;
+    const pVector<T> &xold, pMatrix<T> &J) {
 
   const T e_qp     = x[0];
   const T e_dp     = x[1];
@@ -261,7 +242,9 @@ template <class T> void jac_beuler(const pVector<T> &x,
    \pre "Initial conditions with input tangents"
    \post "New state x with 1st order tangents"
 */
-template <class T> void integrate(pVector<T> &x, size_t dim, double h) {
+template <class T> void integrate(pVector<T> &x) {
+  
+  size_t dim = x.dim();
   
   double eps = 1e-9;
   int iteration = 0;
@@ -270,16 +253,17 @@ template <class T> void integrate(pVector<T> &x, size_t dim, double h) {
   pMatrix<T> J(dim,dim);
   
   xold = x;
-  residual_beuler<T>(x, xold, h, y);
+  residual_beuler<T>(x, xold, y);
   J.zeros();
   
   do {
     iteration = iteration + 1;
-    jac_beuler<T>(x, xold, h, J);
+    jac_beuler<T>(x, xold, J);
     adlinsolve<T>(J, y);
     x = x - y;  
-    residual_beuler<T>(x, xold, h, y);
+    residual_beuler<T>(x, xold, y);
   } while (y.norm() > eps);
   
 } 
+} System;
 #endif
