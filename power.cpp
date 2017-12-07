@@ -16,20 +16,20 @@
 
 using namespace std;
 
-System sys;
 
 int main(int nargs, char** args) {
   // Define state arrays
 
+  System sys;
   size_t dim = sys.dim();  
-  init(dim);
 
   pVector<double> xold(dim);
   pVector<double> x(dim);
   
   sys.ic(xold);
+  ad drivers(sys);
 
-  jactest(xold);
+  drivers.jactest(xold);
   cout << "At point:" << endl;
   cout << "---------" << endl;
   cout << xold << endl;
@@ -37,7 +37,7 @@ int main(int nargs, char** args) {
   pTensor3<double> H(dim,dim,dim);
   pTensor4<double> T(dim,dim,dim,dim);
   x = xold;
-  t1s_driver(x, J);
+  drivers.t1s_driver(x, J);
   cout << "Function using AD" << endl;
   cout << "-----------------" << endl;
   cout << xold << endl;
@@ -51,7 +51,7 @@ int main(int nargs, char** args) {
   J.zeros();
   H.zeros();
   x = xold;
-  t2s_t1s_driver(x, J, H);
+  drivers.t2s_t1s_driver(x, J, H);
   cout << "J" << endl << J << endl;
   cout << "H" << endl << H << endl;
   cout << "Tensor, Hessian and Jacobian using 3rd order AD" << endl;
@@ -59,12 +59,12 @@ int main(int nargs, char** args) {
   J.zeros();
   H.zeros();
   x = xold;
-  t3s_t2s_t1s_driver(x, J, H, T);
+  drivers.t3s_t2s_t1s_driver(x, J, H, T);
   cout << "J" << endl << J << endl;
   cout << "H" << endl << H << endl;
   cout << "T" << endl << T << endl;
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
-  fdJ_driver(x, J);
+  drivers.fdJ_driver(x, J);
   cout << "Function using FD" << endl;
   cout << "-----------------" << endl;
   cout << xold << endl;
@@ -75,12 +75,12 @@ int main(int nargs, char** args) {
   cout << "Hessian using FD" << endl;
   cout << "-----------------" << endl;
   x = xold;
-  fdH_driver(x, H);
+  drivers.fdH_driver(x, H);
   cout << H << endl;
   cout << "Tensor using FD" << endl;
   cout << "-----------------" << endl;
   x = xold;
-  fdT_driver(x, T);
+  drivers.fdT_driver(x, T);
   cout << T << endl;
   return 0;
 }

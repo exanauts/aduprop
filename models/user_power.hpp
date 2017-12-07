@@ -235,35 +235,5 @@ template <class T> void jac_beuler(const pVector<T> &x,
 
 }
 
-/*!
-   \brief "User provided time integration"
-   \param x "1st order active input variable"
-   \param h "Discretization"
-   \pre "Initial conditions with input tangents"
-   \post "New state x with 1st order tangents"
-*/
-template <class T> void integrate(pVector<T> &x) {
-  
-  size_t dim = x.dim();
-  
-  double eps = 1e-9;
-  int iteration = 0;
-  pVector<T> xold(dim);
-  pVector<T> y(dim);
-  pMatrix<T> J(dim,dim);
-  
-  xold = x;
-  residual_beuler<T>(x, xold, y);
-  J.zeros();
-  
-  do {
-    iteration = iteration + 1;
-    jac_beuler<T>(x, xold, J);
-    adlinsolve<T>(J, y);
-    x = x - y;  
-    residual_beuler<T>(x, xold, y);
-  } while (y.norm() > eps);
-  
-} 
 } System;
 #endif
