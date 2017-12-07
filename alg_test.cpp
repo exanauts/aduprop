@@ -15,7 +15,7 @@ int main(int nargs, char** args) {
     b.set(i, 1.0);
   }
 
-  b.display();
+  std::cout << b << std::endl;
 
   // Matrix creation
 
@@ -27,19 +27,19 @@ int main(int nargs, char** args) {
     }
   }
 
-  A.display();
+  std::cout << A << std::endl;
 
   // Decremental multiplication
 
   alg::pVector<double> y(dim);
   y.zeros();
   alg::decmatmul(A, b, y);
-  y.display();
+  std::cout << y << std::endl;
 
   // LU decomp
 
   alg::LUsolve(A, b);
-  b.display();
+  std::cout << b << std::endl;
 
 
   // Performance test
