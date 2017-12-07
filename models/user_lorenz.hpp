@@ -1,23 +1,37 @@
+/*!
+   \file "user.hpp"
+   \brief "This is the provided user code."
+   \author "Adrian Maldonado and Michel Schanen"
+   \date 21/11/2017
+*/
 #ifndef USER_HPP
 #define USER_HPP
 #include <iostream>
 
 using namespace std;
 
-template <class T> int adlinsolve(T **A, T *B, size_t n);
+using namespace alg;
 
 typedef struct System {
-  size_t N; /* Number of variables */
-  double F; /* Forcing constant */
-};
+public:
+  const size_t dimension = 5; /* Number of variables */
+  const double F = 1.5; /* Forcing constant */
+  const double h = 0.01;
+  
+void ic(pVector<double> &x) {
+  // Initial values for state array.
+  for(size_t i = 0; i < dimension ; ++i) x[i] = F;
+  // initial perturbation
+  x[0] = 0.01;
+}
 
-System sys;
+size_t dim() { return dimension; }
 
-template <class T> void residual_beuler(const T* const x, const T* const xold,
-    const double h, T* const F) {
+template <class T> void residual_beuler(const pVector<T> &x, const pVector<T> &xold,
+    pVector<T> &F) {
 
-  const size_t N = sys.N; 
-  const double Force = sys.F;
+  const size_t N = dim(); 
+  const double Force = this->F;
 
   F[0] = (x[1] - x[N - 2])*x[N - 1] - x[0];
   F[1] = (x[2] - x[N - 1])*x[0] - x[1];
@@ -33,13 +47,10 @@ template <class T> void residual_beuler(const T* const x, const T* const xold,
 
 }
 
-
-template <class T> void jac_beuler(const T* const x, const T* const xold,
-    const double h, T** const J) {
+template <class T> void jac_beuler(const pVector<T> &x, 
+    const pVector<T> &xold, pMatrix<T> &J) {
     
-
-  const size_t N = sys.N; 
-  const double Force = sys.F;
+  const size_t N = dim(); 
 
   // REMEMBER the jacobian indeces are switched
   
@@ -74,45 +85,5 @@ template <class T> void jac_beuler(const T* const x, const T* const xold,
   }
 
 }
-
-template <class T> void integrate(T *x, size_t dim, double h) {
-  
-  double eps = 1e-9;
-  int iteration = 0, ierr;
-  T *xold = new T[dim];
-  T *y = new T[dim];
-  T **J = new T* [dim];
-  
-  for (size_t i = 0; i < dim; ++i)
-    xold[i] = x[i];
-  
-  residual_beuler<T>(x, xold, h, y);
-  
-  J[0] = new T [dim*dim];
-  
-  for(size_t i = 0; i < dim; ++i)
-    J[i] = J[0] + dim * i;
-
-  for(size_t i = 0; i < dim*dim; ++i)
-    J[0][i] = 0;
-  
-  jac_beuler<T>(x, xold, h, J);
-  
-  ierr = adlinsolve<T>(J, y, dim);
-  
-  if(ierr) {
-    cout << "Linear solver error: " << ierr << endl;
-    exit(1);
-  }
-
-  for(size_t i = 0; i < dim; ++i) {
-    x[i] = x[i] - y[i];
-  }
-
-  delete [] xold;
-  delete [] y;
-  delete [] J[0];
-  delete [] J;
-  
-} 
+} System;
 #endif
