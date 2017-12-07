@@ -49,19 +49,23 @@ template <typename T> class pTensor3 {
   friend std::ostream& operator<< <> ( std::ostream&, pTensor3<T>& );  
   
   pTensor3( const pTensor3 &other ) {
-    if(data != NULL) delete [] data;
-    d1=other.d1;
-    d2=other.d2;
-    d3=other.d3;
-    data = new T[d1*d2*d3];
+    if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3) {
+      if(data != NULL) delete [] data;
+      d1=other.d1;
+      d2=other.d2;
+      d3=other.d3;
+      data = new T[d1*d2*d3];
+    }
     for(size_t i = 0; i < d1*d2*d3 ; ++i) data[i] = other.data[i];
   }
   pTensor3& operator=( const pTensor3 &other ) {
-    if(data != NULL) delete [] data;
-    d1=other.d1;
-    d2=other.d2;
-    d3=other.d3;
-    data = new T[d1*d2*d3];
+    if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3) {
+      if(data != NULL) delete [] data;
+      d1=other.d1;
+      d2=other.d2;
+      d3=other.d3;
+      data = new T[d1*d2*d3];
+    }
     for(size_t i = 0; i < d1*d2*d3 ; ++i) data[i] = other.data[i];
     return *this;
   }
@@ -182,21 +186,25 @@ template <typename T> class pTensor4 {
   friend std::ostream& operator<< <> ( std::ostream&, pTensor4<T>& );  
   
   pTensor4( const pTensor4 &other ) {
-    if(data != NULL) delete [] data;
-    d1=other.d1;
-    d2=other.d2;
-    d3=other.d3;
-    d3=other.d4;
-    data = new T[d1*d2*d3*d4];
+    if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3 || d4 != other.d4) {
+      if(data != NULL) delete [] data;
+      d1=other.d1;
+      d2=other.d2;
+      d3=other.d3;
+      d3=other.d4;
+      data = new T[d1*d2*d3*d4];
+    }
     for(size_t i = 0; i < d1*d2*d3*d4 ; ++i) data[i] = other.data[i];
   }
   pTensor4& operator=( const pTensor4 &other ) {
-    if(data != NULL) delete [] data;
-    d1=other.d1;
-    d2=other.d2;
-    d3=other.d3;
-    d4=other.d4;
-    data = new T[d1*d2*d3*d4];
+    if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3 || d4 != other.d4) {
+      if(data != NULL) delete [] data;
+      d1=other.d1;
+      d2=other.d2;
+      d3=other.d3;
+      d4=other.d4;
+      data = new T[d1*d2*d3*d4];
+    }
     for(size_t i = 0; i < d1*d2*d3*d4 ; ++i) data[i] = other.data[i];
     return *this;
   }

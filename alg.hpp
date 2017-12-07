@@ -47,16 +47,20 @@ template <typename T> class pVector {
   friend std::ostream& operator<< <> ( std::ostream&, pVector<T>& );  
 
   pVector( const pVector &other ) {
-    if(data != NULL) delete [] data;
-    n=other.n;
-    data = new T[n];
+    if(other.n != n) {
+      if(data != NULL) delete [] data;
+      n=other.n;
+      data = new T[n];
+    }
     for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
   }
   
   pVector& operator=( const pVector &other ) {
-    if(data != NULL) delete [] data;
-    n=other.n;
-    data = new T[n];
+    if(other.n != n) {
+      if(data != NULL) delete [] data;
+      n=other.n;
+      data = new T[n];
+    }
     for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
     return *this;
   }
@@ -153,17 +157,21 @@ template <typename T> class pMatrix {
   friend std::ostream& operator<< <> ( std::ostream&, pMatrix<T>& );  
   
   pMatrix( const pMatrix &other ) {
-    if(data != NULL) delete [] data;
-    rows=other.rows;
-    cols=other.cols;
-    data = new T[rows*cols];
+    if(other.cols != cols || other.rows != rows) {
+      if(data != NULL) delete [] data;
+      rows=other.rows;
+      cols=other.cols;
+      data = new T[rows*cols];
+    }
     for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
   }
   pMatrix& operator=( const pMatrix &other ) {
-    if(data != NULL) delete [] data;
-    rows=other.rows;
-    cols=other.cols;
-    data = new T[rows*cols];
+    if(other.cols != cols || other.rows != rows) {
+      if(data != NULL) delete [] data;
+      rows=other.rows;
+      cols=other.cols;
+      data = new T[rows*cols];
+    }
     for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
     return *this;
   }
