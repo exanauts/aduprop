@@ -373,7 +373,7 @@ template <class T> void integrate(pVector<T> &x) {
   sys->residual_beuler<T>(x, xold, y);
   J.zeros();
   
-  // do {
+  do {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
     adlinsolve<T>(J, y);
