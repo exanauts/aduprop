@@ -13,8 +13,6 @@ using namespace std;
 
 using namespace alg;
 
-template <class T> void adlinsolve(pMatrix<T> &A, pVector<T> &B);
-
 typedef class System {
 public:
   // System parameters.
