@@ -81,17 +81,14 @@ int main(int nargs, char** args) {
 
 
   // IO stuff
-  
-  b.to_hdf5("b.hdf5");
-  
+ 
+#ifdef HDF5
   alg::pVector<double> b2, err;
-  
+  b.to_hdf5("b.hdf5");
   b2.from_hdf5("b.hdf5");
-
   err = b - b2;
-
   assert(abs(err.norm()) < EPS);
-
+#endif
 
   
 

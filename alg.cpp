@@ -48,7 +48,7 @@ template <typename T> T pVector<T>::get(const size_t i) const {
   return data[i];
 }
 
-
+#ifdef HDF5
 template <> void pVector<double>::to_hdf5(const std::string filename) {
   hid_t file_id;
   hsize_t dims[2];
@@ -69,6 +69,7 @@ template <> void pVector<double>::from_hdf5(const std::string filename) {
   H5LTread_dataset_double(file_id, "vector", data);
   H5Fclose(file_id);
 }
+#endif
 
 // MATRIX DEFINITIONS
 

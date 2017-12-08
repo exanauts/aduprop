@@ -8,6 +8,7 @@ HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
 # HDF5 support
 ifneq ($(HDF_INSTALL),)
 	CFLAGS += -I$(HDF_INSTALL)/include
+	CFLAGS += -DHDF5
 	LDLIBS += -L$(HDF_INSTALL)/lib
 	LDLIBS += $(HDF_INSTALL)/lib/libhdf5.a
 	LDLIBS += $(HDF_INSTALL)/lib/libhdf5_hl.a

@@ -36,9 +36,11 @@ template <typename T> class pVector {
   T* get_datap() const;
   void zeros();
 
+#ifdef HDF5
   // IO routines
   void to_hdf5(const std::string filename);
   void from_hdf5(const std::string filename);
+#endif
 
   void display();
   T& operator[] (int i) {
