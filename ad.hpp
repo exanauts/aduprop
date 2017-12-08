@@ -44,8 +44,9 @@ extern System sys;
 
 typedef class ad {
 // void t1s_driver(pVector<double> &xic, pMatrix<double> &J);
-// void t2s_t1s_driver(pVector<double> &xic, pMatrix<double> &J, pTensor3<double> &H);
-// void t3s_t2s_t1s_driver(pVector<double> &xic, 
+// void t2s_t1s_driver(pVector<double> &xic, 
+// pMatrix<double> &J, pTensor3<double> &H);
+// void t3s_t2s_t1s_driver(pVector<double> &xic,
 //   pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T);
 private:
   pVector<double> py;
@@ -65,7 +66,6 @@ private:
   pMatrix<double> t2_t1_pJ;
   pMatrix<double> t3_t2_t1_pJ;
   pMatrix<double> tmp_pJ;
-  
   System *sys;
 
 public:
@@ -80,15 +80,15 @@ ad(System &sys_) {
   t3_t2_py = pVector<double>(dim);
   t2_t1_py = pVector<double>(dim);
   t3_t2_t1_py = pVector<double>(dim);
-  pJ = pMatrix<double>(dim,dim);
-  t3_pJ = pMatrix<double>(dim,dim);
-  t1_pJ = pMatrix<double>(dim,dim);
-  t3_t1_pJ = pMatrix<double>(dim,dim);
-  t2_pJ = pMatrix<double>(dim,dim);
-  t3_t2_pJ = pMatrix<double>(dim,dim);
-  t2_t1_pJ = pMatrix<double>(dim,dim);
-  t3_t2_t1_pJ = pMatrix<double>(dim,dim);
-  tmp_pJ = pMatrix<double>(dim,dim);
+  pJ = pMatrix<double>(dim, dim);
+  t3_pJ = pMatrix<double>(dim, dim);
+  t1_pJ = pMatrix<double>(dim, dim);
+  t3_t1_pJ = pMatrix<double>(dim, dim);
+  t2_pJ = pMatrix<double>(dim, dim);
+  t3_t2_pJ = pMatrix<double>(dim, dim);
+  t2_t1_pJ = pMatrix<double>(dim, dim);
+  t3_t2_t1_pJ = pMatrix<double>(dim, dim);
+  tmp_pJ = pMatrix<double>(dim, dim);
 }
 
 template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
@@ -136,10 +136,9 @@ void fdH_driver(pVector<double> &xic, pTensor3<double> &H) {
   size_t dim = xic.dim();
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
-  pMatrix<double> Jpert1(dim,dim);
-  pMatrix<double> Jpert2(dim,dim);
+  pMatrix<double> Jpert1(dim, dim);
+  pMatrix<double> Jpert2(dim, dim);
   double pert = 1e-8;
-  
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
     for (size_t j = 0; j < dim; ++j) xpert2[j] = xic[j];
@@ -311,8 +310,8 @@ void jactest(pVector<double> &xold) {
   pVector<t1s> axold = pVector<t1s>(dim);
   pVector<t1s> y = pVector<t1s>(dim);
   for (size_t i = 0; i < dim; ++i) {
-    axold[i]=xold[i];
-    x[i]=xold[i];
+    axold[i] = xold[i];
+    x[i] = xold[i];
   }
 
   // Evaluate jacobian
@@ -329,27 +328,24 @@ void jactest(pVector<double> &xold) {
   cout << "AD Jacobian" << endl;
   // Print jacobian
   cout << J;
-  
+
   // Hand coded jacobian
 
   pMatrix<double> Jhc(dim, dim);
   pVector<double> xold_hc(dim);
   pVector<double> x_hc(dim);
   for (size_t i = 0; i < dim; ++i) {
-    xold_hc[i]=xold[i];
-    x_hc[i]=xold[i];
+    xold_hc[i] = xold[i];
+    x_hc[i] = xold[i];
     for (size_t j = 0; j < dim; ++j) {
       Jhc[i][j] = 0;
     }
   }
 
   // for (size_t i = 0; i < dim; ++i) xold_hc[i]=xold[i];
-
   cout << "HC Jacobian" << endl;
   sys->jac_beuler<double>(x_hc, xold_hc, Jhc);
-
   cout << Jhc;
-
 }
 
 /*!
@@ -359,33 +355,30 @@ void jactest(pVector<double> &xold) {
    \pre "Initial conditions with input tangents"
    \post "New state x with 1st order tangents"
 */
-template <class T> void integrate(pVector<T> &x) {
-  
+template <class T> void integrate(pVector<T> &x) { 
   size_t dim = x.dim();
-  
   double eps = 1e-9;
   int iteration = 0;
   pVector<T> xold(dim);
   pVector<T> y(dim);
-  pMatrix<T> J(dim,dim);
-  
+  pMatrix<T> J(dim, dim);
   xold = x;
   sys->residual_beuler<T>(x, xold, y);
   J.zeros();
-  
+
   do {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
     adlinsolve<T>(J, y);
-    x = x - y;  
+    x = x - y;
     sys->residual_beuler<T>(x, xold, y);
   } while (y.norm() > eps);
-  
-} 
 
+} 
 } ad;
 
-template <> void ad::adlinsolve<double>(pMatrix<double> &J, pVector<double> &y) {
+template <> void ad::adlinsolve<double>(pMatrix<double> &J, 
+    pVector<double> &y) {
   LUsolve(J, y);
 }
 
@@ -434,35 +427,35 @@ template <> void ad::adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
 }
 
 
-template <> void ad::adlinsolve<t2s>(pMatrix<t2s>  &t2s_J, pVector<t2s> &t2s_y) {
+template <> void ad::adlinsolve<t2s>(pMatrix<t2s> &t2s_J, pVector<t2s> &t2s_y) {
   // Get the values and tangents out for both J and y
   size_t dim = t2s_y.dim();
-  
+
   for (size_t i = 0; i < dim; ++i) py[i] = t2s_y[i].value().value();
   for (size_t i = 0; i < dim; ++i) t1_py[i] = t2s_y[i].value().gradient();
   for (size_t i = 0; i < dim; ++i) t2_py[i] = t2s_y[i].gradient().value();
   for (size_t i = 0; i < dim; ++i) t2_t1_py[i] = t2s_y[i].gradient().gradient();
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = t2s_J[i][j].value().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       tmp_pJ[i][j] = t2s_J[i][j].value().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t1_pJ[i][j] = t2s_J[i][j].value().gradient();
     }
   }
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t2_pJ[i][j] = t2s_J[i][j].gradient().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t2_t1_pJ[i][j] = t2s_J[i][j].gradient().gradient();
     }
@@ -499,7 +492,7 @@ template <> void ad::adlinsolve<t2s>(pMatrix<t2s>  &t2s_J, pVector<t2s> &t2s_y) 
   LUsolve(pJ, t2_t1_py);
   // Put x and t1_x back into the t1s type
   // cout << "New x and step" << endl;
-  
+
   for (size_t i = 0; i < dim; ++i) t2s_y[i] = py[i];
   for (size_t i = 0; i < dim; ++i) t2s_y[i].gradient().gradient() = t2_t1_py[i];
   for (size_t i = 0; i < dim; ++i) t2s_y[i].value().gradient() = t1_py[i];
@@ -510,12 +503,12 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   // Get the values and tangents out for both J and y
   size_t dim = t3s_y.dim();
   for (size_t i = 0; i < dim; ++i) py[i] = t3s_y[i].value().value().value();
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       pJ[i][j] = t3s_J[i][j].value().value().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       tmp_pJ[i][j] = t3s_J[i][j].value().value().value();
     }
@@ -526,26 +519,33 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   // t1_py has the tangents of the RHS of the primal. We now do t1_b - A_1*x
   // which is the RHS of the 1st order LS and decrement A_1*x. t1_b was already
   // extracted above
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t1_pJ[i][j] = t3s_J[i][j].value().value().gradient();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t1_py[i] = t3s_y[i].value().value().gradient();
+  for (size_t i = 0; i < dim; ++i)
+    t1_py[i] = t3s_y[i].value().value().gradient();
+
   decmatmul(t1_pJ, py, t1_py);
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t2_pJ[i][j] = t3s_J[i][j].value().gradient().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t2_py[i] = t3s_y[i].value().gradient().value();
+  for (size_t i = 0; i < dim; ++i)
+    t2_py[i] = t3s_y[i].value().gradient().value();
+
   decmatmul(t2_pJ, py, t2_py);
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t3_pJ[i][j] = t3s_J[i][j].gradient().value().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t3_py[i] = t3s_y[i].gradient().value().value();
+
+  for (size_t i = 0; i < dim; ++i)
+    t3_py[i] = t3s_y[i].gradient().value().value();
+
   decmatmul(t3_pJ, py, t3_py);
   // Use the saved Jacobian. The matrix is the same for the 1st order LS
   for (size_t i = 0; i < dim; ++i) {
@@ -567,33 +567,38 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   }
   LUsolve(pJ, t3_py);
 
-  
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t2_t1_pJ[i][j] = t3s_J[i][j].value().gradient().gradient();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t2_t1_py[i] = t3s_y[i].value().gradient().gradient();
+  for (size_t i = 0; i < dim; ++i)
+    t2_t1_py[i] = t3s_y[i].value().gradient().gradient();
+
   decmatmul(t2_t1_pJ, py, t2_t1_py);
   decmatmul(t1_pJ, t2_py, t2_t1_py);
   decmatmul(t2_pJ, t1_py, t2_t1_py);
 
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t3_t2_pJ[i][j] = t3s_J[i][j].gradient().gradient().value();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t3_t2_py[i] = t3s_y[i].gradient().gradient().value();
+  for (size_t i = 0; i < dim; ++i)
+    t3_t2_py[i] = t3s_y[i].gradient().gradient().value();
+
   decmatmul(t3_t2_pJ, py, t3_t2_py);
   decmatmul(t3_pJ, t2_py, t3_t2_py);
   decmatmul(t2_pJ, t3_py, t3_t2_py);
 
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t3_t1_pJ[i][j] = t3s_J[i][j].gradient().value().gradient();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t3_t1_py[i] = t3s_y[i].gradient().value().gradient();
+  for (size_t i = 0; i < dim; ++i)
+    t3_t1_py[i] = t3s_y[i].gradient().value().gradient();
+
   decmatmul(t3_t1_pJ, py, t3_t1_py);
   decmatmul(t1_pJ, t3_py, t3_t1_py);
   decmatmul(t3_pJ, t1_py, t3_t1_py);
@@ -616,12 +621,14 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
     }
   }
   LUsolve(pJ, t3_t1_py);
-  for (size_t i = 0; i < dim; ++i) { 
+  for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       t3_t2_t1_pJ[i][j] = t3s_J[i][j].gradient().gradient().gradient();
     }
   }
-  for (size_t i = 0; i < dim; ++i) t3_t2_t1_py[i] = t3s_y[i].gradient().gradient().gradient();
+  for (size_t i = 0; i < dim; ++i)
+    t3_t2_t1_py[i] = t3s_y[i].gradient().gradient().gradient();
+
   decmatmul(t3_t1_pJ, t2_py, t3_t2_t1_py);
   decmatmul(t1_pJ, t3_t2_py, t3_t2_t1_py);
   decmatmul(t3_t2_t1_pJ, py, t3_t2_t1_py);
@@ -636,13 +643,21 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   }
   LUsolve(pJ, t3_t2_t1_py);
   // Put x and t1_x back into the t1s type
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].value().value().value() = py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].gradient().value().value() = t3_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].value().gradient().gradient() = t2_t1_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].gradient().gradient().gradient() = t3_t2_t1_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].value().value().gradient() = t1_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].gradient().value().gradient() = t3_t1_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].value().gradient().value() = t2_py[i];
-  for (size_t i = 0; i < dim; ++i) t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].value().value().value() = py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].gradient().value().value() = t3_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].value().gradient().gradient() = t2_t1_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].gradient().gradient().gradient() = t3_t2_t1_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].value().value().gradient() = t1_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].gradient().value().gradient() = t3_t1_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].value().gradient().value() = t2_py[i];
+  for (size_t i = 0; i < dim; ++i)
+    t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
 }
 #endif  // ADUPROP_AD_HPP_

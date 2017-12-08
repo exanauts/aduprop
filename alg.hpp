@@ -21,7 +21,8 @@ typedef codi::RealForwardGen<t2s> t3s;
 // Passive vector definition
 
 template <typename> class pVector;
-template <typename T> std::ostream& operator<< (std::ostream& os, pVector<T> &m);
+template <typename T> std::ostream& operator<< (std::ostream& os,
+    pVector<T> &m);
 
 template <typename T> class pVector {
  public:
@@ -39,54 +40,54 @@ template <typename T> class pVector {
   T& operator[] (int i) {
     return data[i];
   }
-  
+
   const T& operator[] (int i) const {
     return data[i];
   }
-  
-  friend std::ostream& operator<< <> ( std::ostream&, pVector<T>& );  
 
-  pVector( const pVector &other ) {
-    if(other.n != n) {
-      if(data != NULL) delete [] data;
-      n=other.n;
+  friend std::ostream& operator<< <> (std::ostream&, pVector<T>&);
+
+  pVector(const pVector &other) {
+    if (other.n != n) {
+      if (data != NULL) delete [] data;
+      n = other.n;
       data = new T[n];
     }
-    for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
+    for (size_t i = 0; i < n; ++i) data[i] = other.data[i];
   }
-  
-  pVector& operator=( const pVector &other ) {
-    if(other.n != n) {
-      if(data != NULL) delete [] data;
-      n=other.n;
+
+  pVector& operator=(const pVector &other) {
+    if (other.n != n) {
+      if (data != NULL) delete [] data;
+      n = other.n;
       data = new T[n];
     }
-    for(size_t i = 0; i < n ; ++i) data[i] = other.data[i];
+    for (size_t i = 0; i < n ; ++i) data[i] = other.data[i];
     return *this;
   }
-  
+
   pVector operator+(const pVector& b) {
     assert(this->n == b.n);
     pVector<T> vec(b.n);
-    for(size_t i = 0; i < b.n ; ++i) {
+    for (size_t i = 0; i < b.n; ++i) {
       vec.data[i] = this->data[i] + b.data[i];
     }
     return vec;
   }
-  
+
   pVector operator-(const pVector& b) {
     assert(this->n == b.n);
     pVector<T> vec(b.n);
-    for(size_t i = 0; i < b.n ; ++i) {
+    for (size_t i = 0; i < b.n; ++i) {
       vec.data[i] = this->data[i] - b.data[i];
     }
     return vec;
   }
-  
+
   T operator*(const pVector& b) {
     assert(this->n == b.n);
     T res = 0.0;
-    for(size_t i = 0; i < b.n ; ++i) {
+    for (size_t i = 0; i < b.n; ++i) {
       res += this->data[i] * b.data[i];
     }
     return res;
@@ -114,7 +115,8 @@ template <typename T> inline void pVector<T>::zeros() {
   }
 }
 
-template <typename T> std::ostream& operator<< (std::ostream& os, pVector<T> &v) {
+template <typename T> std::ostream& operator<< (std::ostream& os,
+    pVector<T> &v) {
   for (size_t i = 0; i < v.n; ++i) {
     os << v.data[i] << " ";
   }
@@ -124,7 +126,8 @@ template <typename T> std::ostream& operator<< (std::ostream& os, pVector<T> &v)
 
 // Passive matrix definition
 template <typename> class pMatrix;
-template <typename T> std::ostream& operator<< (std::ostream& os, pMatrix<T> &m);
+template <typename T> std::ostream& operator<< (std::ostream& os,
+    pMatrix<T> &m);
 
 template <typename T> class pMatrix {
  public:
@@ -140,46 +143,47 @@ template <typename T> class pMatrix {
   size_t nrows() const;
   size_t ncols() const;
   void display();
-  
+
   class row {
-  public:
+   public:
     T *ptr;
     size_t &rows;
-    row(T *ptr_, size_t &rows_) : ptr(ptr_), rows(rows_) {}; 
+    row(T *ptr_, size_t &rows_) : ptr(ptr_), rows(rows_) {};
     T& operator[] (int i) {
       return *(ptr+i);
     }
-  
-  };
+  }
+
   row operator[] (int i) {
     return row(data+i*rows, rows);
   }
-  friend std::ostream& operator<< <> ( std::ostream&, pMatrix<T>& );  
-  
-  pMatrix( const pMatrix &other ) {
-    if(other.cols != cols || other.rows != rows) {
-      if(data != NULL) delete [] data;
-      rows=other.rows;
-      cols=other.cols;
+
+  friend std::ostream& operator<< <> (std::ostream&, pMatrix<T>&);
+
+  pMatrix(const pMatrix &other) {
+    if (other.cols != cols || other.rows != rows) {
+      if (data != NULL) delete [] data;
+      rows = other.rows;
+      cols = other.cols;
       data = new T[rows*cols];
     }
-    for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
+    for (size_t i = 0; i < rows*cols; ++i) data[i] = other.data[i];
   }
-  pMatrix& operator=( const pMatrix &other ) {
-    if(other.cols != cols || other.rows != rows) {
-      if(data != NULL) delete [] data;
-      rows=other.rows;
-      cols=other.cols;
+  pMatrix& operator=(const pMatrix &other) {
+    if (other.cols != cols || other.rows != rows) {
+      if (data != NULL) delete [] data;
+      rows = other.rows;
+      cols = other.cols;
       data = new T[rows*cols];
     }
-    for(size_t i = 0; i < rows*cols ; ++i) data[i] = other.data[i];
+    for (size_t i = 0; i < rows*cols; ++i) data[i] = other.data[i];
     return *this;
   }
-  
+
   T norm() {
     T res = 0;
-    for(size_t i = 0 ; i < rows ; ++i) {
-      for(size_t j = 0 ; j < cols ; ++j) {
+    for (size_t i = 0 ; i < rows; ++i) {
+      for (size_t j = 0 ; j < cols; ++j) {
         res+=(data[i*cols + j])*(data[i*cols + j]);
       }
     }
@@ -197,7 +201,8 @@ template <typename T> inline void pMatrix<T>::zeros() {
   }
 }
 
-template <typename T> std::ostream& operator<< (std::ostream& os, pMatrix<T> &m) {
+template <typename T> std::ostream& operator<< (std::ostream& os,
+    pMatrix<T> &m) {
   for (size_t i = 0; i < m.rows; ++i) {
     for (size_t j = 0; j < m.cols; ++j) {
       os << m[i][j] << " ";
@@ -219,15 +224,18 @@ template <typename T> inline T* pMatrix<T>::get_datap() const {
   return data;
 }
 
-template <typename T> inline T& pMatrix<T>::get(const size_t i, const size_t j) {
+template <typename T> inline T& pMatrix<T>::get(const size_t i,
+    const size_t j) {
   return data[j*rows + i];
 }
 
 // Function declarations
 
-void decmatmul(const pMatrix<double> &A, const pVector<double> &x, pVector<double> &y);
+void decmatmul(const pMatrix<double> &A, const pVector<double> &x,
+  pVector<double> &y);
+
 void LUsolve(pMatrix<double> &A, pVector<double> &b);
 
-} // end of namespace
+}  // namespace alg
 
 #endif  // ADUPROP_ALG_HPP_
