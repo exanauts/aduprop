@@ -9,6 +9,8 @@
 
 #include <codi.hpp>
 #include <cassert>
+#include "hdf5.h"
+#include "hdf5_hl.h"
 #include "tensor.hpp"
 
 namespace alg {
