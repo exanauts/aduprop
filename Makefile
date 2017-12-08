@@ -10,6 +10,8 @@ ifneq ($(HDF_INSTALL),)
 	CFLAGS += -I$(HDF_INSTALL)/include
 	LDLIBS += -L$(HDF_INSTALL)/lib
 	LDLIBS += $(HDF_INSTALL)/lib/libhdf5.a
+	LDLIBS += $(HDF_INSTALL)/lib/libhdf5_hl.a
+	LDLIBS += -lsz -lz -lm
 endif
 
 

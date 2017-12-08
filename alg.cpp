@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include "hdf5.h"
+#include "hdf5_hl.h"
 
 
 namespace alg {
@@ -44,6 +46,28 @@ template <typename T> void pVector<T>::set(const size_t i, const T val) {
 
 template <typename T> T pVector<T>::get(const size_t i) const {
   return data[i];
+}
+
+
+template <> void pVector<double>::to_hdf5(const std::string filename) {
+  hid_t file_id;
+  hsize_t dims[2];
+  dims[0] = n;
+  file_id = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTmake_dataset(file_id, "vector", 1, dims, H5T_NATIVE_DOUBLE, data);
+  H5Fclose (file_id);
+}
+
+template <> void pVector<double>::from_hdf5(const std::string filename) {
+  assert(n == 0); // vector must be empty
+  hid_t file_id;
+  hsize_t dims[2];
+  file_id = H5Fopen (filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  H5LTget_dataset_info(file_id, "vector", dims, NULL, NULL);
+  n = dims[0];
+  data = (double*)malloc(dims[0]*sizeof(double));
+  H5LTread_dataset_double(file_id, "vector", data);
+  H5Fclose(file_id);
 }
 
 // MATRIX DEFINITIONS

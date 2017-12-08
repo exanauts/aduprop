@@ -8,6 +8,8 @@ int main(int nargs, char** args) {
   
   size_t dim = 4;
 
+  double EPS = 1e-10;
+
   //  Vector creation
   alg::pVector<double> b(dim);
 
@@ -76,5 +78,22 @@ int main(int nargs, char** args) {
   cycleEND = __rdtsc();
   
   std::cout << "Number of cycles spent in overload: " << cycleEND - cycleSTART << std::endl;
+
+
+  // IO stuff
+  
+  b.to_hdf5("b.hdf5");
+  
+  alg::pVector<double> b2, err;
+  
+  b2.from_hdf5("b.hdf5");
+
+  err = b - b2;
+
+  assert(abs(err.norm()) < EPS);
+
+
+  
+
 
 }

@@ -9,8 +9,6 @@
 
 #include <codi.hpp>
 #include <cassert>
-#include "hdf5.h"
-#include "hdf5_hl.h"
 #include "tensor.hpp"
 
 namespace alg {
@@ -37,6 +35,10 @@ template <typename T> class pVector {
   size_t dim() const;
   T* get_datap() const;
   void zeros();
+
+  // IO routines
+  void to_hdf5(const std::string filename);
+  void from_hdf5(const std::string filename);
 
   void display();
   T& operator[] (int i) {
