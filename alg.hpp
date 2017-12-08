@@ -152,7 +152,7 @@ template <typename T> class pMatrix {
     T& operator[] (int i) {
       return *(ptr+i);
     }
-  }
+  };
 
   row operator[] (int i) {
     return row(data+i*rows, rows);
