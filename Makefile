@@ -1,5 +1,5 @@
 CXX = clang++
-CFLAGS = -O3 -Wall -std=c++11 -I${CODI_DIR}/include
+CFLAGS = -g -O0 -Wall -std=c++11 -I${CODI_DIR}/include
 LDLIBS = -llapack -lblas
 
 

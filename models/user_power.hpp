@@ -171,64 +171,64 @@ template <class T> void jac_beuler(const pVector<T> &x,
 
   J.zeros();
   J[0][0] = 1.0 - h*(-(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0) - 1.0)/T_d0p;
-  J[2][0] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0)/T_d0p;
-  J[9][0] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*pow(x_dp - xl, -1.0) + 1)/T_d0p;
+  J[0][2] = -h*(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0)/T_d0p;
+  J[0][9] = h*(x_d - x_dp)*(-(-x_ddp + x_dp)*pow(x_dp - xl, -1.0) + 1)/T_d0p;
 
   J[1][1] = 1.0 - h*(-(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0) - 1.0)/T_q0p;
-  J[3][1] = h*(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0)/T_q0p;
-  J[8][1] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*pow(x_qp - xl, -1.0) + 1.0)/T_q0p;
+  J[1][3] = h*(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0)/T_q0p;
+  J[1][8] = -h*(x_q - x_qp)*(-(-x_qdp + x_qp)*pow(x_qp - xl, -1.0) + 1.0)/T_q0p;
   
-  J[0][2] = -h/T_d0dp;
+  J[2][0] = -h/T_d0dp;
   J[2][2] = 1.0 + h/T_d0dp;
-  J[9][2] = -h*(-x_dp + xl)/T_d0dp;
+  J[2][9] = -h*(-x_dp + xl)/T_d0dp;
   
-  J[1][3] = h/T_q0dp;
+  J[3][1] = h/T_q0dp;
   J[3][3] = 1.0 + h/T_q0dp;
-  J[8][3] = -h*(-x_qp + xl)/T_q0dp;
+  J[3][8] = -h*(-x_qp + xl)/T_q0dp;
   
-  J[0][4] = 0.5*h*i_q*(x_ddp - xl)/(H*(x_dp - xl));
-  J[1][4] = -0.5*h*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
-  J[2][4] = 0.5*h*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
-  J[3][4] = -0.5*h*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
+  J[4][0] = 0.5*h*i_q*(x_ddp - xl)/(H*(x_dp - xl));
+  J[4][1] = -0.5*h*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
+  J[4][2] = 0.5*h*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
+  J[4][3] = -0.5*h*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
   J[4][4] = 1.0;
-  J[8][4] = -0.5*h*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
-  J[9][4] = -0.5*h*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
+  J[4][8] = -0.5*h*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
+  J[4][9] = -0.5*h*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
    
-  J[4][5] = -120.0*M_PI*h;
+  J[5][4] = -120.0*M_PI*h;
   J[5][5] = 1.0;
    
-  J[0][6] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
-  J[2][6] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
+  J[6][0] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
+  J[6][2] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
   J[6][6] = 1.0/x_ddp;
-  J[9][6] = 1.0;
-   
-  J[1][7] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
-  J[3][7] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
-  J[7][7] = -1/x_qdp;
-  J[8][7] = 1.0;
-   
-  J[5][8] = -v1m*cos(delta - v1a);
-  J[7][8] = 1.0;
-  J[10][8] = -sin(delta - v1a);
-  J[11][8] = v1m*cos(delta - v1a);
-   
-  J[5][9] = v1m*sin(delta - v1a);
   J[6][9] = 1.0;
-  J[10][9] = -cos(delta - v1a);
-  J[11][9] = -v1m*sin(delta - v1a);
+   
+  J[7][1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
+  J[7][2] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
+  J[7][7] = -1/x_qdp;
+  J[7][8] = 1.0;
+   
+  J[8][5] = -v1m*cos(delta - v1a);
+  J[8][7] = 1.0;
+  J[8][10] = -sin(delta - v1a);
+  J[8][11] = v1m*cos(delta - v1a);
+   
+  J[9][5] = v1m*sin(delta - v1a);
+  J[9][6] = 1.0;
+  J[9][10] = -cos(delta - v1a);
+  J[9][11] = -v1m*sin(delta - v1a);
   
-  J[6][10] = i_q;
-  J[7][10] = i_d;
-  J[8][10] = v_q;
-  J[9][10] = v_d;
+  J[10][6] = i_q;
+  J[10][7] = i_d;
+  J[10][8] = v_q;
+  J[10][9] = v_d;
   J[10][10] = v0m*sin(v0a - v1a)/xline;
-  J[11][10] = -v0m*v1m*cos(v0a - v1a)/xline;
+  J[10][11] = -v0m*v1m*cos(v0a - v1a)/xline;
   
-  J[6][11] = i_d;
-  J[7][11] = -i_q;
-  J[8][11] = -v_d;
-  J[9][11] = v_q;
-  J[10][11] = v0m*cos(v0a - v1a)/xline - 2.0*v1m/xline;
+  J[11][6] = i_d;
+  J[11][7] = -i_q;
+  J[11][8] = -v_d;
+  J[11][9] = v_q;
+  J[11][10] = v0m*cos(v0a - v1a)/xline - 2.0*v1m/xline;
   J[11][11] = v0m*v1m*sin(v0a - v1a)/xline;
 
 }
