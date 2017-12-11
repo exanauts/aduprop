@@ -156,12 +156,12 @@ template <typename T> class pMatrix {
     size_t &rows;
     row(T *ptr_, size_t &rows_) : ptr(ptr_), rows(rows_) {};
     T& operator[] (int i) {
-      return *(ptr+i);
+      return *(ptr+i*rows);
     }
   };
 
   row operator[] (int i) {
-    return row(data+i*rows, rows);
+    return row(data+i, rows);
   }
 
   friend std::ostream& operator<< <> (std::ostream&, pMatrix<T>&);

@@ -109,7 +109,7 @@ void fdJ_driver(pVector<double> &xic, pMatrix<double> &J) {
   size_t dim = xic.dim();
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
-  double pert = 1e-8;
+  double pert = 1e-10;
 
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
@@ -118,7 +118,7 @@ void fdJ_driver(pVector<double> &xic, pMatrix<double> &J) {
     xpert2[i] -= pert/2.0;
     integrate<double>(xpert1);
     integrate<double>(xpert2);
-    for (size_t j = 0; j < dim; ++j) J[i][j] = (xpert1[j] - xpert2[j])/pert;
+    for (size_t j = 0; j < dim; ++j) J[j][i] = (xpert1[j] - xpert2[j])/pert;
   }
   integrate<double>(xic);
 }
@@ -138,7 +138,7 @@ void fdH_driver(pVector<double> &xic, pTensor3<double> &H) {
   pVector<double> xpert2(dim);
   pMatrix<double> Jpert1(dim, dim);
   pMatrix<double> Jpert2(dim, dim);
-  double pert = 1e-8;
+  double pert = 1e-10;
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
     for (size_t j = 0; j < dim; ++j) xpert2[j] = xic[j];
@@ -148,7 +148,7 @@ void fdH_driver(pVector<double> &xic, pTensor3<double> &H) {
     t1s_driver(xpert2, Jpert2);
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
-        H[i][j][k] = (Jpert1[j][k] - Jpert2[j][k])/pert;
+        H[j][k][i] = (Jpert1[j][k] - Jpert2[j][k])/pert;
       }
     }
   }
@@ -171,7 +171,7 @@ void fdT_driver(pVector<double> &xic, pTensor4<double> &T) {
   pMatrix<double> J(dim, dim);
   pTensor3<double> Hpert1(dim, dim, dim);
   pTensor3<double> Hpert2(dim, dim, dim);
-  double pert = 1e-8;
+  double pert = 1e-10;
   for (size_t i = 0; i < dim; ++i) {
     cout << "Computing tensor. "
       << (double) i*(double) 100.0/(double) dim << "\% done." << endl;
@@ -184,7 +184,7 @@ void fdT_driver(pVector<double> &xic, pTensor4<double> &T) {
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
         for (size_t l = 0; l < dim; ++l) {
-          T[i][j][k][l] = (Hpert1[j][k][l] - Hpert2[j][k][l])/pert;
+          T[j][k][l][i] = (Hpert1[j][k][l] - Hpert2[j][k][l])/pert;
         }
       }
     }
@@ -210,7 +210,7 @@ void t1s_driver(pVector<double> &xic, pMatrix<double> &J) {
     }
     axic[i].setGradient(1.0);
     integrate<t1s>(axic);
-    for (size_t j = 0; j < dim; ++j) J[i][j] = axic[j].getGradient();
+    for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
   for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
@@ -239,7 +239,7 @@ void t2s_t1s_driver(pVector<double> &xic,
       axic[j].gradient().value() = 1.0;
       integrate<t2s>(axic);
       for (size_t k = 0; k < dim; ++k) {
-        H[i][j][k] = axic[k].gradient().gradient();
+        H[k][j][i] = axic[k].gradient().gradient();
       }
       // This should give you the Jacobian too
       // for(size_t k = 0; k < dim ; ++k) {
@@ -247,7 +247,7 @@ void t2s_t1s_driver(pVector<double> &xic,
       // }
     }
     for (size_t j = 0; j < dim; ++j) {
-      J[i][j] = axic[j].value().gradient();
+      J[j][i] = axic[j].value().gradient();
     }
   }
 }
@@ -286,15 +286,15 @@ void t3s_t2s_t1s_driver(pVector<double> &xic,
         axic[k].gradient().value().value() = 1.0;
         integrate<t3s>(axic);
         for (size_t l = 0; l < dim; ++l) {
-          T[i][j][k][l] = axic[l].gradient().gradient().gradient();
+          T[l][k][j][i] = axic[l].gradient().gradient().gradient();
         }
       }
       for (size_t k = 0; k < dim; ++k) {
-        H[i][j][k] = axic[k].value().gradient().gradient();
+        H[k][j][i] = axic[k].value().gradient().gradient();
       }
     }
     for (size_t j = 0; j < dim; ++j) {
-      J[i][j] = axic[j].value().value().gradient();
+      J[j][i] = axic[j].value().value().gradient();
     }
   }
 }
@@ -316,13 +316,13 @@ void jactest(pVector<double> &xold) {
 
   // Evaluate jacobian
   pMatrix<double> J(dim, dim);
-  for (size_t i = 0; i < dim; ++i) {
-    x[i].setGradient(1.0);
-    for (size_t j = 0; j < dim; ++j) {
+  for (size_t j = 0; j < dim; ++j) {
+    x[j].setGradient(1.0);
+    for (size_t i = 0; i < dim; ++i) {
       sys->residual_beuler<t1s>(x, axold, y);
-      J[i][j] = y[j].getGradient();
+      J[i][j] = y[i].getGradient();
     }
-    x[i].setGradient(0.0);
+    x[j].setGradient(0.0);
   }
 
   cout << "AD Jacobian" << endl;
