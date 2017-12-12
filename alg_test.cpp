@@ -25,7 +25,7 @@ int main(int nargs, char** args) {
 
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) {
-      A.set(i, j, static_cast<double>(pow(i + 1, j)));
+      A[i][j] = static_cast<double>(pow(i + 1, j));
     }
   }
 
