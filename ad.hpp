@@ -360,23 +360,33 @@ template <class T> void integrate(pVector<T> &x) {
   double eps = 1e-9;
   int iteration = 0;
   pVector<T> xold(dim);
+  pVector<T> yold(dim);
   pVector<T> y(dim);
+  pVector<T> res(dim);
   pMatrix<T> J(dim, dim);
+  pMatrix<T> Jold(dim, dim);
   xold = x;
   sys->residual_beuler<T>(x, xold, y);
   J.zeros();
 
-  do {
+  // do {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
     cout << endl << endl << "Iteration: " << iteration << endl;
     cout << "Norm(J): " << J.norm() << endl << " J: " << J << endl;
     cout << "Norm(F): " << y.norm() << endl << " F: " << y << endl;
+    yold = y;
+    Jold = J;
     adlinsolve<T>(J, y);
+    res = Jold*y - yold;
     cout << "Norm(y): " << y.norm() << endl << " y: " << y << endl;
+    cout << "|Ax - b| " << res.norm() << endl;
+    cout << "|Ax - b| " << res << endl;
+    
     x = x - y;
     sys->residual_beuler<T>(x, xold, y);
-  } while (y.norm() > eps);
+  // } while (y.norm() > eps);
+  
  
 } 
 } ad;

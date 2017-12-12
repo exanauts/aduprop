@@ -195,6 +195,16 @@ template <typename T> class pMatrix {
     }
     return sqrt(res);
   }
+  pVector<T> operator*(const pVector<T>& b) {
+    assert(this->cols == b.dim());
+    pVector<T> res(b.dim());
+    for (size_t i = 0; i < rows; ++i) {
+      for (size_t j = 0; j < b.dim(); ++j) {
+        res[j] += data[i*cols + j] * b[i];
+      }
+    }
+    return res;
+  }
   
  private:
   size_t rows, cols;
@@ -211,9 +221,9 @@ template <typename T> std::ostream& operator<< (std::ostream& os,
     pMatrix<T> &m) {
   for (size_t i = 0; i < m.rows; ++i) {
     for (size_t j = 0; j < m.cols; ++j) {
-      os << m[i][j] << " ";
+      os << m.data[j*m.cols + i] << " ";
     }
-    os << "\n";
+    // os << "\n";
   }
   return os;
 }
