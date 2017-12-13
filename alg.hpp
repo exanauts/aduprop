@@ -197,10 +197,11 @@ template <typename T> class pMatrix {
   }
   pVector<T> operator*(const pVector<T>& b) {
     assert(this->cols == b.dim());
-    pVector<T> res(b.dim());
+    pVector<T> res(rows);
+    for (size_t i = 0; i < rows; ++i) res[i] = 0;
     for (size_t i = 0; i < rows; ++i) {
-      for (size_t j = 0; j < b.dim(); ++j) {
-        res[j] += data[i*cols + j] * b[i];
+      for (size_t j = 0; j < cols; ++j) {
+        res[i] += data[j*cols + i] * b[j];
       }
     }
     return res;
