@@ -371,18 +371,21 @@ template <class T> void integrate(pVector<T> &x) {
   do {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
+#ifdef DBUG
     cout << endl << endl << "Iteration: " << iteration << endl;
     cout << "Norm(J): " << setprecision(20) << J.norm() << endl << " J: " << J << endl;
     cout << "Norm(F): " << y.norm() << endl << " F: " << y << endl;
+#endif
     yold = y;
     Jold = J;
     adlinsolve<T>(J, y);
     pVector<T> res(dim);
     res = Jold*y - yold;
+#ifdef DBUG
     cout << "Norm(y): " << y.norm() << endl << " y: " << y << endl;
     cout << "|Ax - b| " << res.norm() << endl;
     cout << "|Ax - b| " << res << endl;
-    
+#endif
     x = x - y;
     sys->residual_beuler<T>(x, xold, y);
   } while (y.norm() > eps);

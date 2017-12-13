@@ -146,7 +146,6 @@ template <class T> void jac_beuler(const pVector<T> &x,
   const T e_dp     = x[1];
   const T phi_1d   = x[2];
   const T phi_2q   = x[3];
-  const T w        = x[4];
   const T delta    = x[5];
   const T v_q      = x[6];
   const T v_d      = x[7];

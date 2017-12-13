@@ -18,6 +18,11 @@ endif
 
 all: powerad
 
+# debug options
+debug: CFLAGS += -DDBUG
+debug: all
+
+# tests
 tests: alg_test
 
 # MAIN PROGRAM
