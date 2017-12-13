@@ -203,7 +203,7 @@ template <class T> void jac_beuler(const pVector<T> &x,
   J[6][9] = 1.0;
    
   J[7][1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
-  J[7][2] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
+  J[7][3] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
   J[7][7] = -1/x_qdp;
   J[7][8] = 1.0;
    

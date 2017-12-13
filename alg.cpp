@@ -160,8 +160,8 @@ void LUsolve(pMatrix<double> &A, pVector<double> &b) {
   double* b_data = b.get_datap();
   int nrhs = 1;
   int info = 0;
-  static bool first = true;
-  static int* ipiv = NULL;
+  bool first = true;
+  int* ipiv = NULL;
   if(first) {  
     ipiv = reinterpret_cast<int*>(calloc(n, sizeof(int)));
     first = false;
@@ -170,6 +170,7 @@ void LUsolve(pMatrix<double> &A, pVector<double> &b) {
   int ldb = n;
 
   FNAME(dgesv)(&n, &nrhs, A_data, &lda, ipiv, b_data, &ldb, &info);
+  free(ipiv);
   assert(!info);
 }
 

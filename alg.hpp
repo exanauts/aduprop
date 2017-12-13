@@ -123,9 +123,12 @@ template <typename T> inline void pVector<T>::zeros() {
 
 template <typename T> std::ostream& operator<< (std::ostream& os,
     pVector<T> &v) {
+  os << "[ ";
   for (size_t i = 0; i < v.n; ++i) {
-    os << v.data[i] << " ";
+    if (i) os << ", ";
+    os << v.data[i];
   }
+  os << " ]";
   std::cout << std::endl;
   return os;
 }
@@ -221,10 +224,12 @@ template <typename T> inline void pMatrix<T>::zeros() {
 template <typename T> std::ostream& operator<< (std::ostream& os,
     pMatrix<T> &m) {
   for (size_t i = 0; i < m.rows; ++i) {
+    os << "[ ";
     for (size_t j = 0; j < m.cols; ++j) {
-      os << m.data[j*m.cols + i] << " ";
+      if (j) os << ", ";
+      os << m.data[j*m.cols + i];
     }
-    // os << "\n";
+    os << " ],\n";
   }
   return os;
 }

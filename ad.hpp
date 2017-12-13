@@ -372,7 +372,7 @@ template <class T> void integrate(pVector<T> &x) {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
     cout << endl << endl << "Iteration: " << iteration << endl;
-    cout << "Norm(J): " << J.norm() << endl << " J: " << J << endl;
+    cout << "Norm(J): " << setprecision(20) << J.norm() << endl << " J: " << J << endl;
     cout << "Norm(F): " << y.norm() << endl << " F: " << y << endl;
     yold = y;
     Jold = J;
