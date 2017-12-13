@@ -1,7 +1,11 @@
-CXX = clang++
-CFLAGS = -g -O0 -Wall -std=c++11 -I${CODI_DIR}/include
-LDLIBS = -llapack -lblas
+include Makefile.inc
 
+ifndef CODI_DIR
+ $(error Environment variable CODI_DIR is undefined)
+endif
+
+CFLAGS += -std=c++11 -I$(CODI_DIR)/include
+LDLIBS = $(MATH_LIBS)
 
 HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
 
@@ -14,7 +18,6 @@ ifneq ($(HDF_INSTALL),)
 	LDLIBS += $(HDF_INSTALL)/lib/libhdf5_hl.a
 	LDLIBS += -lsz -lz -lm
 endif
-
 
 all: powerad
 

@@ -1,0 +1,4 @@
+CXX = clang++
+CFLAGS = -g -O0 -Wall 
+MATH_LIBS = -llapack -lblas
+CODI_DIR = $(HOME)/git/CoDiPack
