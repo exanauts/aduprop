@@ -65,7 +65,7 @@ int main(int nargs, char** args) {
   // cout << "H" << endl << H << endl;
   // cout << "T" << endl << T << endl;
   for (size_t i = 0; i < dim; ++i) x[i] = xold[i];
-  drivers.fdJ_driver(x, J);
+  // drivers.fdJ_driver(x, J);
   cout << "Function using FD" << endl;
   cout << "-----------------" << endl;
   cout << xold << endl;
