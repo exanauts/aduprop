@@ -5,6 +5,8 @@ LDLIBS = -llapack -lblas
 
 HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
 
+.PHONY: all debug tests doc clean
+
 # HDF5 support
 ifneq ($(HDF_INSTALL),)
 	CFLAGS += -I$(HDF_INSTALL)/include
@@ -21,6 +23,11 @@ all: powerad
 # debug options
 debug: CFLAGS += -DDBUG
 debug: all
+
+# optimized
+opt: CFLAGS := $(filter-out -O0,$(CFLAGS))
+opt: CFLAGS += -O3
+opt: all
 
 # tests
 tests: alg_test
@@ -51,5 +58,6 @@ doc: power.cpp ad.hpp user.hpp doc/Doxyfile.in doc/mainpage.md
 
 clean:
 	$(RM) *.o
+	$(RM) powerad
 
 

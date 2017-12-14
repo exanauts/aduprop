@@ -105,7 +105,7 @@ template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
    \pre "Input system and state"
    \post "Jacobian"
 */
-void fdJ_driver(pVector<double> &xic, pMatrix<double> &J) {
+void fdJ_driver(const pVector<double> &xic, pMatrix<double> &J) {
   size_t dim = xic.dim();
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
@@ -120,7 +120,7 @@ void fdJ_driver(pVector<double> &xic, pMatrix<double> &J) {
     integrate<double>(xpert2);
     for (size_t j = 0; j < dim; ++j) J[j][i] = (xpert1[j] - xpert2[j])/pert;
   }
-  integrate<double>(xic);
+  //integrate<double>(xic);
 }
 
 /*!
@@ -132,7 +132,7 @@ void fdJ_driver(pVector<double> &xic, pMatrix<double> &J) {
    \pre "Input system and state"
    \post "Hessian"
 */
-void fdH_driver(pVector<double> &xic, pTensor3<double> &H) {
+void fdH_driver(const pVector<double> &xic, pTensor3<double> &H) {
   size_t dim = xic.dim();
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
@@ -164,7 +164,7 @@ void fdH_driver(pVector<double> &xic, pTensor3<double> &H) {
    \pre "Input system and state"
    \post "Tensor"
 */
-void fdT_driver(pVector<double> &xic, pTensor4<double> &T) {
+void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
   size_t dim = xic.dim();
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
@@ -200,7 +200,7 @@ void fdT_driver(pVector<double> &xic, pTensor4<double> &T) {
    \pre "Input system and state"
    \post "Jacobian"
 */
-void t1s_driver(pVector<double> &xic, pMatrix<double> &J) {
+void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
   size_t dim = xic.dim();
   pVector<t1s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -212,8 +212,10 @@ void t1s_driver(pVector<double> &xic, pMatrix<double> &J) {
     integrate<t1s>(axic);
     for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
-  for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
+  //for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
+
+
 /*!
    \brief "Driver for accumulating Hessian using AD. Go over all 
    Cartesian basis vectors of the tangents t1_xic and t2_xic and collect one Hessian projection after the other."
@@ -223,7 +225,7 @@ void t1s_driver(pVector<double> &xic, pMatrix<double> &J) {
    \pre "Input system and state"
    \post "Hessian"
 */
-void t2s_t1s_driver(pVector<double> &xic,
+void t2s_t1s_driver(const pVector<double> &xic,
     pMatrix<double> &J, pTensor3<double> &H) {
   size_t dim = xic.dim();
   pVector<t2s> axic(dim);
@@ -262,7 +264,7 @@ void t2s_t1s_driver(pVector<double> &xic,
    \pre "Input system and state"
    \post "tensor"
 */
-void t3s_t2s_t1s_driver(pVector<double> &xic,
+void t3s_t2s_t1s_driver(const pVector<double> &xic,
     pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T) {
   size_t dim = xic.dim();
   pVector<t3s> axic(dim);
@@ -304,7 +306,7 @@ void t3s_t2s_t1s_driver(pVector<double> &xic,
    handwritten Jacobian and the AD generated Jacobian based on residual_beuler"
    \param xold "State xold"
 */
-void jactest(pVector<double> &xold) {
+void jactest(const pVector<double> &xold) {
   size_t dim = xold.dim();
   pVector<t1s> x = pVector<t1s>(dim);
   pVector<t1s> axold = pVector<t1s>(dim);
