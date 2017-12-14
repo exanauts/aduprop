@@ -16,7 +16,6 @@
 #include "CONTRIB/cxxopts.hpp"
 
 int main(int argc, char* argv[]) {
-  
   // Options parser
 
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
@@ -30,18 +29,18 @@ int main(int argc, char* argv[]) {
     ("test_jac", "Test inner jacobian", cxxopts::value<bool>(test_jac))
     ("tensor1", "Compute AD and HC jacobian", cxxopts::value<bool>(tensor1))
     ("tensor2", "Compute AD and HC hessian", cxxopts::value<bool>(tensor2))
-    ("tensor3", "Compute AD and HC tensor of order 3", cxxopts::value<bool>(tensor3))
-  ;
+    ("tensor3", "Compute AD and HC tensor of order 3",
+     cxxopts::value<bool>(tensor3));
 
   auto result = options.parse(argc, argv);
-  
+
   // problem definition
   System sys;
-  size_t dim = sys.dim();  
+  size_t dim = sys.dim();
 
   pVector<double> xold(dim);
   pVector<double> x(dim);
-  
+
   sys.ic(xold);
   ad drivers(sys);
 
@@ -55,7 +54,7 @@ int main(int argc, char* argv[]) {
   std::cout << "---------" << std::endl;
   std::cout << xold << endl;
   x = xold;
-  
+
 
   // Tensors
   pMatrix<double>  J(dim, dim);
@@ -67,14 +66,14 @@ int main(int argc, char* argv[]) {
   pTensor4<double> T(dim, dim, dim, dim);
   pTensor4<double> T_fd(dim, dim, dim, dim);
 
-  
+
   if (tensor1) {
     J.zeros();
     drivers.t1s_driver(x, J);
     std::cout << "Jacobian using 1st order AD" << endl;
     std::cout << "-----------------" << std::endl;
     std::cout << J << std::endl;
-  
+
     J_fd.zeros();
     drivers.fdJ_driver(x, J_fd);
     std::cout << "Jacobian using FD" << std::endl;
@@ -90,7 +89,7 @@ int main(int argc, char* argv[]) {
     std::cout << "-----------------" << std::endl;
     std::cout << "J" << std::endl << J << std::endl;
     std::cout << "H" << std::endl << H << std::endl;
-  
+
     J.zeros();
     H.zeros();
     std::cout << "Hessian using FD" << std::endl;
