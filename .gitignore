@@ -1,3 +1,7 @@
 powerad
 *.o
 libaduprop.a
+Makefile.inc
+examples/lorenz/lorenz
+examples/power/lorenz
+test/alg_test/alg_test
