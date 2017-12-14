@@ -1,27 +1,6 @@
 include Makefile.inc
 
-ifndef CODI_DIR
- $(error Environment variable CODI_DIR is undefined)
-endif
-
-CFLAGS += -std=c++11 -I$(CODI_DIR)/include
-LDLIBS = $(MATH_LIBS)
-
-HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
-
-.PHONY: all debug tests doc clean
-
-# HDF5 support
-ifneq ($(HDF_INSTALL),)
-	CFLAGS += -I$(HDF_INSTALL)/include
-	CFLAGS += -DHDF5
-	LDLIBS += -L$(HDF_INSTALL)/lib
-	LDLIBS += $(HDF_INSTALL)/lib/libhdf5.a
-	LDLIBS += $(HDF_INSTALL)/lib/libhdf5_hl.a
-	LDLIBS += -lsz -lz -lm
-endif
-
-all: powerad
+all: lib
 
 # debug options
 debug: CFLAGS += -DDBUG
@@ -33,34 +12,44 @@ opt: CFLAGS += -O3
 opt: all
 
 # tests
-tests: alg_test
+tests: 
+	cd test ; for i in `ls` ; do cd $$i ; make test ; done
 
-# MAIN PROGRAM
+# LIBRARY
 
-powerad: power.o alg.o
-	$(CXX) -o powerad power.o alg.o $(LDLIBS)
+lib: alg.o $(HEADERS) 
+	$(AR) $(AROPT) libaduprop.a alg.o
 
-power.o: power.cpp $(HEADERS)
-	$(CXX) $(CFLAGS) -c power.cpp
-
-alg.o: alg.cpp $(HEADERS)
-	$(CXX) $(CFLAGS) -c alg.cpp
-
-# TESTS
-
-alg_test: alg_test.o alg.o
-	$(CXX) -o alg_test alg_test.o alg.o $(LDLIBS)
-
-alg_test.o: alg_test.cpp $(HEADERS)
-	$(CXX) $(CFLAGS) -c alg_test.cpp
+alg.o: $(SRC_DIR)/alg.cpp $(HEADERS)
+	$(CXX) $(CFLAGS) -c $(SRC_DIR)/alg.cpp
 
 # DOCUMENTATION
 
-doc: power.cpp ad.hpp user.hpp doc/Doxyfile.in doc/mainpage.md
+doc: $(HEADERS) doc/Doxyfile.in doc/mainpage.md
 	cd doc ; doxygen Doxyfile.in ; cd ..
 
+# CLEANING
+ 
 clean:
-	$(RM) *.o
-	$(RM) powerad
+	$(RM) *.o libaduprop.a
+
+cleanall:
+	$(RM) *.o libaduprop.a
+	cd test ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
+	cd examples ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
+
+# BUILD EXAMPLES
+
+examples:
+	cd examples ; for i in `ls` ; do cd $$i ; make ; cd .. ; done
+
+# BUILDALL
+
+all: lib examples tests
+
+.PHONY: clean cleanall all examples tests lib doc
+
+
+
 
 
