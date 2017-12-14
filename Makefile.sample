@@ -1,4 +1,32 @@
 CXX = clang++
 CFLAGS = -g -O0 -Wall 
+# DEBUG
+# CFLAGS = -g -O0 -Wall -DDBUG
 MATH_LIBS = -llapack -lblas
 CODI_DIR = $(HOME)/git/CoDiPack
+ADUPROP_DIR = $(HOME)/git/aduprop/aduprop
+
+# DON'T EDIT BELOW THIS LINE
+
+ifndef CODI_DIR
+ $(error Environment variable CODI_DIR is undefined)
+endif
+
+INCLUDE_DIR = $(ADUPROP_DIR)/include
+SRC_DIR = $(ADUPROP_DIR)/src
+CFLAGS += -std=c++11 -I$(CODI_DIR)/include -I$(INCLUDE_DIR)
+LDLIBS = -L$(ADUPROP_DIR) -laduprop $(MATH_LIBS)
+AR = ar
+AROPT = rcs
+
+HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
+
+# HDF5 support
+ifneq ($(HDF_INSTALL),)
+	CFLAGS += -I$(HDF_INSTALL)/include
+	CFLAGS += -DHDF5
+	LDLIBS += -L$(HDF_INSTALL)/lib
+	LDLIBS += $(HDF_INSTALL)/lib/libhdf5.a
+	LDLIBS += $(HDF_INSTALL)/lib/libhdf5_hl.a
+	LDLIBS += -lsz -lz -lm
+endif
