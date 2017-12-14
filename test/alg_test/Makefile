@@ -7,3 +7,6 @@ alg_test: alg_test.o
 
 alg_test.o: alg_test.cpp 
 	$(CXX) $(CFLAGS) -c alg_test.cpp
+
+clean:
+	$(RM) *.o alg_test
