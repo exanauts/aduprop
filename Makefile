@@ -30,13 +30,13 @@ clean:
 
 cleanall:
 	$(RM) *.o libaduprop.a
-	cd test ; for i in `ls` ; do cd $$i ; make clean ; done
-	cd examples ; for i in `ls` ; do cd $$i ; make clean ; done
+	cd test ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
+	cd examples ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
 
 # BUILD EXAMPLES
 
 examples:
-	cd examples ; for i in `ls` ; do cd $$i ; make ; done
+	cd examples ; for i in `ls` ; do cd $$i ; make ; cd .. ; done
 
 # BUILDALL
 
