@@ -24,6 +24,6 @@ doc: doc/Doxyfile.in doc/mainpage.md
 	cd doc ; doxygen Doxyfile.in ; cd ..
 
 clean:
-	$(RM) *.o
+	$(RM) *.o libaduprop.a
 
 
