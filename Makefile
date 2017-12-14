@@ -12,15 +12,15 @@ tests:
 
 # LIBRARY
 
-lib: alg.o 
+lib: alg.o $(HEADERS) 
 	$(AR) $(AROPT) libaduprop.a alg.o
 
-alg.o: $(SRC_DIR)/alg.cpp
+alg.o: $(SRC_DIR)/alg.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c $(SRC_DIR)/alg.cpp
 
 # DOCUMENTATION
 
-doc: doc/Doxyfile.in doc/mainpage.md
+doc: $(HEADERS) doc/Doxyfile.in doc/mainpage.md
 	cd doc ; doxygen Doxyfile.in ; cd ..
 
 # CLEANING

@@ -19,7 +19,10 @@ LDLIBS = -L$(ADUPROP_DIR) -laduprop $(MATH_LIBS)
 AR = ar
 AROPT = rcs
 
-HEADERS = ad.hpp user.hpp alg.hpp linsolve.hpp tensor.hpp
+HEADERFILES = ad.hpp alg.hpp linsolve.hpp tensor.hpp
+
+HEADERS = $(addprefix $(ADUPROP_DIR)/include/, $(HEADERFILES))
+
 
 # HDF5 support
 ifneq ($(HDF_INSTALL),)
