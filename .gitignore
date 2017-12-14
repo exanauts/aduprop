@@ -3,5 +3,5 @@ powerad
 libaduprop.a
 Makefile.inc
 examples/lorenz/lorenz
-examples/power/lorenz
+examples/power/power
 test/alg_test/alg_test
