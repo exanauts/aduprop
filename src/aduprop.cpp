@@ -13,7 +13,7 @@
 // AD library used
 // Rudimentary linear solver interface
 #include "ad.hpp"
-#include "CONTRIB/cxxopts.hpp"
+#include "cxxopts.hpp"
 
 int main(int argc, char* argv[]) {
   // Options parser

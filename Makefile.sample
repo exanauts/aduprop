@@ -15,6 +15,7 @@ endif
 INCLUDE_DIR = $(ADUPROP_DIR)/include
 SRC_DIR = $(ADUPROP_DIR)/src
 CFLAGS += -std=c++11 -I$(CODI_DIR)/include -I$(INCLUDE_DIR)
+CFLAGS += -I$(ADUPROP_DIR)/CONTRIB
 LDLIBS = -L$(ADUPROP_DIR) -laduprop $(MATH_LIBS)
 AR = ar
 AROPT = rcs
