@@ -2,13 +2,13 @@ include ../../Makefile.inc
 
 CFLAGS+= -I$(PWD)
 
-power: user.hpp aduprop.o
+.PHONY: clean
 
-power: user.hpp aduprop.o
-	$(CXX) -o power aduprop.o $(LDLIBS)
+power: user.hpp main.o 
+	$(CXX) -o power main.o $(LDLIBS)
 
-aduprop.o: $(SRC_DIR)/aduprop.cpp
-	$(CXX) $(CFLAGS) -c $(SRC_DIR)/aduprop.cpp
+main.o: main.cpp
+	$(CXX) $(CFLAGS) -c main.cpp
 
 clean:
 	$(RM) *.o power

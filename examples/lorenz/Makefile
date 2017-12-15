@@ -2,13 +2,11 @@ include ../../Makefile.inc
 
 CFLAGS+= -I$(PWD)
 
-lorenz: user.hpp aduprop.o
+lorenz: user.hpp main.o
+	$(CXX) -o lorenz main.o $(LDLIBS)
 
-lorenz: user.hpp aduprop.o
-	$(CXX) -o lorenz aduprop.o $(LDLIBS)
-
-aduprop.o: $(SRC_DIR)/aduprop.cpp
-	$(CXX) $(CFLAGS) -c $(SRC_DIR)/aduprop.cpp
+main.o: main.cpp
+	$(CXX) $(CFLAGS) -c main.cpp
 
 clean:
 	$(RM) *.o lorenz

@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
   pTensor4<double> T(dim, dim, dim, dim);
   pTensor4<double> T_fd(dim, dim, dim, dim);
 
+  
 
   if (tensor1) {
     J.zeros();
