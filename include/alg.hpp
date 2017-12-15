@@ -210,6 +210,30 @@ template <typename T> class pMatrix {
     return res;
   }
   
+  pMatrix<T> operator+(const pMatrix<T>& b) {
+    assert(this->cols == b.ncols());
+    assert(this->rows == b.nrows());
+    pMatrix<T> res(rows,cols);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < rows*cols; ++i) {
+        pres[i] = data[i] + pb[i];
+    }
+    return res;
+  }
+  
+  pMatrix<T> operator-(const pMatrix<T>& b) {
+    assert(this->cols == b.ncols());
+    assert(this->rows == b.nrows());
+    pMatrix<T> res(rows,cols);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < rows*cols; ++i) {
+        pres[i] = data[i] - pb[i];
+    }
+    return res;
+  }
+  // 
  private:
   size_t rows, cols;
   T* data;

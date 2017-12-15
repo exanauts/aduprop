@@ -1,7 +1,5 @@
 include Makefile.inc
 
-all: lib
-
 # debug options
 debug: CFLAGS += -DDBUG
 debug: all
@@ -12,8 +10,8 @@ opt: CFLAGS += -O3
 opt: all
 
 # tests
-tests: 
-	cd test ; for i in `ls` ; do cd $$i ; make test ; done
+test: lib
+	cd test ; ./runtests.sh
 
 # LIBRARY
 
@@ -35,19 +33,19 @@ clean:
 
 cleanall:
 	$(RM) *.o libaduprop.a
-	cd test ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
-	cd examples ; for i in `ls` ; do cd $$i ; make clean ; cd .. ; done
+	cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
+	cd examples ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
 
 # BUILD EXAMPLES
 
 examples:
-	cd examples ; for i in `ls` ; do cd $$i ; make ; cd .. ; done
+	cd examples ; for i in `ls -d */` ; do cd $$i ; make ; cd .. ; done
 
 # BUILDALL
 
 all: lib examples tests
 
-.PHONY: clean cleanall all examples tests lib doc
+.PHONY: clean cleanall all examples test lib doc
 
 
 

@@ -348,6 +348,13 @@ void jactest(const pVector<double> &xold) {
   cout << "HC Jacobian" << endl;
   sys->jac_beuler<double>(x_hc, xold_hc, Jhc);
   cout << Jhc;
+  double diff = (J - Jhc).norm();
+  cout << "Norm" << endl << diff << endl;
+  if(diff > 1e-20) {
+    cerr << "ERROR: HC and AD Jacobian differ." << endl;
+    exit(1);
+  }
+  
 }
 
 /*!
