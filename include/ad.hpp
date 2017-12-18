@@ -33,7 +33,6 @@ original variable.
 //#include "linsolve.hpp"
 
 using namespace std;
-
 using namespace alg;
 
 typedef codi::RealForwardGen<double> t1s;
@@ -42,12 +41,9 @@ typedef codi::RealForwardGen<t2s> t3s;
 
 extern System sys;
 
+// TODO: Name is not informative. This class does much more than AD: stores data, has integration functions,
+// etc...
 typedef class ad {
-// void t1s_driver(pVector<double> &xic, pMatrix<double> &J);
-// void t2s_t1s_driver(pVector<double> &xic, 
-// pMatrix<double> &J, pTensor3<double> &H);
-// void t3s_t2s_t1s_driver(pVector<double> &xic,
-//   pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T);
 private:
   pVector<double> py;
   pVector<double> t3_py;
@@ -358,6 +354,7 @@ void jactest(const pVector<double> &xold) {
    \post "New state x with 1st order tangents"
 */
 template <class T> void integrate(pVector<T> &x) { 
+  // TODO(Michel, Adrian): integrate must not overwrite &x by default.
   size_t dim = x.dim();
   double eps = 1e-9;
   int iteration = 0;

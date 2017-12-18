@@ -15,9 +15,8 @@
 #include "ad.hpp"
 #include "cxxopts.hpp"
 
-int main(int argc, char* argv[]) {
-  // Options parser
-
+void test(int argc, char* argv[], pVector<double> xold, System& sys,
+    ad& drivers) {
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
   bool test_jac = false;
@@ -33,17 +32,9 @@ int main(int argc, char* argv[]) {
      cxxopts::value<bool>(tensor3));
 
   auto result = options.parse(argc, argv);
-
-  // problem definition
-  System sys;
   size_t dim = sys.dim();
-
-  pVector<double> xold(dim);
+  
   pVector<double> x(dim);
-
-  sys.ic(xold);
-  ad drivers(sys);
-
 
   // jacobian test
   if (test_jac) {
@@ -119,6 +110,95 @@ int main(int argc, char* argv[]) {
     drivers.fdT_driver(x, T);
     std::cout << T << std::endl;
   }
+}
+
+// TODO(Michel, Adrian): names for system objects and ad drivers seem to me a tad
+// confusing. Can we think how to name this?
+
+/*!
+   \brief "Propagates the mean and the covariance matrices one step."
+   \param m0 "Mean"
+   \param cv0 "Covariance matrix"
+   \param sys "System data"
+   \param drivers "AD drivers"
+*/
+void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
+    ad& drivers) {
+  
+  size_t dim = sys.dim();
+  pMatrix<double>  J(dim, dim);
+  pMatrix<double>  cv_temp(dim, dim);
+
+
+  // Before
+  std::cout << m0 << std::endl;
+  std::cout << cv0 << std::endl;
+  
+  // Obtain tensors
+  J.zeros();
+  drivers.t1s_driver(m0, J);
+  
+  // Propagate mean
+  drivers.integrate(m0);
+
+
+  // Propagate covariance
+
+  for (size_t pn = 0; pn < dim; ++pn) {
+    for (size_t pm = 0; pm < dim; ++pm) {
+      for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = 0; j < dim; ++j) {
+          cv_temp[pn][pm] += 0.5*((J[pn][j]*J[pm][i] +
+                J[pm][j]*J[pn][i])*cv0[i][j]);
+        }
+      }
+    }
+  }
+
+  cv0 = cv_temp;
+
+  // After
+  std::cout << m0 << std::endl;
+  std::cout << cv0 << std::endl;
+
+}
+
+
+
+int main(int argc, char* argv[]) {
+  
+  // problem definition
+  System sys;
+  size_t dim = sys.dim();
+
+  // Mean
+  pVector<double> m0(dim);
+  m0[0] = 1.06512037300928485983;
+  m0[1] = 0.51819992367912581788;
+  m0[2] = 0.85058383242985102779;
+  m0[3] = -0.66197500054304025952;
+  m0[4] = -0.05000000000000000278;
+  m0[5] = 0.73618306350367335167;
+  m0[6] = 0.77067836274882195458;
+  m0[7] = 0.69832289180288620312;
+  m0[8] = 0.46185376441989828278;
+  m0[9] = 1.01531727676021699125;
+  m0[10] = 1.0400000000000000000;
+  m0[11] = 0.00000000000000000000;
+  
+  // Co-variance
+  pMatrix<double> cv0(dim, dim);
+  cv0.zeros();
+  for (size_t i = 0; i < dim; ++i) {
+    cv0[i][i] = 0.0001;
+  }
+
+
+  ad drivers(sys);
+  
+  //test(argc, argv, m0, sys, drivers);
+
+  propagateAD(m0, cv0, sys, drivers);
 
 
   return 0;
