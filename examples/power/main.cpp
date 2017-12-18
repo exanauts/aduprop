@@ -128,14 +128,15 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   size_t dim = sys.dim();
   pMatrix<double>  J(dim, dim);
   pMatrix<double>  cv_temp(dim, dim);
-
+  
 
   // Before
-  std::cout << m0 << std::endl;
-  std::cout << cv0 << std::endl;
+  //std::cout << m0 << std::endl;
+  //std::cout << cv0 << std::endl;
   
   // Obtain tensors
   J.zeros();
+  cv_temp.zeros();
   drivers.t1s_driver(m0, J);
   
   // Propagate mean
@@ -158,8 +159,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   cv0 = cv_temp;
 
   // After
-  std::cout << m0 << std::endl;
-  std::cout << cv0 << std::endl;
+  //std::cout << m0 << std::endl;
+  //std::cout << cv0 << std::endl;
 
 }
 
@@ -198,7 +199,10 @@ int main(int argc, char* argv[]) {
   
   //test(argc, argv, m0, sys, drivers);
 
-  propagateAD(m0, cv0, sys, drivers);
+  for (size_t i = 0; i < 30; ++i) {
+    std::cout << "Step: " << i << std::endl;
+    propagateAD(m0, cv0, sys, drivers);
+  }
 
 
   return 0;
