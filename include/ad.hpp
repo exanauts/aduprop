@@ -676,4 +676,45 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
   for (size_t i = 0; i < dim; ++i)
     t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
 }
+
+
+/*!
+   \brief "Propagates the mean and the covariance matrices one step."
+   \param m0 "Mean"
+   \param cv0 "Covariance matrix"
+   \param sys "System data"
+   \param drivers "AD drivers"
+*/
+void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
+    ad& drivers) {
+  size_t dim = sys.dim();
+  pMatrix<double>  J(dim, dim);
+  pMatrix<double>  cv_temp(dim, dim);
+  
+  // Obtain tensors
+  J.zeros();
+  cv_temp.zeros();
+  drivers.t1s_driver(m0, J);
+  
+  // Propagate mean
+  drivers.integrate(m0);
+
+  // Propagate covariance
+
+  for (size_t pn = 0; pn < dim; ++pn) {
+    for (size_t pm = 0; pm < dim; ++pm) {
+      for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = 0; j < dim; ++j) {
+          cv_temp[pn][pm] += 0.5*((J[pn][j]*J[pm][i] +
+                J[pm][j]*J[pn][i])*cv0[i][j]);
+        }
+      }
+    }
+  }
+
+  cv0 = cv_temp;
+}
+
+
+
 #endif  // ADUPROP_AD_HPP_

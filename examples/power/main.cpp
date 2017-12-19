@@ -46,7 +46,6 @@ void test(int argc, char* argv[], pVector<double> xold, System& sys,
   std::cout << xold << endl;
   x = xold;
 
-
   // Tensors
   pMatrix<double>  J(dim, dim);
   pMatrix<double>  J_fd(dim, dim);
@@ -56,8 +55,6 @@ void test(int argc, char* argv[], pVector<double> xold, System& sys,
 
   pTensor4<double> T(dim, dim, dim, dim);
   pTensor4<double> T_fd(dim, dim, dim, dim);
-
-  
 
   if (tensor1) {
     J.zeros();
@@ -112,60 +109,6 @@ void test(int argc, char* argv[], pVector<double> xold, System& sys,
   }
 }
 
-// TODO(Michel, Adrian): names for system objects and ad drivers seem to me a tad
-// confusing. Can we think how to name this?
-
-/*!
-   \brief "Propagates the mean and the covariance matrices one step."
-   \param m0 "Mean"
-   \param cv0 "Covariance matrix"
-   \param sys "System data"
-   \param drivers "AD drivers"
-*/
-void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
-    ad& drivers) {
-  
-  size_t dim = sys.dim();
-  pMatrix<double>  J(dim, dim);
-  pMatrix<double>  cv_temp(dim, dim);
-  
-
-  // Before
-  //std::cout << m0 << std::endl;
-  //std::cout << cv0 << std::endl;
-  
-  // Obtain tensors
-  J.zeros();
-  cv_temp.zeros();
-  drivers.t1s_driver(m0, J);
-  
-  // Propagate mean
-  drivers.integrate(m0);
-
-
-  // Propagate covariance
-
-  for (size_t pn = 0; pn < dim; ++pn) {
-    for (size_t pm = 0; pm < dim; ++pm) {
-      for (size_t i = 0; i < dim; ++i) {
-        for (size_t j = 0; j < dim; ++j) {
-          cv_temp[pn][pm] += 0.5*((J[pn][j]*J[pm][i] +
-                J[pm][j]*J[pn][i])*cv0[i][j]);
-        }
-      }
-    }
-  }
-
-  cv0 = cv_temp;
-
-  // After
-  //std::cout << m0 << std::endl;
-  //std::cout << cv0 << std::endl;
-
-}
-
-
-
 int main(int argc, char* argv[]) {
   
   // problem definition
@@ -202,6 +145,8 @@ int main(int argc, char* argv[]) {
   for (size_t i = 0; i < 30; ++i) {
     std::cout << "Step: " << i << std::endl;
     propagateAD(m0, cv0, sys, drivers);
+    std::cout << m0 << std::endl;
+    std::cout << cv0 << std::endl;
   }
 
 
