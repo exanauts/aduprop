@@ -1,5 +1,5 @@
 #!/bin/bash
-LOGFILE="testlog.txt"
+LOGFILE="$(pwd)/test.log"
 
 failed=0
 

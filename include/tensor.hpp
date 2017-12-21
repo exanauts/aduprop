@@ -58,6 +58,32 @@ template <typename T> class pTensor3 {
     }
     for(size_t i = 0; i < d1*d2*d3 ; ++i) data[i] = other.data[i];
   }
+  pTensor3<T> operator+(const pTensor3<T>& b) {
+    assert(this->d1 == b.d1);
+    assert(this->d2 == b.d2);
+    assert(this->d3 == b.d3);
+    pTensor3<T> res(d1,d2,d3);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < d1*d2*d3; ++i) {
+        pres[i] = data[i] + pb[i];
+    }
+    return res;
+  }
+  
+  pTensor3<T> operator-(const pTensor3<T>& b) {
+    assert(this->d1 == b.d1);
+    assert(this->d2 == b.d2);
+    assert(this->d3 == b.d3);
+    pTensor3<T> res(d1,d2,d3);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < d1*d2*d3; ++i) {
+        pres[i] = data[i] - pb[i];
+    }
+    return res;
+  }
+  
   pTensor3& operator=( const pTensor3 &other ) {
     if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3) {
       if(data != NULL) delete [] data;
@@ -196,6 +222,35 @@ template <typename T> class pTensor4 {
     }
     for(size_t i = 0; i < d1*d2*d3*d4 ; ++i) data[i] = other.data[i];
   }
+  
+  pTensor4<T> operator+(const pTensor4<T>& b) {
+    assert(this->d1 == b.d1);
+    assert(this->d2 == b.d2);
+    assert(this->d3 == b.d3);
+    assert(this->d4 == b.d4);
+    pTensor4<T> res(d1,d2,d3,d4);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < d1*d2*d3*d4; ++i) {
+        pres[i] = data[i] + pb[i];
+    }
+    return res;
+  }
+  
+  pTensor4<T> operator-(const pTensor4<T>& b) {
+    assert(this->d1 == b.d1);
+    assert(this->d2 == b.d2);
+    assert(this->d3 == b.d3);
+    assert(this->d4 == b.d4);
+    pTensor4<T> res(d1,d2,d3,d4);
+    T *pb = b.get_datap();
+    T *pres = res.get_datap();
+    for (size_t i = 0; i < d1*d2*d3*d4; ++i) {
+        pres[i] = data[i] - pb[i];
+    }
+    return res;
+  }
+  
   pTensor4& operator=( const pTensor4 &other ) {
     if(d1 != other.d1 || d2 != other.d2 || d3 != other.d3 || d4 != other.d4) {
       if(data != NULL) delete [] data;

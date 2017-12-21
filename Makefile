@@ -29,12 +29,12 @@ doc: $(HEADERS) doc/Doxyfile.in doc/mainpage.md
 # CLEANING
  
 clean:
-	$(RM) *.o libaduprop.a
+	- $(RM) *.o libaduprop.a
 
 cleanall:
-	$(RM) *.o libaduprop.a
-	cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
-	cd examples ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
+	- $(RM) *.o libaduprop.a
+	- cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done ; test.log
+	- cd examples ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
 
 # BUILD EXAMPLES
 

@@ -13,4 +13,4 @@ alg_test.o: alg_test.cpp
 	$(CXX) $(CFLAGS) -c alg_test.cpp
 
 clean:
-	$(RM) *.o alg_test out
+	$(RM) *.o diff.out alg_test out

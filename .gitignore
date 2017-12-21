@@ -1,5 +1,6 @@
 powerad
 *.o
+*.log
 libaduprop.a
 Makefile.inc
 examples/lorenz/lorenz

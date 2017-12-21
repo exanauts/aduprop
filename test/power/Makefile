@@ -3,15 +3,18 @@ include ../../Makefile.inc
 CFLAGS+= -I$(PWD)
 
 run:
-	./tensor_test --test_jac
+	./power --test_jac
+	./power --tensor1
+	./power --tensor2
+	./power --tensor3
 
-build: user.hpp tensor_test.o
-	$(CXX) -o tensor_test tensor_test.o $(LDLIBS)
+build: user.hpp power.o
+	$(CXX) -o power power.o $(LDLIBS)
 
-tensor_test.o: $(HEADERS) $(SRC_DIR)/tensor_test.cpp
-	$(CXX) $(CFLAGS) -c $(SRC_DIR)/tensor_test.cpp
+power.o: $(HEADERS) power.cpp
+	$(CXX) $(CFLAGS) -c power.cpp
 
 clean:
-	$(RM) *.o tensor_test
+	$(RM) *.o power 
 
 

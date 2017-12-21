@@ -138,7 +138,7 @@ void fdH_driver(const pVector<double> &xic, pTensor3<double> &H) {
   pVector<double> xpert2(dim);
   pMatrix<double> Jpert1(dim, dim);
   pMatrix<double> Jpert2(dim, dim);
-  double pert = 1e-10;
+  double pert = 1e-8;
   for (size_t i = 0; i < dim; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
     for (size_t j = 0; j < dim; ++j) xpert2[j] = xic[j];
@@ -171,7 +171,7 @@ void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
   pMatrix<double> J(dim, dim);
   pTensor3<double> Hpert1(dim, dim, dim);
   pTensor3<double> Hpert2(dim, dim, dim);
-  double pert = 1e-10;
+  double pert = 1e-8;
   for (size_t i = 0; i < dim; ++i) {
     cout << "Computing tensor. "
       << (double) i*(double) 100.0/(double) dim << "\% done." << endl;
@@ -350,7 +350,7 @@ void jactest(const pVector<double> &xold) {
   cout << Jhc;
   double diff = (J - Jhc).norm();
   cout << "Norm" << endl << diff << endl;
-  if(diff > 1e-20) {
+  if(diff > 1e-14) {
     cerr << "ERROR: HC and AD Jacobian differ." << endl;
     exit(1);
   }
