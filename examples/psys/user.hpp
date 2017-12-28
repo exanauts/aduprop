@@ -10,6 +10,8 @@
 #include "alg.hpp"
 
 
+#define GEN_SIZE 9
+
 // System Data structures
 
 struct Branch {
@@ -118,6 +120,7 @@ public:
 
   double h; 
   size_t dimension;
+  size_t pnet; // pointer to network equations
   
   Branch* branches;
   Generator* gens;
@@ -150,30 +153,117 @@ size_t dim() { return dimension; }
 template <class T> void residual_beuler(const alg::pVector<T> &x,
     const alg::pVector<T> &xold, alg::pVector<T> &F) {
   
+  size_t genp;
   double yre, yim;
+  T vfr, vto, afr, ato;
+  T vbus, abus;
+  
+  // Generator temporary state vars
+  T e_qp, e_dp, phi_1d, phi_2q, w, delta;
+  T v_q, v_d, i_q, i_d;
+  T psi_de, psi_qe;
+  double x_d, x_q, x_dp, x_qp, x_ddp, x_qdp;
+  double xl, H, T_d0p, T_q0p, T_d0dp, T_q0dp;
+  double e_fd, p_m;
 
   F.zeros();
 
-  std::cout << "Cacota" << std::endl;
+  for (size_t i = 0; i < ngens; ++i) {
+    genp = i*GEN_SIZE;
 
+    // retrieve state var values
+    e_qp     = x[genp];
+    e_dp     = x[genp + 1];
+    phi_1d   = x[genp + 2];
+    phi_2q   = x[genp + 3];
+    w        = x[genp + 4];
+    delta    = x[genp + 5];
+    v_q      = x[genp + 6];
+    v_d      = x[genp + 7];
+    i_q      = x[genp + 8];
+    i_d      = x[genp + 9];
+
+    // retrieve generator parameters
+    x_d = gens[i].x_d;
+    x_q = gens[i].x_q;
+    x_dp = gens[i].x_dp;
+    x_qp = gens[i].x_qp;
+    x_ddp = gens[i].x_ddp;
+    x_qdp = gens[i].x_qdp;
+    xl = gens[i].xl;
+    H = gens[i].H;
+    T_d0p = gens[i].T_d0p;
+    T_q0p = gens[i].T_q0p;
+    T_d0dp = gens[i].T_d0dp;
+    T_q0dp = gens[i].T_q0dp;
+    e_fd = gens[i].e_fd;
+    p_m = gens[i].p_m;
+
+    // Voltage
+    vbus = x[pnet + 2*gens[i].bus];
+    abus = x[pnet + 2*gens[i].bus + 1];
+
+    psi_de = (x_ddp - xl)/(x_dp - xl)*e_qp + 
+      (x_dp - x_ddp)/(x_dp - xl)*phi_1d;
+
+    psi_qe = -(x_ddp - xl)/(x_qp - xl)*e_dp + 
+      (x_qp - x_ddp)/(x_qp - xl)*phi_2q;
+
+    // Machine states
+    F[genp] = (-e_qp + e_fd - (i_d - (-x_ddp + x_dp)*(-e_qp + i_d*(x_dp - xl) 
+      + phi_1d)/pow((x_dp - xl), 2.0))*(x_d - x_dp))/T_d0p;
+    F[genp + 1] = (-e_dp + (i_q - (-x_qdp + x_qp)*( e_dp + i_q*(x_qp - xl) 
+      + phi_2q)/pow((x_qp - xl), 2.0))*(x_q - x_qp))/T_q0p;
+    F[genp + 2] = ( e_qp - i_d*(x_dp - xl) - phi_1d)/T_d0dp;
+    F[genp + 3] = (-e_dp - i_q*(x_qp - xl) - phi_2q)/T_q0dp;
+    F[genp + 4] = (p_m - psi_de*i_q + psi_qe*i_d)/(2.0*H);
+    F[genp + 5] = 2.0*M_PI*60.0*w;
+
+    // Stator currents
+    F[genp + 6] = i_d - ((x_ddp - xl)/(x_dp - xl)*e_qp + 
+      (x_dp - x_ddp)/(x_dp - xl)*phi_1d - v_q)/x_ddp;
+    F[genp + 7] = i_q - (-(x_qdp - xl)/(x_qp - xl)*e_dp + 
+      (x_qp - x_qdp)/(x_qp - xl)*phi_2q + v_d)/x_qdp;
+
+    // Stator voltages
+    F[genp + 8] = v_d - vbus*sin(delta - abus);
+    F[genp + 9] = v_q - vbus*cos(delta - abus);
+
+    F[pnet + 2*gens[i].bus] += v_d*i_d + v_q*i_q;
+    F[pnet + 2*gens[i].bus + 1] += v_q*i_d - v_d*i_q;
+  }
+
+
+
+  // Power flow equations
   for (size_t i = 0; i < nbuses; ++i) {
     for (size_t j = 0; j < nbuses; ++j) {
 
       yre = (*ybus)[2*i][2*j];
       yim = (*ybus)[2*i + 1][2*j];
 
+      vfr = x[pnet + 2*i];
+      vto = x[pnet + 2*j];
+      afr = x[pnet + 2*i + 1];
+      ato = x[pnet + 2*j + 1];
+
       if (i == j) {
-        F[2*i] += x[2*i]*x[2*i]*yre;
-        F[2*i + 1] += -x[2*i]*x[2*i]*yim;
+        F[pnet + 2*i] -= vfr*vto*yre;
+        F[pnet + 2*i + 1] -= -vfr*vto*yim;
       } else {
-        F[2*i] += x[2*i]*x[2*j]*(yim*sin(x[2*i + 1] -
-              x[2*j + 1]) + yre*cos(x[2*i + 1] - x[2*j + 1]));
-        F[2*i + 1] += x[2*i]*x[2*j]*(yre*sin(x[2*i + 1] -
-              x[2*j + 1]) - yim*cos(x[2*i + 1] - x[2*j + 1]));
+        F[pnet + 2*i] -= vfr*vto*(yim*sin(afr - ato) 
+            + yre*cos(afr - ato));
+        F[pnet + 2*i + 1] -= vfr*vto*(yre*sin(afr - ato)
+            - yim*cos(afr - ato));
       }
     }
   }
 
+  // Load injections (PQ)
+  for (size_t i = 0; i < nloads; ++i) {
+    F[pnet + 2*loads[i].bus] -= loads[i].P;
+    F[pnet + 2*loads[i].bus + 1] -= loads[i].Q;
+  }
 }
 
 /*!
@@ -213,7 +303,8 @@ System::System(int _nbuses, int _nbranches, int _ngens, int _nloads) {
   loads = new Load[nloads];
 
   // Calculate dimension
-  dimension += nbuses*2; // transmission system
+  pnet = ngens*GEN_SIZE; // assume all gens are GENROU
+  dimension = pnet + nbuses*2; // add transmission system
 
 }
 
