@@ -35,13 +35,24 @@ int main(int argc, char* argv[]) {
   auto result = options.parse(argc, argv);
 
   // problem definition
-  System sys;
-  size_t dim = sys.dim();
+  int nbuses, nbranches, ngen, nload;
 
-  pVector<double> xold(dim);
-  pVector<double> x(dim);
+  nbuses = 2;
+  nbranches = 1;
+  ngen = 1;
+  nload = 1;
 
-  ad drivers(sys);
+  System sys(nbuses, nbranches, ngen);
+
+  sys.branches[0].set(0, 1, 0.0001, 0.0576);
+
+  sys.build_ybus();
+  std::cout << *sys.ybus << std::endl;
+
+  //pVector<double> xold(dim);
+  //pVector<double> x(dim);
+
+  //ad drivers(sys);
 
 
   return 0;

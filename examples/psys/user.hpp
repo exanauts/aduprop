@@ -9,14 +9,63 @@
 #include <iostream>
 #include "alg.hpp"
 
-typedef class System {
+
+// System Data structures
+
+struct Branch {
+  int fr;
+  int to;
+  double r;
+  double x;
+
+  Branch():fr(0), to(0), r(0), x(0){};
+  Branch(int fr, int to, double r, double x):fr(fr), to(to), r(r), x(x){}
+  void set(int fr_, int to_, double r_, double x_);
+};
+
+void Branch::set(int fr_, int to_, double r_, double x_) {
+  fr = fr_;
+  to = to_;
+  r = r_;
+  x = x_;
+}
+
+// Auxiliary functions
+
+void expandComplex(int i, int j, double a, double b,
+    alg::pMatrix<double>& mat) {
+  mat[2*i][2*j] += a;
+  mat[2*i + 1][2*j + 1] += a;
+  mat[2*i][2*j + 1] += -b;
+  mat[2*i + 1][2*j] += b;
+}
+
+
+class System {
 public:
   // System parameters.
+
+  Branch* branches;
+  
   // Generator
   
+  int nbuses;
+  int nbranches;
+  int ngen;
+
   double h; 
   size_t dimension;
-  
+
+  alg::pMatrix<double>* ybus;
+
+  // Constructors
+  System();
+  System(int nbuses, int nbranches, int ngens);
+  ~System();
+
+  // Electrical system
+  void build_ybus();
+
 
 size_t dim() { return dimension; }
 
@@ -50,5 +99,53 @@ template <class T> void jac_beuler(const alg::pVector<T> &x,
   // Empty
 }
 
-} System;
+};
+
+System::System() {
+  dimension = 0;
+  nbranches = 0;
+  nbuses = 0;
+  ngen = 0;
+}
+
+
+System::System(int _nbuses, int _nbranches, int _ngens) {
+  dimension = 0; // initialize to 0
+  nbuses = _nbuses;
+  nbranches = _nbranches;
+  ngen = _ngens;
+
+  branches = new Branch[nbranches];
+}
+
+System::~System(){
+  if (nbranches)
+    delete branches;
+  if (ybus)
+    delete ybus;
+}
+
+
+void System::build_ybus() {
+  
+  double yre, yim, mag;
+  int fr, to;
+
+  ybus = new alg::pMatrix<double>(2*nbuses, 2*nbuses);
+  ybus->zeros();
+  for (size_t i = 0; i < nbranches; ++i) {
+    mag = pow(branches[i].r, 2.0) + pow(branches[i].x, 2.0);
+    fr = branches[i].fr;
+    to = branches[i].to;
+    yre = branches[i].r / mag;
+    yim = -branches[i].x / mag;
+
+    expandComplex(fr, fr, yre, yim, *ybus);
+    expandComplex(to, to, yre, yim, *ybus);
+    expandComplex(fr, to, -yre, -yim, *ybus);
+    expandComplex(to, fr, -yre, -yim, *ybus);
+  }
+}
+
+
 #endif
