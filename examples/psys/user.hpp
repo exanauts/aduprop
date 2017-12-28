@@ -30,6 +30,74 @@ void Branch::set(int fr_, int to_, double r_, double x_) {
   x = x_;
 }
 
+struct Load {
+  int bus;
+  double P;
+  double Q;
+  
+  Load():bus(0), P(0.0), Q(0.0){};
+  void set(int bus_, double P_, double Q_);
+};
+
+void Load::set(int bus_, double P_, double Q_) {
+  bus = bus_;
+  P = P_;
+  Q = Q_;
+}
+
+struct Generator {
+
+  int bus;
+
+  double x_d;
+  double x_q;
+  double x_dp;
+  double x_qp;
+  double x_ddp;
+  double x_qdp;
+  double xl;
+  double H;
+  double T_d0p;
+  double T_q0p;
+  double T_d0dp;
+  double T_q0dp;
+
+  double e_fd;
+  double p_m;
+
+
+  Generator();
+  void set(int busn, double x_d_, double x_q_, double x_dp_, double x_qp_,
+      double x_ddp_, double x_qdp_, double xl_, double H_, double T_d0p_,
+      double T_q0p_, double T_d0dp_, double T_q0dp_);
+};
+
+Generator::Generator() {
+}
+
+void Generator::set(int busn, double x_d_, double x_q_, double x_dp_,
+    double x_qp_, double x_ddp_, double x_qdp_, double xl_,
+    double H_, double T_d0p_, double T_q0p_, double T_d0dp_,
+    double T_q0dp_) {
+  bus = busn;
+  x_d = x_d_;  
+  x_q = x_q_;  
+  x_dp = x_dp_;  
+  x_qp = x_qp_;  
+  x_ddp = x_ddp_;  
+  x_qdp = x_qdp_;  
+  xl = xl_;  
+  H = H_;  
+  T_d0p = T_d0p_;  
+  T_q0p = T_q0p_;  
+  T_d0dp = T_d0dp_;
+  T_q0dp = T_q0dp_;
+
+  e_fd = -1.0;
+  p_m = -1.0;
+}
+
+
 // Auxiliary functions
 
 void expandComplex(int i, int j, double a, double b,
@@ -45,17 +113,21 @@ class System {
 public:
   int nbuses;
   int nbranches;
-  int ngen;
+  int ngens;
+  int nloads;
 
   double h; 
   size_t dimension;
   
   Branch* branches;
+  Generator* gens;
+  Load* loads;
+  
   alg::pMatrix<double>* ybus;
 
   // Constructors
   System();
-  System(int nbuses, int nbranches, int ngens);
+  System(int nbuses, int nbranches, int ngens, int nloads);
   ~System();
 
   // Electrical system
@@ -124,17 +196,21 @@ System::System() {
   dimension = 0;
   nbranches = 0;
   nbuses = 0;
-  ngen = 0;
+  ngens = 0;
+  nloads = 0;
 }
 
 
-System::System(int _nbuses, int _nbranches, int _ngens) {
+System::System(int _nbuses, int _nbranches, int _ngens, int _nloads) {
   dimension = 0; // initialize to 0
   nbuses = _nbuses;
   nbranches = _nbranches;
-  ngen = _ngens;
+  ngens = _ngens;
+  nloads = _nloads;
 
   branches = new Branch[nbranches];
+  gens = new Generator[ngens];
+  loads = new Load[nloads];
 
   // Calculate dimension
   dimension += nbuses*2; // transmission system
@@ -142,10 +218,10 @@ System::System(int _nbuses, int _nbranches, int _ngens) {
 }
 
 System::~System(){
-  if (nbranches)
-    delete branches;
-  if (ybus)
-    delete ybus;
+  if (nbranches) delete branches;
+  if (ngens) delete gens;
+  if (nloads) delete loads;
+  if (ybus) delete ybus;
 }
 
 

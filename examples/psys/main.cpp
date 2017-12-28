@@ -42,12 +42,17 @@ int main(int argc, char* argv[]) {
   ngen = 1;
   nload = 1;
 
-  System sys(nbuses, nbranches, ngen);
+  System sys(nbuses, nbranches, ngen, nload);
 
   sys.branches[0].set(0, 1, 0.0001, 0.0576);
+  sys.loads[0].set(1, 1.0648453, 0.38835684);
+  sys.gens[0].set(0, 1.575, 1.512, 0.29, 0.39, 0.1733,
+      0.1733, 0.0787, 3.38, 6.09, 1.0, 0.05, 0.15);
+  sys.gens[0].e_fd = 2.36980307364616349375;
+  sys.gens[0].p_m = 1.06496000000000012875;
 
   sys.build_ybus();
-  std::cout << *sys.ybus << std::endl;
+  //std::cout << *sys.ybus << std::endl;
 
   pVector<double> xold(sys.dimension);
   pVector<double> x(sys.dimension);
@@ -60,7 +65,6 @@ int main(int argc, char* argv[]) {
 
   xold = x;
 
-  std::cout << F << std::endl;
   sys.residual_beuler<double>(x, xold, F);
   std::cout << F << std::endl;
 
