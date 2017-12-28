@@ -49,8 +49,20 @@ int main(int argc, char* argv[]) {
   sys.build_ybus();
   std::cout << *sys.ybus << std::endl;
 
-  //pVector<double> xold(dim);
-  //pVector<double> x(dim);
+  pVector<double> xold(sys.dimension);
+  pVector<double> x(sys.dimension);
+  pVector<double> F(sys.dimension);
+
+  x[0] = 1.04;
+  x[1] = 0.0; 
+  x[2] = 1.01613;
+  x[3] = -0.05803568828731545;
+
+  xold = x;
+
+  std::cout << F << std::endl;
+  sys.residual_beuler<double>(x, xold, F);
+  std::cout << F << std::endl;
 
   //ad drivers(sys);
 

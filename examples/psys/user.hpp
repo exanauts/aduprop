@@ -1,5 +1,5 @@
 /*!
-   \file "user.hpp"
+  \file "user.hpp"
    \brief "This is the provided user code."
    \author "Adrian Maldonado and Michel Schanen"
    \date 21/11/2017
@@ -43,19 +43,14 @@ void expandComplex(int i, int j, double a, double b,
 
 class System {
 public:
-  // System parameters.
-
-  Branch* branches;
-  
-  // Generator
-  
   int nbuses;
   int nbranches;
   int ngen;
 
   double h; 
   size_t dimension;
-
+  
+  Branch* branches;
   alg::pMatrix<double>* ybus;
 
   // Constructors
@@ -82,7 +77,31 @@ size_t dim() { return dimension; }
 */
 template <class T> void residual_beuler(const alg::pVector<T> &x,
     const alg::pVector<T> &xold, alg::pVector<T> &F) {
-  // Empty
+  
+  double yre, yim;
+
+  F.zeros();
+
+  std::cout << "Cacota" << std::endl;
+
+  for (size_t i = 0; i < nbuses; ++i) {
+    for (size_t j = 0; j < nbuses; ++j) {
+
+      yre = (*ybus)[2*i][2*j];
+      yim = (*ybus)[2*i + 1][2*j];
+
+      if (i == j) {
+        F[2*i] += x[2*i]*x[2*i]*yre;
+        F[2*i + 1] += -x[2*i]*x[2*i]*yim;
+      } else {
+        F[2*i] += x[2*i]*x[2*j]*(yim*sin(x[2*i + 1] -
+              x[2*j + 1]) + yre*cos(x[2*i + 1] - x[2*j + 1]));
+        F[2*i + 1] += x[2*i]*x[2*j]*(yre*sin(x[2*i + 1] -
+              x[2*j + 1]) - yim*cos(x[2*i + 1] - x[2*j + 1]));
+      }
+    }
+  }
+
 }
 
 /*!
@@ -116,6 +135,10 @@ System::System(int _nbuses, int _nbranches, int _ngens) {
   ngen = _ngens;
 
   branches = new Branch[nbranches];
+
+  // Calculate dimension
+  dimension += nbuses*2; // transmission system
+
 }
 
 System::~System(){
@@ -127,7 +150,6 @@ System::~System(){
 
 
 void System::build_ybus() {
-  
   double yre, yim, mag;
   int fr, to;
 
