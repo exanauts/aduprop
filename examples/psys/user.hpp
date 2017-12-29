@@ -11,6 +11,7 @@
 
 
 #define GEN_SIZE 10
+#define DEFAULT_STEP 0.004
 
 // System Data structures
 
@@ -118,7 +119,7 @@ public:
   int ngens;
   int nloads;
 
-  double step_size; // step size for beuler
+  double deltat; // step size for beuler
   size_t dimension;
   size_t pnet; // pointer to network equations
   
@@ -231,9 +232,15 @@ template <class T> void residual_beuler(const alg::pVector<T> &x,
 
     F[pnet + 2*gens[i].bus] += v_d*i_d + v_q*i_q;
     F[pnet + 2*gens[i].bus + 1] += v_q*i_d - v_d*i_q;
+  
+    // Update residual for ODE equations
+    F[genp] = x[genp] - xold[genp] - deltat*F[genp];
+    F[genp + 1] = x[genp + 1] - xold[genp + 1] - deltat*F[genp + 1];
+    F[genp + 2] = x[genp + 2] - xold[genp + 2] - deltat*F[genp + 2];
+    F[genp + 3] = x[genp + 3] - xold[genp + 3] - deltat*F[genp + 3];
+    F[genp + 4] = x[genp + 4] - xold[genp + 4] - deltat*F[genp + 4];
+    F[genp + 5] = x[genp + 5] - xold[genp + 5] - deltat*F[genp + 5];
   }
-
-
 
   // Power flow equations
   for (size_t i = 0; i < nbuses; ++i) {
@@ -306,6 +313,7 @@ System::System(int _nbuses, int _nbranches, int _ngens, int _nloads) {
   pnet = ngens*GEN_SIZE; // assume all gens are GENROU
   dimension = pnet + nbuses*2; // add transmission system
 
+  deltat = DEFAULT_STEP;
 }
 
 System::~System(){
