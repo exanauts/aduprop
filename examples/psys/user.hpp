@@ -284,7 +284,112 @@ template <class T> void residual_beuler(const alg::pVector<T> &x,
 */
 template <class T> void jac_beuler(const alg::pVector<T> &x, 
     const alg::pVector<T> &xold, alg::pMatrix<T> &J) {
-  // Empty
+  size_t genp;
+  double yre, yim;
+  T vfr, vto, afr, ato;
+  T vbus, abus;
+  
+  // Generator temporary state vars
+  T e_qp, e_dp, phi_1d, phi_2q, w, delta;
+  T v_q, v_d, i_q, i_d;
+  T psi_de, psi_qe;
+  double x_d, x_q, x_dp, x_qp, x_ddp, x_qdp;
+  double xl, H, T_d0p, T_q0p, T_d0dp, T_q0dp;
+  double e_fd, p_m;
+  
+  J.zeros();
+
+  for (size_t i = 0; i < ngens; ++i) {
+    genp = i*GEN_SIZE;
+
+    // retrieve state var values
+    e_qp     = x[genp];
+    e_dp     = x[genp + 1];
+    phi_1d   = x[genp + 2];
+    phi_2q   = x[genp + 3];
+    w        = x[genp + 4];
+    delta    = x[genp + 5];
+    v_q      = x[genp + 6];
+    v_d      = x[genp + 7];
+    i_q      = x[genp + 8];
+    i_d      = x[genp + 9];
+
+    // retrieve generator parameters
+    x_d = gens[i].x_d;
+    x_q = gens[i].x_q;
+    x_dp = gens[i].x_dp;
+    x_qp = gens[i].x_qp;
+    x_ddp = gens[i].x_ddp;
+    x_qdp = gens[i].x_qdp;
+    xl = gens[i].xl;
+    H = gens[i].H;
+    T_d0p = gens[i].T_d0p;
+    T_q0p = gens[i].T_q0p;
+    T_d0dp = gens[i].T_d0dp;
+    T_q0dp = gens[i].T_q0dp;
+    e_fd = gens[i].e_fd;
+    p_m = gens[i].p_m;
+
+    // Voltage
+    vbus = x[pnet + 2*gens[i].bus];
+    abus = x[pnet + 2*gens[i].bus + 1];
+
+    psi_de = (x_ddp - xl)/(x_dp - xl)*e_qp + 
+      (x_dp - x_ddp)/(x_dp - xl)*phi_1d;
+
+    psi_qe = -(x_ddp - xl)/(x_qp - xl)*e_dp + 
+      (x_qp - x_ddp)/(x_qp - xl)*phi_2q;
+    
+    J[genp][genp] = 1.0 - deltat*(-(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0) - 1.0)/T_d0p;
+    J[genp][genp + 2] = -deltat*(x_d - x_dp)*(-x_ddp + x_dp)*pow(x_dp - xl, -2.0)/T_d0p;
+    J[genp][genp + 9] = deltat*(x_d - x_dp)*(-(-x_ddp + x_dp)*pow(x_dp - xl, -1.0) + 1)/T_d0p;
+
+    J[genp + 1][genp + 1] = 1.0 - deltat*(-(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0) - 1.0)/T_q0p;
+    J[genp + 1][genp + 3] = deltat*(x_q - x_qp)*(-x_qdp + x_qp)*pow(x_qp - xl, -2.0)/T_q0p;
+    J[genp + 1][genp + 8] = -deltat*(x_q - x_qp)*(-(-x_qdp + x_qp)*pow(x_qp - xl, -1.0) + 1.0)/T_q0p;
+    
+    J[genp + 2][genp + 0] = -deltat/T_d0dp;
+    J[genp + 2][genp + 2] = 1.0 + deltat/T_d0dp;
+    J[genp + 2][genp + 9] = -deltat*(-x_dp + xl)/T_d0dp;
+    
+    J[genp + 3][genp + 1] = deltat/T_q0dp;
+    J[genp + 3][genp + 3] = 1.0 + deltat/T_q0dp;
+    J[genp + 3][genp + 8] = -deltat*(-x_qp + xl)/T_q0dp;
+    
+    J[genp + 4][genp + 0] = 0.5*deltat*i_q*(x_ddp - xl)/(H*(x_dp - xl));
+    J[genp + 4][genp + 1] = -0.5*deltat*i_d*(-x_ddp + xl)/(H*(x_qp - xl));
+    J[genp + 4][genp + 2] = 0.5*deltat*i_q*(-x_ddp + x_dp)/(H*(x_dp - xl));
+    J[genp + 4][genp + 3] = -0.5*deltat*i_d*(-x_ddp + x_qp)/(H*(x_qp - xl));
+    J[genp + 4][genp + 4] = 1.0;
+    J[genp + 4][genp + 8] = -0.5*deltat*(-e_qp*(x_ddp - xl)/(x_dp - xl) - phi_1d*(-x_ddp + x_dp)/(x_dp - xl))/H;
+    J[genp + 4][genp + 9] = -0.5*deltat*(e_dp*(-x_ddp + xl)/(x_qp - xl) + phi_2q*(-x_ddp + x_qp)/(x_qp - xl))/H;
+     
+    J[genp + 5][genp + 4] = -120.0*M_PI*deltat;
+    J[genp + 5][genp + 5] = 1.0;
+     
+    J[genp + 6][genp + 0] = -(x_ddp - xl)/(x_ddp*(x_dp - xl));
+    J[genp + 6][genp + 2] = -(-x_ddp + x_dp)/(x_ddp*(x_dp - xl));
+    J[genp + 6][genp + 6] = 1.0/x_ddp;
+    J[genp + 6][genp + 9] = 1.0;
+     
+    J[genp + 7][genp + 1] = -(-x_qdp + xl)/(x_qdp*(x_qp - xl));
+    J[genp + 7][genp + 3] = -(-x_qdp + x_qp)/(x_qdp*(x_qp - xl));
+    J[genp + 7][genp + 7] = -1/x_qdp;
+    J[genp + 7][genp + 8] = 1.0;
+     
+    J[genp + 8][genp + 5] = -vbus*cos(delta - abus);
+    J[genp + 8][genp + 7] = 1.0;
+    J[genp + 8][genp + 10] = -sin(delta - abus);
+    J[genp + 8][genp + 11] = vbus*cos(delta - abus);
+     
+    J[genp + 9][genp + 5] = vbus*sin(delta - abus);
+    J[genp + 9][genp + 6] = 1.0;
+    J[genp + 9][genp + 10] = -cos(delta - abus);
+    J[genp + 9][genp + 11] = -vbus*sin(delta - abus);
+
+    // Contribution to power flow
+
+  }
 }
 
 };
