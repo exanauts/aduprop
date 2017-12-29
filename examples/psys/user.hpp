@@ -10,7 +10,7 @@
 #include "alg.hpp"
 
 
-#define GEN_SIZE 9
+#define GEN_SIZE 10
 
 // System Data structures
 
@@ -118,7 +118,7 @@ public:
   int ngens;
   int nloads;
 
-  double h; 
+  double step_size; // step size for beuler
   size_t dimension;
   size_t pnet; // pointer to network equations
   
