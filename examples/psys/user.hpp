@@ -388,7 +388,58 @@ template <class T> void jac_beuler(const alg::pVector<T> &x,
     J[genp + 9][genp + 11] = -vbus*sin(delta - abus);
 
     // Contribution to power flow
+    J[pnet + 2*gens[i].bus][genp + 6] = i_q;
+    J[pnet + 2*gens[i].bus][genp + 7] = i_d;
+    J[pnet + 2*gens[i].bus][genp + 8] = v_q;
+    J[pnet + 2*gens[i].bus][genp + 9] = v_d;
+    
+    J[pnet + 2*gens[i].bus + 1][genp + 6] = i_d;
+    J[pnet + 2*gens[i].bus + 1][genp + 7] = -i_q;
+    J[pnet + 2*gens[i].bus + 1][genp + 8] = -v_d;
+    J[pnet + 2*gens[i].bus + 1][genp + 9] = v_q;
+  }
 
+  // Power flow equations
+  for (size_t i = 0; i < nbuses; ++i) {
+    for (size_t j = 0; j < nbuses; ++j) {
+
+      yre = (*ybus)[2*i][2*j];
+      yim = (*ybus)[2*i + 1][2*j];
+
+      vfr = x[pnet + 2*i];
+      vto = x[pnet + 2*j];
+      afr = x[pnet + 2*i + 1];
+      ato = x[pnet + 2*j + 1];
+
+      if (i == j) {
+        // Active power
+        J[pnet + 2*i][pnet + 2*i] -= vto*yre;
+        J[pnet + 2*i][pnet + 2*j] -= vfr*yre;
+        // Reactive power
+        J[pnet + 2*i + 1][pnet + 2*i] -= -vto*yim;
+        J[pnet + 2*i + 1][pnet + 2*j] -= -vfr*yim;
+      } else {
+        // Active power
+        J[pnet + 2*i][pnet + 2*i] -= vto*(yim*sin(afr - ato) 
+            + yre*cos(afr - ato));
+        J[pnet + 2*i][pnet + 2*j] -= vfr*(yim*sin(afr - ato) 
+            + yre*cos(afr - ato));
+        J[pnet + 2*i][pnet + 2*i + 1] -= vto*vfr*(yim*cos(afr - ato) 
+            - yre*sin(afr - ato));
+        J[pnet + 2*i][pnet + 2*j + 1] -= vto*vfr*(-yim*cos(afr - ato) 
+            + yre*sin(afr - ato));
+
+        // Reactive power
+        J[pnet + 2*i + 1][pnet + 2*i] -= vto*(yre*sin(afr - ato)
+            - yim*cos(afr - ato));
+        J[pnet + 2*i + 1][pnet + 2*j] -= vfr*(yre*sin(afr - ato)
+            - yim*cos(afr - ato));
+        J[pnet + 2*i + 1][pnet + 2*i + 1] -= vto*vfr*(yre*cos(afr - ato)
+            + yim*sin(afr - ato));
+        J[pnet + 2*i + 1][pnet + 2*j + 1] -= vto*vfr*(-yre*cos(afr - ato)
+            - yim*sin(afr - ato));
+      }
+    }
   }
 }
 
