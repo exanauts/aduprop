@@ -210,15 +210,16 @@ int main(int argc, char* argv[]) {
 
     std::cout << x << std::endl;
     for (size_t i = 0; i < tsteps; ++i) {
-      std::cout << TMAT << std::endl;
-      for (size_t j = 0; j < sys.dimension; ++j)
-        TMAT[j][i] = x[j];
+      for (size_t j = 0; j < sys.dimension; ++j) {
+        std::cout << j << std::endl;
+        TMAT.set(j, i, x[j]);
+      }
       std::cout << "Step: " << i << std::endl;
       drivers.integrate(x);
     }
+    TMAT.display();
     std::cout << x << std::endl;
 
-    std::cout << TMAT << std::endl;
 
   }
   
