@@ -20,17 +20,18 @@ struct Branch {
   int to;
   double r;
   double x;
+  double b;
 
-  Branch():fr(0), to(0), r(0), x(0){};
-  Branch(int fr, int to, double r, double x):fr(fr), to(to), r(r), x(x){}
-  void set(int fr_, int to_, double r_, double x_);
+  Branch():fr(0), to(0), r(0), x(0), b(0){};
+  void set(int fr_, int to_, double r_, double x_, double b_);
 };
 
-void Branch::set(int fr_, int to_, double r_, double x_) {
+void Branch::set(int fr_, int to_, double r_, double x_, double b_) {
   fr = fr_;
   to = to_;
   r = r_;
   x = x_;
+  b = b_;
 }
 
 struct Load {
@@ -481,7 +482,7 @@ System::~System(){
 
 
 void System::build_ybus() {
-  double yre, yim, mag;
+  double yre, yim, mag, b;
   int fr, to;
 
   ybus = new alg::pMatrix<double>(2*nbuses, 2*nbuses);
@@ -497,6 +498,11 @@ void System::build_ybus() {
     expandComplex(to, to, yre, yim, *ybus);
     expandComplex(fr, to, -yre, -yim, *ybus);
     expandComplex(to, fr, -yre, -yim, *ybus);
+
+    // susceptance
+    //b = 0.5*branches[i].b;
+    //expandComplex(fr, fr, 0.0, b, *ybus);
+    //expandComplex(to, to, 0.0, b, *ybus);
   }
 }
 

@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     System sys(nbuses, nbranches, ngen, nload);
 
-    sys.branches[0].set(0, 1, 0.0001, 0.0576);
+    sys.branches[0].set(0, 1, 0.0001, 0.0576, 0.000);
     sys.loads[0].set(1, 1.0648453, 0.38835684);
     sys.gens[0].set(0, 1.575, 1.512, 0.29, 0.39, 0.1733,
         0.1733, 0.0787, 3.38, 6.09, 1.0, 0.05, 0.15);
@@ -95,15 +95,15 @@ int main(int argc, char* argv[]) {
     System sys(nbuses, nbranches, ngen, nload);
 
 
-    sys.branches[0].set(0, 3, 0.0000, 0.0576);
-    sys.branches[1].set(1, 6, 0.0000, 0.0625);
-    sys.branches[2].set(2, 8, 0.0000, 0.0586);
-    sys.branches[3].set(3, 4, 0.0100, 0.0850);
-    sys.branches[4].set(3, 5, 0.0170, 0.0920);
-    sys.branches[5].set(4, 6, 0.0320, 0.1610);
-    sys.branches[6].set(5, 8, 0.0390, 0.1700);
-    sys.branches[7].set(6, 7, 0.0085, 0.0720);
-    sys.branches[8].set(7, 8, 0.0119, 0.1008);
+    sys.branches[0].set(0, 3, 0.0000, 0.0576, 0.000);
+    sys.branches[1].set(1, 6, 0.0000, 0.0625, 0.000);
+    sys.branches[2].set(2, 8, 0.0000, 0.0586, 0.000);
+    sys.branches[3].set(3, 4, 0.0100, 0.0850, 0.176);
+    sys.branches[4].set(3, 5, 0.0170, 0.0920, 0.158);
+    sys.branches[5].set(4, 6, 0.0320, 0.1610, 0.306);
+    sys.branches[6].set(5, 8, 0.0390, 0.1700, 0.358);
+    sys.branches[7].set(6, 7, 0.0085, 0.0720, 0.149);
+    sys.branches[8].set(7, 8, 0.0119, 0.1008, 0.209);
 
 
     // sys.loads[0].set(4, 1.383061, 0.553224);
