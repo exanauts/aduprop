@@ -201,8 +201,8 @@ int main(int argc, char* argv[]) {
     sys.residual_beuler<double>(x, xold, F);
     std::cout << F << std::endl;
 
-    //ad drivers(sys);
-    //drivers.jactest(xold);
+    ad drivers(sys);
+    drivers.jactest(xold);
 
   }
 

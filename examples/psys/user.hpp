@@ -380,13 +380,13 @@ template <class T> void jac_beuler(const alg::pVector<T> &x,
      
     J[genp + 8][genp + 5] = -vbus*cos(delta - abus);
     J[genp + 8][genp + 7] = 1.0;
-    J[genp + 8][genp + 10] = -sin(delta - abus);
-    J[genp + 8][genp + 11] = vbus*cos(delta - abus);
+    J[genp + 8][pnet + 2*gens[i].bus] = -sin(delta - abus);
+    J[genp + 8][pnet + 2*gens[i].bus + 1] = vbus*cos(delta - abus);
      
     J[genp + 9][genp + 5] = vbus*sin(delta - abus);
     J[genp + 9][genp + 6] = 1.0;
-    J[genp + 9][genp + 10] = -cos(delta - abus);
-    J[genp + 9][genp + 11] = -vbus*sin(delta - abus);
+    J[genp + 9][pnet + 2*gens[i].bus] = -cos(delta - abus);
+    J[genp + 9][pnet + 2*gens[i].bus + 1] = -vbus*sin(delta - abus);
 
     // Contribution to power flow
     J[pnet + 2*gens[i].bus][genp + 6] = i_q;
