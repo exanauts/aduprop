@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
     // problem definition
     int nbuses, nbranches, ngen, nload;
 
+    int tsteps = 10;
+
     nbuses = 9;
     nbranches = 9;
     ngen = 3;
@@ -138,6 +140,9 @@ int main(int argc, char* argv[]) {
     pVector<double> xold(sys.dimension);
     pVector<double> x(sys.dimension);
     pVector<double> F(sys.dimension);
+
+    pMatrix<double> TMAT(sys.dimension, tsteps);
+    TMAT.zeros();
 
     // Generator 0 state variables
 
@@ -202,9 +207,21 @@ int main(int argc, char* argv[]) {
     std::cout << F << std::endl;
 
     ad drivers(sys);
-    drivers.jactest(xold);
+
+    std::cout << x << std::endl;
+    for (size_t i = 0; i < tsteps; ++i) {
+      std::cout << TMAT << std::endl;
+      for (size_t j = 0; j < sys.dimension; ++j)
+        TMAT[j][i] = x[j];
+      std::cout << "Step: " << i << std::endl;
+      drivers.integrate(x);
+    }
+    std::cout << x << std::endl;
+
+    std::cout << TMAT << std::endl;
 
   }
+  
 
   return 0;
 }
