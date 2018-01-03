@@ -122,6 +122,17 @@ template <typename T> void pMatrix<T>::display() {
 }
 
 
+#ifdef HDF5
+template <> void pMatrix<double>::to_hdf5(const std::string filename) {
+  hid_t file_id;
+  hsize_t dims[2];
+  dims[0] = rows;
+  dims[1] = cols;
+  file_id = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTmake_dataset(file_id, "matrix", 2, dims, H5T_NATIVE_DOUBLE, data);
+  H5Fclose (file_id);
+}
+#endif
 
 // LINEAR ALGEBRA FUNCTIONS
 

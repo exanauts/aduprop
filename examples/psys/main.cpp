@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     // problem definition
     int nbuses, nbranches, ngen, nload;
 
-    int tsteps = 10;
+    int tsteps = 1000;
 
     nbuses = 9;
     nbranches = 9;
@@ -151,6 +151,7 @@ int main(int argc, char* argv[]) {
     x[2] = 1.01915642e+00;
     x[3] = -4.21631455e-01;
     x[4] = -3.10192730e-25;
+    x[4] = -0.005;
     x[5] =  4.41919647e-01;
     x[6] = 0.94008964;
     x[7] =  0.4447825;
@@ -208,17 +209,16 @@ int main(int argc, char* argv[]) {
 
     ad drivers(sys);
 
-    std::cout << x << std::endl;
     for (size_t i = 0; i < tsteps; ++i) {
       for (size_t j = 0; j < sys.dimension; ++j) {
-        std::cout << j << std::endl;
         TMAT.set(j, i, x[j]);
       }
-      std::cout << "Step: " << i << std::endl;
+      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
+        << "." << std::endl;
       drivers.integrate(x);
     }
-    TMAT.display();
-    std::cout << x << std::endl;
+
+    TMAT.to_hdf5("solution.hdf5");
 
 
   }

@@ -152,6 +152,10 @@ template <typename T> class pMatrix {
   size_t nrows() const;
   size_t ncols() const;
   void display();
+#ifdef HDF5
+  // IO routines
+  void to_hdf5(const std::string filename);
+#endif
 
   class row {
    public:
