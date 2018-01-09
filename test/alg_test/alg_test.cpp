@@ -46,7 +46,7 @@ int main(int nargs, char** args) {
 
   // Performance test
   
-
+/*
   uint64_t cycleSTART, cycleEND;
 
   size_t large_dim = 10000;
@@ -78,6 +78,7 @@ int main(int nargs, char** args) {
   cycleEND = __rdtsc();
   
   std::cout << "Number of cycles spent in overload: " << cycleEND - cycleSTART << std::endl;
+*/
 
 
   // IO stuff

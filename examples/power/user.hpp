@@ -13,7 +13,7 @@ using namespace std;
 
 using namespace alg;
 
-typedef class System {
+typedef struct System {
 public:
   // System parameters.
   // Generator
@@ -39,6 +39,23 @@ public:
   
   const double h = 0.004; 
   const size_t dimension = 12;
+
+void ic(pVector<double> &x) {
+  // Initial values for state array.
+
+  x[0] = 1.06512037300928485983;
+  x[1] = 0.51819992367912581788;
+  x[2] = 0.85058383242985102779;
+  x[3] = -0.66197500054304025952;
+  x[4] = -0.05000000000000000278;
+  x[5] = 0.73618306350367335167;
+  x[6] = 0.77067836274882195458;
+  x[7] = 0.69832289180288620312;
+  x[8] = 0.46185376441989828278;
+  x[9] = 1.01531727676021699125;
+  x[10] = 1.0400000000000000000;
+  x[11] = 0.00000000000000000000;
+}
   
 size_t dim() { return dimension; }
 

@@ -62,25 +62,25 @@ template <class T> void jac_beuler(const pVector<T> &x,
   // Add integration term
   for (size_t  i = 0; i < N; ++i) {
     if (i == 0) {
-      J[i][i] -= h;
-      J[N - 2][i] += -h*x[N - 1];
-      J[N - 1][i] += h*(x[i + 1] - x[N - 2]);
-      J[i + 1][i] += h*x[N - 1];
+      J[i][i] += h;
+      J[i][N - 2] -= -h*x[N - 1];
+      J[i][N - 1] -= h*(x[i + 1] - x[N - 2]);
+      J[i][i + 1] -= h*x[N - 1];
     } else if (i == 1) {
-      J[i][i] -= h;
-      J[N - 1][i] += -h*x[0];
-      J[0][i] += h*(x[i + 1] - x[N - 1]);
-      J[i + 1][i] += h*x[0];
+      J[i][i] += h;
+      J[i][N - 1] -= -h*x[0];
+      J[i][0] -= h*(x[i + 1] - x[N - 1]);
+      J[i][i + 1] -= h*x[0];
     } else if (i == (N - 1)) {
-      J[i][i] -= h;
-      J[i - 2][i] += -h*x[i - 1];
-      J[i - 1][i] += h*(x[0] - x[i - 2]);
-      J[0][i] += h*x[i - 1];
+      J[i][i] += h;
+      J[i][i - 2] -= -h*x[i - 1];
+      J[i][i - 1] -= h*(x[0] - x[i - 2]);
+      J[i][0] -= h*x[i - 1];
     } else {
-      J[i][i] -= h;
-      J[i - 2][i] += -h*x[i - 1];
-      J[i - 1][i] += h*(x[i + 1] - x[i - 2]);
-      J[i + 1][i] += h*x[i - 1];
+      J[i][i] += h;
+      J[i][i - 2] -= -h*x[i - 1];
+      J[i][i - 1] -= h*(x[i + 1] - x[i - 2]);
+      J[i][i + 1] -= h*x[i - 1];
     }
   }
 
