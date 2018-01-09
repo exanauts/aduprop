@@ -33,7 +33,7 @@ clean:
 
 cleanall:
 	- $(RM) *.o libaduprop.a
-	- cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done ; test.log
+	- cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done ; rm *.log
 	- cd examples ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
 
 # BUILD EXAMPLES

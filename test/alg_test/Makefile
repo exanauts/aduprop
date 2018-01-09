@@ -2,7 +2,7 @@ include ../../Makefile.inc
 
 run: build
 	./alg_test > diff.out
-	diff diff.out diff.in
+	diff diff.out diff.in >&2
 
 build: alg_test
 
