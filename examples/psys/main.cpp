@@ -35,16 +35,21 @@ int main(int argc, char* argv[]) {
 
   auto result = options.parse(argc, argv);
 
+
+  // Variable declaration
+  int nbuses, nbranches, ngen, nload;
+  int tsteps = 1000;
+  System sys;
+
   if (TWO_BUS) {
     // problem definition
-    int nbuses, nbranches, ngen, nload;
 
     nbuses = 2;
     nbranches = 1;
     ngen = 1;
     nload = 1;
 
-    System sys(nbuses, nbranches, ngen, nload);
+    sys.init(nbuses, nbranches, ngen, nload);
 
     sys.branches[0].set(0, 1, 0.0001, 0.0576, 0.000);
     sys.loads[0].set(1, 1.0648453, 0.38835684);
@@ -64,7 +69,7 @@ int main(int argc, char* argv[]) {
     x[1] = 0.51819992367912581788;
     x[2] = 0.85058383242985102779;
     x[3] = -0.66197500054304025952;
-    x[4] = -0.00000000000000000;
+    x[4] = -0.01000000000000000;
     x[5] = 0.73618306350367335167;
     x[6] = 0.77067836274882195458;
     x[7] = 0.69832289180288620312;
@@ -78,25 +83,16 @@ int main(int argc, char* argv[]) {
 
     xold = x;
 
-    sys.residual_beuler<double>(x, xold, F);
-    std::cout << F << std::endl;
-
     ad drivers(sys);
-    drivers.jactest(xold);
   } else {
-    // problem definition
-    int nbuses, nbranches, ngen, nload;
-
-    int tsteps = 1000;
 
     nbuses = 9;
     nbranches = 9;
     ngen = 3;
     nload = 3;
 
-    System sys(nbuses, nbranches, ngen, nload);
-
-
+    sys.init(nbuses, nbranches, ngen, nload);
+    
     sys.branches[0].set(0, 3, 0.0000, 0.0576, 0.000);
     sys.branches[1].set(1, 6, 0.0000, 0.0625, 0.000);
     sys.branches[2].set(2, 8, 0.0000, 0.0586, 0.000);
@@ -107,14 +103,12 @@ int main(int argc, char* argv[]) {
     sys.branches[7].set(6, 7, 0.0085, 0.0720, 0.149);
     sys.branches[8].set(7, 8, 0.0119, 0.1008, 0.209);
 
-
     // sys.loads[0].set(4, 1.383061, 0.553224);
     sys.loads[0].set(4, 1.2500001068394062, 0.49999968121877764);
 
     //sys.loads[1].set(5, 0.964050, 0.321350);
     sys.loads[1].set(5, 0.900000218680605,  0.300000072893535);
     sys.loads[2].set(7, 0.9999996236911225, 0.3500004914694625);
-
 
     // Generator 0
     sys.gens[0].set(0, 1.575, 1.512, 0.29, 0.39, 0.1733,
@@ -151,7 +145,7 @@ int main(int argc, char* argv[]) {
     x[2] = 1.01915642e+00;
     x[3] = -4.21631455e-01;
     x[4] = -3.10192730e-25;
-    x[4] = -0.005;
+    x[4] = -0.000;
     x[5] =  4.41919647e-01;
     x[6] = 0.94008964;
     x[7] =  0.4447825;
@@ -203,9 +197,6 @@ int main(int argc, char* argv[]) {
     x[sys.pnet + 17] = (M_PI/180.0)*2.1073;
 
     xold = x;
-
-    sys.residual_beuler<double>(x, xold, F);
-    std::cout << F << std::endl;
 
     ad drivers(sys);
 
