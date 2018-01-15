@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   bool tensor2  = false;
   bool tensor3  = false;
 
-  bool TWO_BUS = false;
+  bool TWO_BUS = true;
   options.add_options()
     ("test_jac", "Test inner jacobian", cxxopts::value<bool>(test_jac))
     ("tensor1", "Compute AD and HC jacobian", cxxopts::value<bool>(tensor1))
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 1000;
+  int tsteps = 10;
   System sys;
 
   if (TWO_BUS) {
@@ -64,12 +64,14 @@ int main(int argc, char* argv[]) {
     pVector<double> xold(sys.dimension);
     pVector<double> x(sys.dimension);
     pVector<double> F(sys.dimension);
+    pMatrix<double> TMAT(sys.dimension, tsteps);
+    TMAT.zeros();
     
     x[0] = 1.06512037300928485983;
     x[1] = 0.51819992367912581788;
     x[2] = 0.85058383242985102779;
     x[3] = -0.66197500054304025952;
-    x[4] = -0.01000000000000000;
+    x[4] = -0.1000000000000000;
     x[5] = 0.73618306350367335167;
     x[6] = 0.77067836274882195458;
     x[7] = 0.69832289180288620312;
@@ -84,6 +86,17 @@ int main(int argc, char* argv[]) {
     xold = x;
 
     ad drivers(sys);
+    
+    for (size_t i = 0; i < tsteps; ++i) {
+      for (size_t j = 0; j < sys.dimension; ++j) {
+        TMAT.set(j, i, x[j]);
+      }
+      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
+        << "." << std::endl;
+      drivers.integrate(x);
+    }
+
+    TMAT.to_hdf5("solution.hdf5");
   } else {
 
     nbuses = 9;
