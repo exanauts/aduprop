@@ -18,19 +18,19 @@ template <typename T> pVector<T>::pVector() {
   n = 0;
 }
 
-template <> pVector<double>::pVector(const size_t nvals) {
-   data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
-   n = nvals;
- }
+// template <> pVector<double>::pVector(const size_t nvals) {
+//    data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
+//    n = nvals;
+//  }
 
 template <typename T> pVector<T>::pVector(const size_t nvals) {
   data = new T[nvals];
   n = nvals;
 }
 
-template <> pVector<double>::~pVector() {
-  if (data != NULL) free(data);
-}
+// template <> pVector<double>::~pVector() {
+//   if (data != NULL) free(data);
+// }
 
 template <typename T> pVector<T>::~pVector() {
   if (data != NULL) {

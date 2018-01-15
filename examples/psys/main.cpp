@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   bool tensor2  = false;
   bool tensor3  = false;
 
-  bool TWO_BUS = true;
+  bool TWO_BUS = false;
   options.add_options()
     ("test_jac", "Test inner jacobian", cxxopts::value<bool>(test_jac))
     ("tensor1", "Compute AD and HC jacobian", cxxopts::value<bool>(tensor1))
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
       drivers.integrate(x);
     }
 
-    TMAT.to_hdf5("solution.hdf5");
+    //TMAT.to_hdf5("solution.hdf5");
   } else {
 
     nbuses = 9;
@@ -222,7 +222,7 @@ int main(int argc, char* argv[]) {
       drivers.integrate(x);
     }
 
-    TMAT.to_hdf5("solution.hdf5");
+    //TMAT.to_hdf5("solution.hdf5");
 
 
   }

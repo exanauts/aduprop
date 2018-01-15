@@ -497,9 +497,9 @@ void System::init(int _nbuses, int _nbranches, int _ngens, int _nloads) {
 
 
 System::~System(){
-  if (nbranches) delete branches;
-  if (ngens) delete gens;
-  if (nloads) delete loads;
+  if (nbranches) delete [] branches;
+  if (ngens) delete [] gens;
+  if (nloads) delete [] loads;
   if (ybus) delete ybus;
 }
 
