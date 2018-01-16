@@ -30,6 +30,8 @@ template <typename T> class pVector {
   explicit pVector(const size_t nvals);
   ~pVector();
 
+  void alloc(const size_t nvals);
+
   void set(const size_t i, const T val);
   T get(const size_t i) const;
   size_t dim() const;
@@ -143,6 +145,8 @@ template <typename T> class pMatrix {
   pMatrix();
   explicit pMatrix(const size_t nrows, const size_t ncols);
   ~pMatrix();
+
+  void alloc(const size_t nrows, const size_t ncols);
 
   void set(const size_t i, const size_t j, const T val);
   void set_col(const size_t j, const T *vals);

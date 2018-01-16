@@ -38,8 +38,11 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 10;
+  int tsteps = 1000;
+  pVector<double> xold, x, F;
+  pMatrix<double> TMAT;
   System sys;
+
 
   if (TWO_BUS) {
     // problem definition
@@ -59,12 +62,11 @@ int main(int argc, char* argv[]) {
     sys.gens[0].p_m = 1.06496000000000012875;
 
     sys.build_ybus();
-    //std::cout << *sys.ybus << std::endl;
 
-    pVector<double> xold(sys.dimension);
-    pVector<double> x(sys.dimension);
-    pVector<double> F(sys.dimension);
-    pMatrix<double> TMAT(sys.dimension, tsteps);
+    xold.alloc(sys.dimension);
+    x.alloc(sys.dimension);
+    F.alloc(sys.dimension);
+    TMAT.alloc(sys.dimension, tsteps);
     TMAT.zeros();
     
     x[0] = 1.06512037300928485983;
@@ -96,7 +98,7 @@ int main(int argc, char* argv[]) {
       drivers.integrate(x);
     }
 
-    //TMAT.to_hdf5("solution.hdf5");
+    TMAT.to_hdf5("solution.hdf5");
   } else {
 
     nbuses = 9;
@@ -139,16 +141,12 @@ int main(int argc, char* argv[]) {
     sys.gens[2].e_fd = 2.07873175984;
     sys.gens[2].p_m = 0.85;
 
-
-
     sys.build_ybus();
-    // std::cout << *sys.ybus << std::endl;
+    xold.alloc(sys.dimension);
+    x.alloc(sys.dimension);
+    F.alloc(sys.dimension);
 
-    pVector<double> xold(sys.dimension);
-    pVector<double> x(sys.dimension);
-    pVector<double> F(sys.dimension);
-
-    pMatrix<double> TMAT(sys.dimension, tsteps);
+    TMAT.alloc(sys.dimension, tsteps);
     TMAT.zeros();
 
     // Generator 0 state variables
@@ -158,7 +156,7 @@ int main(int argc, char* argv[]) {
     x[2] = 1.01915642e+00;
     x[3] = -4.21631455e-01;
     x[4] = -3.10192730e-25;
-    x[4] = -0.000;
+    x[4] = -0.01;
     x[5] =  4.41919647e-01;
     x[6] = 0.94008964;
     x[7] =  0.4447825;
@@ -208,24 +206,22 @@ int main(int argc, char* argv[]) {
     x[sys.pnet + 15] = (M_PI/180.0)*0.8364;
     x[sys.pnet + 16] = 1.00414;
     x[sys.pnet + 17] = (M_PI/180.0)*2.1073;
-
-    xold = x;
-
-    ad drivers(sys);
-
-    for (size_t i = 0; i < tsteps; ++i) {
-      for (size_t j = 0; j < sys.dimension; ++j) {
-        TMAT.set(j, i, x[j]);
-      }
-      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
-        << "." << std::endl;
-      drivers.integrate(x);
-    }
-
-    //TMAT.to_hdf5("solution.hdf5");
-
-
   }
+    
+  xold = x;
+
+  ad drivers(sys);
+
+  for (size_t i = 0; i < tsteps; ++i) {
+    for (size_t j = 0; j < sys.dimension; ++j) {
+      TMAT.set(j, i, x[j]);
+    }
+    std::cout << "Step: " << i << ". Time: " << sys.deltat * i
+      << "." << std::endl;
+    drivers.integrate(x);
+  }
+
+  TMAT.to_hdf5("solution.hdf5");
   
 
   return 0;

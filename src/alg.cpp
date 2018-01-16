@@ -39,6 +39,13 @@ template <typename T> pVector<T>::~pVector() {
   } 
 }
 
+template <typename T> void pVector<T>::alloc(const size_t nvals) {
+  assert(n == 0);
+  assert(data == NULL);
+  data = new T[nvals];
+  n = nvals;
+}
+
 template <typename T> void pVector<T>::set(const size_t i, const T val) {
   data[i] = val;
 }
@@ -96,6 +103,15 @@ template <typename T> pMatrix<T>::pMatrix(const size_t nrows, const size_t ncols
 //     data = NULL;
 //   }
 // }
+
+template <typename T> void pMatrix<T>::alloc(const size_t nrows, const size_t ncols) {
+  assert(rows == 0);
+  assert(cols == 0);
+  assert(data == NULL);
+  data = new T[ncols*nrows];
+  cols = ncols;
+  rows = nrows;
+}
 
 template <typename T> pMatrix<T>::~pMatrix() {
   if (data != NULL) {
