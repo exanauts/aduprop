@@ -1,0 +1,3 @@
+file: m0_9bus
+contents: 48, double
+desc: this file contains steady-state initial conditions for the 9 bus system: 3 Generators and 3 CP loads. No governors, no exciters.

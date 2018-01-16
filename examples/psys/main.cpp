@@ -20,26 +20,22 @@ int main(int argc, char* argv[]) {
 
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
-  bool test_jac = false;
-  bool tensor1  = false;
-  bool tensor2  = false;
-  bool tensor3  = false;
+  bool external_init = false;
 
   bool TWO_BUS = false;
+  
   options.add_options()
-    ("test_jac", "Test inner jacobian", cxxopts::value<bool>(test_jac))
-    ("tensor1", "Compute AD and HC jacobian", cxxopts::value<bool>(tensor1))
-    ("tensor2", "Compute AD and HC hessian", cxxopts::value<bool>(tensor2))
-    ("tensor3", "Compute AD and HC tensor of order 3",
-     cxxopts::value<bool>(tensor3));
+    ("x0", "Read initial conditions from x0.hdf5", cxxopts::value<bool>(external_init))
+    ("o,output", "Output trajectory (integration)", cxxopts::value<std::string>());
 
   auto result = options.parse(argc, argv);
 
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 1000;
+  int tsteps = 200;
   pVector<double> xold, x, F;
+  pVector<double> x0;
   pMatrix<double> TMAT;
   System sys;
 
@@ -73,7 +69,7 @@ int main(int argc, char* argv[]) {
     x[1] = 0.51819992367912581788;
     x[2] = 0.85058383242985102779;
     x[3] = -0.66197500054304025952;
-    x[4] = -0.1000000000000000;
+    x[4] = -0.01000000000000000;
     x[5] = 0.73618306350367335167;
     x[6] = 0.77067836274882195458;
     x[7] = 0.69832289180288620312;
@@ -85,20 +81,6 @@ int main(int argc, char* argv[]) {
     x[sys.pnet + 2] = 1.01613;
     x[sys.pnet + 3] = -0.05803568828731545;
 
-    xold = x;
-
-    ad drivers(sys);
-    
-    for (size_t i = 0; i < tsteps; ++i) {
-      for (size_t j = 0; j < sys.dimension; ++j) {
-        TMAT.set(j, i, x[j]);
-      }
-      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
-        << "." << std::endl;
-      drivers.integrate(x);
-    }
-
-    TMAT.to_hdf5("solution.hdf5");
   } else {
 
     nbuses = 9;
@@ -142,7 +124,6 @@ int main(int argc, char* argv[]) {
     sys.gens[2].p_m = 0.85;
 
     sys.build_ybus();
-    xold.alloc(sys.dimension);
     x.alloc(sys.dimension);
     F.alloc(sys.dimension);
 
@@ -156,7 +137,7 @@ int main(int argc, char* argv[]) {
     x[2] = 1.01915642e+00;
     x[3] = -4.21631455e-01;
     x[4] = -3.10192730e-25;
-    x[4] = -0.01;
+    x[4] = 0.0;
     x[5] =  4.41919647e-01;
     x[6] = 0.94008964;
     x[7] =  0.4447825;
@@ -207,8 +188,14 @@ int main(int argc, char* argv[]) {
     x[sys.pnet + 16] = 1.00414;
     x[sys.pnet + 17] = (M_PI/180.0)*2.1073;
   }
-    
-  xold = x;
+ 
+  // Read initial conditions from external file. Check for dimension
+  // consistency.
+  if (external_init) {
+    x0.from_hdf5("x0.hdf5");
+    assert(x0.dim() == x.dim());
+    x = x0;
+  }
 
   ad drivers(sys);
 
@@ -221,8 +208,12 @@ int main(int argc, char* argv[]) {
     drivers.integrate(x);
   }
 
-  TMAT.to_hdf5("solution.hdf5");
-  
+
+  if (result.count("output")) {
+    TMAT.to_hdf5(result["output"].as<std::string>());
+  } else {
+    TMAT.to_hdf5("solution.hdf5");
+  }
 
   return 0;
 }
