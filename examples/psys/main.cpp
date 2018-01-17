@@ -21,11 +21,13 @@ int main(int argc, char* argv[]) {
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
   bool external_init = false;
+  bool propagate_moments = false;
 
   bool TWO_BUS = false;
   
   options.add_options()
     ("x0", "Read initial conditions from x0.hdf5", cxxopts::value<bool>(external_init))
+    ("m,moments", "Propagate moments with AD", cxxopts::value<bool>(propagate_moments))
     ("o,output", "Output trajectory (integration)", cxxopts::value<std::string>());
 
   auto result = options.parse(argc, argv);
@@ -199,16 +201,46 @@ int main(int argc, char* argv[]) {
 
   ad drivers(sys);
 
-  for (size_t i = 0; i < tsteps; ++i) {
-    for (size_t j = 0; j < sys.dimension; ++j) {
-      TMAT.set(j, i, x[j]);
+  if (!propagate_moments) {
+    for (size_t i = 0; i < tsteps; ++i) {
+      for (size_t j = 0; j < sys.dimension; ++j) {
+        TMAT.set(j, i, x[j]);
+      }
+      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
+        << "." << std::endl;
+      drivers.integrate(x);
     }
-    std::cout << "Step: " << i << ". Time: " << sys.deltat * i
-      << "." << std::endl;
-    drivers.integrate(x);
+  } else {
+    // Co-variance
+    pMatrix<double> cv0(sys.dimension, sys.dimension);
+    cv0.zeros();
+    // Strings
+    char step_str[20];
+    std::string fcov;
+
+    for (size_t i = 0; i < sys.dimension; ++i) 
+      cv0[i][i] = 0.0000001;
+    
+    cv0[4][4] = 0.000001;
+
+    for (size_t i = 0; i < tsteps; ++i) {
+      // Save mean in trajectory matrix
+      for (size_t j = 0; j < sys.dimension; ++j) {
+        TMAT.set(j, i, x[j]);
+      }
+      // Save cov. matrix .... Strings = vodoo
+      sprintf(step_str, "%d", (int)i);
+      fcov = std::string("output/covSTEP") + step_str + ".hdf5";
+      cv0.to_hdf5(fcov.c_str());
+
+      // Propagate
+      std::cout << "Step: " << i << ". Time: " << sys.deltat * i
+        << "." << std::endl;
+      propagateAD(x, cv0, sys, drivers);
+    }
   }
 
-
+  // Output trajectory
   if (result.count("output")) {
     TMAT.to_hdf5(result["output"].as<std::string>());
   } else {
