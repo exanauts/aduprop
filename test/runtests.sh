@@ -13,7 +13,7 @@ buildtest () {
   print Building Test: $test_name
   print -------------------------
   
-  make build 2>&1 | sed -e 's/^/'"$test_name"': /' | tee --append $LOGFILE
+  make build 2>&1 | sed -e 's/^/'"$test_name"': /' | tee -a $LOGFILE
   rc=${PIPESTATUS[0]}
   
   #    print " Returned: $rc " 
@@ -34,7 +34,7 @@ runtest () {
   print Running Test: $test_name
   print -------------------------
   
-  make run 2>&1 | sed -e 's/^/'"$test_name"': /' | tee --append $LOGFILE
+  make run 2>&1 | sed -e 's/^/'"$test_name"': /' | tee -a $LOGFILE
   rc=${PIPESTATUS[0]}
   
   #    print " Returned: $rc " 
