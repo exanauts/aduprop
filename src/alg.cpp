@@ -19,9 +19,9 @@ template <typename T> pVector<T>::pVector() {
 }
 
 // template <> pVector<double>::pVector(const size_t nvals) {
-//   data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
-//   n = nvals;
-// }
+//    data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
+//    n = nvals;
+//  }
 
 template <typename T> pVector<T>::pVector(const size_t nvals) {
   data = new T[nvals];
@@ -29,10 +29,7 @@ template <typename T> pVector<T>::pVector(const size_t nvals) {
 }
 
 // template <> pVector<double>::~pVector() {
-//   if (data != NULL) {
-//     // free(data);
-//     data = NULL;
-//   }
+//   if (data != NULL) free(data);
 // }
 
 template <typename T> pVector<T>::~pVector() {
@@ -40,6 +37,13 @@ template <typename T> pVector<T>::~pVector() {
     delete [] data;
     data = NULL;
   } 
+}
+
+template <typename T> void pVector<T>::alloc(const size_t nvals) {
+  assert(n == 0);
+  assert(data == NULL);
+  data = new T[nvals];
+  n = nvals;
 }
 
 template <typename T> void pVector<T>::set(const size_t i, const T val) {
@@ -100,6 +104,15 @@ template <typename T> pMatrix<T>::pMatrix(const size_t nrows, const size_t ncols
 //   }
 // }
 
+template <typename T> void pMatrix<T>::alloc(const size_t nrows, const size_t ncols) {
+  assert(rows == 0);
+  assert(cols == 0);
+  assert(data == NULL);
+  data = new T[ncols*nrows];
+  cols = ncols;
+  rows = nrows;
+}
+
 template <typename T> pMatrix<T>::~pMatrix() {
   if (data != NULL) {
     delete [] data;
@@ -122,6 +135,17 @@ template <typename T> void pMatrix<T>::display() {
 }
 
 
+#ifdef HDF5
+template <> void pMatrix<double>::to_hdf5(const std::string filename) {
+  hid_t file_id;
+  hsize_t dims[2];
+  dims[0] = rows;
+  dims[1] = cols;
+  file_id = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTmake_dataset(file_id, "matrix", 2, dims, H5T_NATIVE_DOUBLE, data);
+  H5Fclose (file_id);
+}
+#endif
 
 // LINEAR ALGEBRA FUNCTIONS
 

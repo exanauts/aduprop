@@ -7,6 +7,7 @@
 #ifndef USER_HPP
 #define USER_HPP
 #include <iostream>
+#include <cassert>
 #include "alg.hpp"
 
 
@@ -135,6 +136,7 @@ public:
   System(int nbuses, int nbranches, int ngens, int nloads);
   ~System();
 
+  void init(int nbuses, int nbranches, int ngens, int nloads); // same as constructor
   // Electrical system
   void build_ybus();
 
@@ -473,10 +475,31 @@ System::System(int _nbuses, int _nbranches, int _ngens, int _nloads) {
   deltat = DEFAULT_STEP;
 }
 
+void System::init(int _nbuses, int _nbranches, int _ngens, int _nloads) {
+  
+  assert(dimension == 0); // Dimension should be 0 from default constructor
+  nbuses = _nbuses;
+  nbranches = _nbranches;
+  ngens = _ngens;
+  nloads = _nloads;
+
+  branches = new Branch[nbranches];
+  gens = new Generator[ngens];
+  loads = new Load[nloads];
+
+  // Calculate dimension
+  pnet = ngens*GEN_SIZE; // assume all gens are GENROU
+  dimension = pnet + nbuses*2; // add transmission system
+
+  deltat = DEFAULT_STEP;
+}
+
+
+
 System::~System(){
-  if (nbranches) delete branches;
-  if (ngens) delete gens;
-  if (nloads) delete loads;
+  if (nbranches) delete [] branches;
+  if (ngens) delete [] gens;
+  if (nloads) delete [] loads;
   if (ybus) delete ybus;
 }
 
