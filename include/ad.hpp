@@ -686,18 +686,63 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
    \param drivers "AD drivers"
 */
 void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
+    pMatrix<double>& J, pTensor3<double>& H, pTensor4<double>& T,
     ad& drivers) {
   size_t dim = sys.dim();
-  pMatrix<double>  J(dim, dim);
-  pMatrix<double>  cv_temp(dim, dim);
   
-  // Obtain tensors
-  J.zeros();
+  // THIS WILL BE AN ENUM THAT WE PASS
+  // 1: Jacobian
+  // 2: Jacobian + Hessian
+  // 3: Jacobian + Hessian + Tensor-3
+  // In this case we do not allocate for all elements.
+
+  int DEGREE = 1;
+  
+  // CV_TEMP
+  pMatrix<double>  cv_temp(dim, dim);
   cv_temp.zeros();
-  drivers.t1s_driver(m0, J);
+  
+  switch(DEGREE) {
+    case 3:
+      T.zeros();
+    case 2:
+      H.zeros();
+    case 1:
+      J.zeros();
+      break;
+    default:
+      std::cout << "Invalid option" << std::endl;
+      exit(-1);
+  }
+
+  // Obtain tensors
+  switch(DEGREE) {
+    case 3:
+      drivers.t3s_t2s_t1s_driver(m0, J, H, T);
+      break;
+    case 2:
+      drivers.t2s_t1s_driver(m0, J, H);
+      break;
+    case 1:
+      drivers.t1s_driver(m0, J);
+      break;
+    default:
+      std::cout << "Invalid option" << std::endl;
+      exit(-1);
+  }
   
   // Propagate mean
   drivers.integrate(m0);
+
+  if (DEGREE > 1) {
+    for (size_t p = 0; p < dim; ++p) {
+      for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = 0; j < dim; ++j) {
+          m0[p] += (1.0/2.0)*H[p][i][j]*cv0[i][j];
+        }
+      }
+    }
+  }
 
   // Propagate covariance
 
@@ -711,6 +756,49 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+
+  if (DEGREE > 2) {
+
+    double aux, kurt;
+
+    for (size_t pn = 0; pn < dim; ++pn) { 
+      for (size_t pm = 0; pm < dim; ++pm) { 
+        for (size_t i = 0; i < dim; ++i) { 
+          for (size_t j = 0; j < dim; ++j) { 
+            for (size_t k = 0; k < dim; ++k) { 
+              for (size_t l = 0; l < dim; ++l) { 
+                aux = 0;
+                aux += J[pn][i]*T[pm][j][k][l];
+                aux += J[pn][j]*T[pm][i][k][l];
+                aux += J[pn][k]*T[pm][i][j][l];
+                aux += J[pn][l]*T[pm][i][j][k];
+                aux += H[pn][i][j]*H[pm][k][l];
+                aux += H[pn][i][k]*H[pm][j][l];
+                aux += H[pn][i][l]*H[pm][j][k];
+                aux += H[pn][j][k]*H[pm][i][l];
+                aux += H[pn][j][l]*H[pm][i][k];
+                aux += H[pn][k][l]*H[pm][i][j];
+                aux += T[pn][j][k][l]*J[pm][i];
+                aux += T[pn][i][k][l]*J[pm][j];
+                aux += T[pn][i][j][l]*J[pm][k];
+                aux += T[pn][i][j][k]*J[pm][l];
+
+                kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
+
+                aux = (1.0/(24.0))*aux*kurt;
+
+                aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
+                cv_temp[pn][pm] += aux;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+
 
   cv0 = cv_temp;
 }

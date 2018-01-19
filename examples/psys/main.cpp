@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
   int tsteps = 200;
+  size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;
   pMatrix<double> TMAT;
@@ -201,6 +202,8 @@ int main(int argc, char* argv[]) {
 
   ad drivers(sys);
 
+  dim = sys.dimension;
+
   if (!propagate_moments) {
     for (size_t i = 0; i < tsteps; ++i) {
       for (size_t j = 0; j < sys.dimension; ++j) {
@@ -217,6 +220,12 @@ int main(int argc, char* argv[]) {
     // Strings
     char step_str[20];
     std::string fcov;
+
+    // Where do we put this???
+    // We should only alocate if we're using all of these.
+    pTensor4<double> T(dim, dim, dim, dim);
+    pTensor3<double> H(dim, dim, dim);
+    pMatrix<double>  J(dim, dim);
 
     for (size_t i = 0; i < sys.dimension; ++i) 
       cv0[i][i] = 0.0000001;
@@ -236,7 +245,7 @@ int main(int argc, char* argv[]) {
       // Propagate
       std::cout << "Step: " << i << ". Time: " << sys.deltat * i
         << "." << std::endl;
-      propagateAD(x, cv0, sys, drivers);
+      propagateAD(x, cv0, sys, J, H, T, drivers);
     }
   }
 
