@@ -4,7 +4,7 @@ LOGFILE="$(pwd)/test.log"
 failed=0
 
 print() {
-  echo $@ | tee --append $LOGFILE
+  echo $@ | tee -a $LOGFILE
 }
 buildtest () {
   test_name=$(basename $1)
