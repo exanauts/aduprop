@@ -41,6 +41,54 @@ typedef codi::RealForwardGen<t2s> t3s;
 
 extern System sys;
 
+
+//#ifdef DBUG
+
+#define BEGIN_TIMED_BLOCK(ID) uint64_t StartCycleCount##ID = __rdtsc();
+#define END_TIMED_BLOCK(ID) Memory.Counter[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; ++Memory.Counter[DebugCycleCounter_##ID].HitCount;
+
+enum
+{
+  DebugCycleCounter_Integrate,
+  DebugCycleCounter_T1SDriver,
+  DebugCycleCounter_Count,
+};
+
+
+struct debug_cycle_counter
+{
+  uint64_t CycleCount;
+  uint32_t HitCount;
+};
+
+struct debug_memory {
+  struct debug_cycle_counter Counter[DebugCycleCounter_Count];
+};
+
+static struct debug_memory Memory;
+
+void HandleCycleCounters() {
+  std::cout << "Performance Statistics" << std::endl;
+
+  // I should not do this here but...
+  std::string funName[DebugCycleCounter_Count];
+  funName[DebugCycleCounter_Integrate] = "Integrate";
+  funName[DebugCycleCounter_T1SDriver] = "T1SDriver";
+
+  for (int CounterIndex = 0; CounterIndex < DebugCycleCounter_Count;
+        ++CounterIndex) {
+    debug_cycle_counter *Counter = Memory.Counter + CounterIndex;
+    if (!Counter->HitCount) break;
+    std::cout << funName[CounterIndex] << " : " << Counter->CycleCount 
+      << " cycles. " << Counter->HitCount << " hits. "
+      << Counter->CycleCount/Counter->HitCount << " cycles/hit." << std::endl;
+  }
+}
+
+//#endif
+
+
+
 // TODO: Name is not informative. This class does much more than AD: stores data, has integration functions,
 // etc...
 typedef class ad {
@@ -85,6 +133,10 @@ ad(System &sys_) {
   t2_t1_pJ = pMatrix<double>(dim, dim);
   t3_t2_t1_pJ = pMatrix<double>(dim, dim);
   tmp_pJ = pMatrix<double>(dim, dim);
+}
+
+~ad() {
+  HandleCycleCounters();
 }
 
 template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
@@ -197,6 +249,7 @@ void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
    \post "Jacobian"
 */
 void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
+  BEGIN_TIMED_BLOCK(T1SDriver);
   size_t dim = xic.dim();
   pVector<t1s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -208,6 +261,7 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
     integrate<t1s>(axic);
     for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
+  END_TIMED_BLOCK(T1SDriver);
   //for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
 
@@ -362,6 +416,9 @@ void jactest(const pVector<double> &xold) {
 */
 template <class T> void integrate(pVector<T> &x) { 
   // TODO(Michel, Adrian): integrate must not overwrite &x by default.
+
+  BEGIN_TIMED_BLOCK(Integrate);
+  
   size_t dim = x.dim();
   double eps = 1e-9;
   int iteration = 0;
@@ -396,8 +453,9 @@ template <class T> void integrate(pVector<T> &x) {
     sys->residual_beuler<T>(x, xold, y);
   } while (y.norm() > eps);
   
- 
-} 
+  END_TIMED_BLOCK(Integrate);
+}
+
 } ad;
 
 template <> void ad::adlinsolve<double>(pMatrix<double> &J, 
