@@ -28,6 +28,7 @@ original variable.
 #ifndef ADUPROP_AD_HPP_
 #define ADUPROP_AD_HPP_
 #include <iostream>
+#include "perf.hpp"
 #include "alg.hpp"
 #include "user.hpp"
 //#include "linsolve.hpp"
@@ -39,55 +40,9 @@ typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
 
+perf global_prof("global");
+
 extern System sys;
-
-
-//#ifdef DBUG
-
-#define BEGIN_TIMED_BLOCK(ID) uint64_t StartCycleCount##ID = __rdtsc();
-#define END_TIMED_BLOCK(ID) Memory.Counter[DebugCycleCounter_##ID].CycleCount += __rdtsc() - StartCycleCount##ID; ++Memory.Counter[DebugCycleCounter_##ID].HitCount;
-
-enum
-{
-  DebugCycleCounter_Integrate,
-  DebugCycleCounter_T1SDriver,
-  DebugCycleCounter_Count,
-};
-
-
-struct debug_cycle_counter
-{
-  uint64_t CycleCount;
-  uint32_t HitCount;
-};
-
-struct debug_memory {
-  struct debug_cycle_counter Counter[DebugCycleCounter_Count];
-};
-
-static struct debug_memory Memory;
-
-void HandleCycleCounters() {
-  std::cout << "Performance Statistics" << std::endl;
-
-  // I should not do this here but...
-  std::string funName[DebugCycleCounter_Count];
-  funName[DebugCycleCounter_Integrate] = "Integrate";
-  funName[DebugCycleCounter_T1SDriver] = "T1SDriver";
-
-  for (int CounterIndex = 0; CounterIndex < DebugCycleCounter_Count;
-        ++CounterIndex) {
-    debug_cycle_counter *Counter = Memory.Counter + CounterIndex;
-    if (!Counter->HitCount) break;
-    std::cout << funName[CounterIndex] << " : " << Counter->CycleCount 
-      << " cycles. " << Counter->HitCount << " hits. "
-      << Counter->CycleCount/Counter->HitCount << " cycles/hit." << std::endl;
-  }
-}
-
-//#endif
-
-
 
 // TODO: Name is not informative. This class does much more than AD: stores data, has integration functions,
 // etc...
@@ -111,9 +66,10 @@ private:
   pMatrix<double> t3_t2_t1_pJ;
   pMatrix<double> tmp_pJ;
   System *sys;
+  perf prof;
 
 public:
-ad(System &sys_) {
+ad(System &sys_) : prof("AD") {
   sys = &sys_;
   size_t dim = sys->dim();
   py = pVector<double>(dim);
@@ -133,10 +89,20 @@ ad(System &sys_) {
   t2_t1_pJ = pMatrix<double>(dim, dim);
   t3_t2_t1_pJ = pMatrix<double>(dim, dim);
   tmp_pJ = pMatrix<double>(dim, dim);
+  prof.activate("integrate");
+  prof.activate("driver");
+  prof.activate("t1s_driver");
+  prof.activate("t2s_t1s_driver");
+  prof.activate("t3s_t2s_t1s_driver");
+  prof.activate("adlinsolve");
+  prof.activate("t1s_adlinsolve");
+  prof.activate("t2s_adlinsolve");
+  prof.activate("t3s_adlinsolve");
+  
 }
 
 ~ad() {
-  HandleCycleCounters();
+  std::cout << prof << std::endl;
 }
 
 template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
@@ -249,7 +215,7 @@ void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
    \post "Jacobian"
 */
 void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
-  BEGIN_TIMED_BLOCK(T1SDriver);
+  prof.begin("t1s_driver");
   size_t dim = xic.dim();
   pVector<t1s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -261,7 +227,7 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
     integrate<t1s>(axic);
     for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
-  END_TIMED_BLOCK(T1SDriver);
+  prof.end("t1s_driver");
   //for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
 
@@ -277,6 +243,7 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
 */
 void t2s_t1s_driver(const pVector<double> &xic,
     pMatrix<double> &J, pTensor3<double> &H) {
+  prof.begin("t2s_t1s_driver");
   size_t dim = xic.dim();
   pVector<t2s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -302,6 +269,7 @@ void t2s_t1s_driver(const pVector<double> &xic,
       J[j][i] = axic[j].value().gradient();
     }
   }
+  prof.end("t2s_t1s_driver");
 }
 
 /*!
@@ -316,6 +284,7 @@ void t2s_t1s_driver(const pVector<double> &xic,
 */
 void t3s_t2s_t1s_driver(const pVector<double> &xic,
     pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T) {
+  prof.begin("t3s_t2s_t1s_driver");
   size_t dim = xic.dim();
   pVector<t3s> axic(dim);
   for (size_t i = 0; i < dim; ++i) {
@@ -349,6 +318,7 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
       J[j][i] = axic[j].value().value().gradient();
     }
   }
+  prof.end("t3s_t2s_t1s_driver");
 }
 
 /*!
@@ -417,7 +387,7 @@ void jactest(const pVector<double> &xold) {
 template <class T> void integrate(pVector<T> &x) { 
   // TODO(Michel, Adrian): integrate must not overwrite &x by default.
 
-  BEGIN_TIMED_BLOCK(Integrate);
+  prof.begin("integrate");
   
   size_t dim = x.dim();
   double eps = 1e-9;
@@ -453,19 +423,22 @@ template <class T> void integrate(pVector<T> &x) {
     sys->residual_beuler<T>(x, xold, y);
   } while (y.norm() > eps);
   
-  END_TIMED_BLOCK(Integrate);
+  prof.end("integrate");
 }
 
 } ad;
 
 template <> void ad::adlinsolve<double>(pMatrix<double> &J, 
     pVector<double> &y) {
+  prof.begin("adlinsolve");
   LUsolve(J, y);
+  prof.end("adlinsolve");
 }
 
 
 template <> void ad::adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
   // Get the values and tangents out for both J and y
+  prof.begin("t1s_adlinsolve");
   size_t dim = t1s_y.dim();
   for (size_t i = 0; i < dim; ++i) py[i] = t1s_y[i].getValue();
   for (size_t i = 0; i < dim; ++i) t1_py[i] = t1s_y[i].getGradient();
@@ -505,11 +478,13 @@ template <> void ad::adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
     t1s_y[i] = py[i];
     t1s_y[i].setGradient(t1_py[i]);
   }
+  prof.end("t1s_adlinsolve");
 }
 
 
 template <> void ad::adlinsolve<t2s>(pMatrix<t2s> &t2s_J, pVector<t2s> &t2s_y) {
   // Get the values and tangents out for both J and y
+  prof.begin("t2s_adlinsolve");
   size_t dim = t2s_y.dim();
 
   for (size_t i = 0; i < dim; ++i) py[i] = t2s_y[i].value().value();
@@ -578,9 +553,11 @@ template <> void ad::adlinsolve<t2s>(pMatrix<t2s> &t2s_J, pVector<t2s> &t2s_y) {
   for (size_t i = 0; i < dim; ++i) t2s_y[i].gradient().gradient() = t2_t1_py[i];
   for (size_t i = 0; i < dim; ++i) t2s_y[i].value().gradient() = t1_py[i];
   for (size_t i = 0; i < dim; ++i) t2s_y[i].gradient().value() = t2_py[i];
+  prof.end("t2s_adlinsolve");
 }
 
 template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
+  prof.begin("t3s_adlinsolve");
   // Get the values and tangents out for both J and y
   size_t dim = t3s_y.dim();
   for (size_t i = 0; i < dim; ++i) py[i] = t3s_y[i].value().value().value();
@@ -740,6 +717,7 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
     t3s_y[i].value().gradient().value() = t2_py[i];
   for (size_t i = 0; i < dim; ++i)
     t3s_y[i].gradient().gradient().value() = t3_t2_py[i];
+  prof.end("t3s_adlinsolve");
 }
 
 
@@ -753,6 +731,7 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
 void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     pMatrix<double>& J, pTensor3<double>& H, pTensor4<double>& T,
     ad& drivers) {
+  global_prof.begin("propagateAD");
   size_t dim = sys.dim();
   
   // THIS WILL BE AN ENUM THAT WE PASS
@@ -866,6 +845,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
 
   cv0 = cv_temp;
+  global_prof.end("propagateAD");
 }
 
 
