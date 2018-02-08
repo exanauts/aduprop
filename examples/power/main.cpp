@@ -141,10 +141,15 @@ int main(int argc, char* argv[]) {
   ad drivers(sys);
   
   //test(argc, argv, m0, sys, drivers);
+  // Where do we put this???
+  // We should only alocate if we're using all of these.
+  pTensor4<double> T(dim, dim, dim, dim);
+  pTensor3<double> H(dim, dim, dim);
+  pMatrix<double>  J(dim, dim);
 
   for (size_t i = 0; i < 30; ++i) {
     std::cout << "Step: " << i << std::endl;
-    propagateAD(m0, cv0, sys, drivers);
+    propagateAD(m0, cv0, sys, J, H, T, drivers);
     std::cout << m0 << std::endl;
     std::cout << cv0 << std::endl;
   }
