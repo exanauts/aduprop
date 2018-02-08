@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
   bool external_init = false;
-  bool propagate_moments = false;
+  bool propagate_moments = true;
 
   bool TWO_BUS = false;
   
@@ -32,6 +32,9 @@ int main(int argc, char* argv[]) {
 
   auto result = options.parse(argc, argv);
 
+  // activate timer in propagateAD
+  
+  global_prof.activate("propagateAD");
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
@@ -255,6 +258,8 @@ int main(int argc, char* argv[]) {
   } else {
     TMAT.to_hdf5("solution.hdf5");
   }
+  
+  std::cout << global_prof << std::endl;
 
   return 0;
 }

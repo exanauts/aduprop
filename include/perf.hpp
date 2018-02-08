@@ -22,7 +22,6 @@ public:
   perf(std::string name_) : name(name_)  {}
   ~perf() {
     for(it = blocks.begin() ; it != blocks.end() ; ++it) {
-      std::cout << "Destroying " << it->first << " timer. " << std::endl;
       delete it->second;  
     }
   }
@@ -64,20 +63,17 @@ public:
 std::ostream& operator<< (std::ostream& os, perf& prof) {
   os << "Performance Statistics for " << prof.name << std::endl;
   std::map<std::string, cycle_counter*>::iterator it;
-
+  
   for(it = prof.blocks.begin() ; it != prof.blocks.end() ; ++it) {
-    uint64_t div = 0;
-    if(it->second->HitCount == 0) {
-      div = 0;
-    }
-    else {
+    if(it->second->HitCount != 0) {
+      uint64_t div = 0;
       div = it->second->CycleCount/it->second->HitCount;
-    }
-    os << it->first << " : " << it->second->CycleCount 
+      os << it->first << " : " << it->second->CycleCount 
       << " cycles. " << it->second->HitCount << " hits. "
       << div << " cycles/hit." << std::endl;
+      std::cout << std::endl;
+    }
+    return os;
   }
-  std::cout << std::endl;
-  return os;
 }
 #endif  // ADUPROP_AD_HPP_
