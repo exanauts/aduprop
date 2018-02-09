@@ -823,12 +823,27 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                 aux += T[pn][j][k][l]*J[pm][i];
                 aux += T[pn][i][k][l]*J[pm][j];
                 aux += T[pn][i][j][l]*J[pm][k];
+                
+                kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
+                aux *= (1.0/(24.0))*kurt;
+                cv_temp[pn][pm] += aux;
+              }
+            }
+          }
+        }
+      }
+    }
+    for (size_t pn = 0; pn < dim; ++pn) { 
+      for (size_t pm = 0; pm < dim; ++pm) { 
+        for (size_t i = 0; i < dim; ++i) { 
+          for (size_t j = 0; j < dim; ++j) { 
+            for (size_t k = 0; k < dim; ++k) { 
+              for (size_t l = 0; l < dim; ++l) { 
+                aux = 0;
                 aux += T[pn][i][j][k]*J[pm][l];
 
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
-
-                aux = (1.0/(24.0))*aux*kurt;
-
+                aux *= (1.0/(24.0))*kurt;
                 aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
                 cv_temp[pn][pm] += aux;
               }
