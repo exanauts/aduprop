@@ -73,7 +73,7 @@ std::ostream& operator<< (std::ostream& os, perf& prof) {
       << div << " cycles/hit." << std::endl;
       std::cout << std::endl;
     }
-    return os;
   }
+  return os;
 }
 #endif  // ADUPROP_AD_HPP_
