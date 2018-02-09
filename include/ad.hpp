@@ -730,7 +730,7 @@ template <> void ad::adlinsolve<t3s>(pMatrix<t3s> &t3s_J, pVector<t3s> &t3s_y) {
 */
 void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     pMatrix<double>& J, pTensor3<double>& H, pTensor4<double>& T,
-    ad& drivers) {
+    ad& drivers, int degree = 1) {
   global_prof.begin("propagateAD");
   size_t dim = sys.dim();
   
@@ -740,13 +740,11 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   // 3: Jacobian + Hessian + Tensor-3
   // In this case we do not allocate for all elements.
 
-  int DEGREE = 1;
-  
   // CV_TEMP
   pMatrix<double>  cv_temp(dim, dim);
   cv_temp.zeros();
   
-  switch(DEGREE) {
+  switch(degree) {
     case 3:
       T.zeros();
     case 2:
@@ -760,7 +758,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   // Obtain tensors
-  switch(DEGREE) {
+  switch(degree) {
     case 3:
       drivers.t3s_t2s_t1s_driver(m0, J, H, T);
       break;
@@ -778,7 +776,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   // Propagate mean
   drivers.integrate(m0);
 
-  if (DEGREE > 1) {
+  if (degree > 1) {
     for (size_t p = 0; p < dim; ++p) {
       for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
@@ -801,7 +799,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     }
   }
 
-  if (DEGREE > 2) {
+  if (degree > 2) {
 
     double aux, kurt;
 

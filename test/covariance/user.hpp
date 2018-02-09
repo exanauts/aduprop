@@ -505,7 +505,7 @@ System::~System(){
 
 
 void System::build_ybus() {
-  double yre, yim, mag, b;
+  double yre, yim, mag;
   int fr, to;
 
   ybus = new alg::pMatrix<double>(2*nbuses, 2*nbuses);
