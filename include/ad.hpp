@@ -31,6 +31,9 @@ original variable.
 #include "perf.hpp"
 #include "alg.hpp"
 #include "user.hpp"
+#include <mpi.h>
+#include <stdlib.h>
+#include "parallel.hpp"
 //#include "linsolve.hpp"
 
 using namespace std;
@@ -283,11 +286,14 @@ void t2s_t1s_driver(const pVector<double> &xic,
    \post "tensor"
 */
 void t3s_t2s_t1s_driver(const pVector<double> &xic,
-    pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T) {
+    pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T, size_t start = 0, size_t end = 0) {
   prof.begin("t3s_t2s_t1s_driver");
   size_t dim = xic.dim();
+  
+  // no end argument is set, hence pick dim as end
+  if(end == 0) end = dim;
   pVector<t3s> axic(dim);
-  for (size_t i = 0; i < dim; ++i) {
+  for (size_t i = start; i < end; ++i) {
     cout << "Computing tensor " << (double) i*(double) 100.0/(double) dim
       << "\% done." << endl;
     for (size_t j = 0; j < dim; ++j) {
@@ -733,6 +739,12 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     ad& drivers, int degree = 1) {
   global_prof.begin("propagateAD");
   size_t dim = sys.dim();
+  size_t start = paduprop_getstart(dim);
+  size_t end = paduprop_getend(dim);
+  std::cout << "start: " << start << std::endl;
+  std::cout << "end: " << end << std::endl;
+  // std::cout << "start: " << start << " " << addleft << std::endl;
+  // std::cout << "end: " << end << " " << addright << std::endl;
   
   // THIS WILL BE AN ENUM THAT WE PASS
   // 1: Jacobian
@@ -743,6 +755,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   // CV_TEMP
   pMatrix<double>  cv_temp(dim, dim);
   cv_temp.zeros();
+  
+  pMatrix<double>  cv_temp2(dim, dim);
+  cv_temp2.zeros();
   
   switch(degree) {
     case 3:
@@ -808,7 +823,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
         for (size_t i = 0; i < dim; ++i) { 
           for (size_t j = 0; j < dim; ++j) { 
             for (size_t k = 0; k < dim; ++k) { 
-              for (size_t l = 0; l < dim; ++l) { 
+              for (size_t l = start; l < end; ++l) { 
                 aux = 0;
                 aux += J[pn][i]*T[pm][j][k][l];
                 aux += J[pn][j]*T[pm][i][k][l];
@@ -826,7 +841,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                 
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
                 aux *= (1.0/(24.0))*kurt;
-                cv_temp[pn][pm] += aux;
+                cv_temp2[pn][pm] += aux;
               }
             }
           }
@@ -837,7 +852,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       for (size_t pm = 0; pm < dim; ++pm) { 
         for (size_t i = 0; i < dim; ++i) { 
           for (size_t j = 0; j < dim; ++j) { 
-            for (size_t k = 0; k < dim; ++k) { 
+            for (size_t k = start; k < end; ++k) { 
               for (size_t l = 0; l < dim; ++l) { 
                 aux = 0;
                 aux += T[pn][i][j][k]*J[pm][l];
@@ -845,7 +860,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
                 aux *= (1.0/(24.0))*kurt;
                 aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
-                cv_temp[pn][pm] += aux;
+                cv_temp2[pn][pm] += aux;
               }
             }
           }
@@ -853,11 +868,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  MPI_Allreduce(MPI_IN_PLACE, cv_temp2.get_datap(), dim*dim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-
-
-
-  cv0 = cv_temp;
+  cv0 = cv_temp + cv_temp2;
   global_prof.end("propagateAD");
 }
 
