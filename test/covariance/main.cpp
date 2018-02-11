@@ -24,14 +24,12 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 10;
+  int tsteps = 20;
   size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;
   pMatrix<double> TMAT;
   System sys;
-  std::ofstream outfile;
-  outfile.open("output.txt");
 
   // problem definition
 
@@ -97,8 +95,6 @@ int main(int argc, char* argv[]) {
     cv0[i][i] = 0.0000001;
   
   cv0[4][4] = 0.000001;
-  outfile << "cv0 at ts = 0\n";
-  outfile << cv0 << std::endl;
 
   for (size_t i = 0; i < tsteps; ++i) {
     // Save mean in trajectory matrix
@@ -113,12 +109,20 @@ int main(int argc, char* argv[]) {
     propagateAD(x, cv0, sys, J, H, T, drivers, degree);
   }
   
-  outfile << "cv0 at ts = " << tsteps << std::endl;
-  outfile << cv0 << std::endl;
-
-  // Output trajectory
-  
   std::cout << global_prof << std::endl;
+  double compare, diff;
+  std::ifstream infile;
+  infile.open("solution.txt");
+  infile >> compare;
+  diff = compare - cv0.norm();
+  std::cout << std::setprecision(16) << compare << std::endl;
+  std::cout << std::setprecision(16) << cv0.norm() << std::endl;
+  std::cout << std::setprecision(16) << compare - cv0.norm() << std::endl;
+  infile.close();
+  if(diff > 1e-15) {
+    cerr << "ERROR: Covariance not correct." << endl;
+    exit(1);
+  }
 
   return 0;
 }
