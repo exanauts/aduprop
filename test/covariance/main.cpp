@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
   std::cout << std::setprecision(16) << cv0.norm() << std::endl;
   std::cout << std::setprecision(16) << compare - cv0.norm() << std::endl;
   infile.close();
-  if(diff > 1e-15) {
+  if(abs(diff) > 1e-15) {
     cerr << "ERROR: Covariance not correct." << endl;
     exit(1);
   }
