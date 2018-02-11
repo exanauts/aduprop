@@ -15,6 +15,7 @@
 // Rudimentary linear solver interface
 #include "ad.hpp"
 #include "cxxopts.hpp"
+#include "parallel.hpp"
 
 int main(int argc, char* argv[]) {
   
@@ -26,14 +27,12 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 10;
+  int tsteps = 20;
   size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;
   pMatrix<double> TMAT;
   System sys;
-  std::ofstream outfile;
-  if(paduprop_getrank() == 0) outfile.open("output.txt");
 
   // problem definition
 
@@ -91,7 +90,8 @@ int main(int argc, char* argv[]) {
 
   // Where do we put this???
   // We should only alocate if we're using all of these.
-  // size_t chunk = paduprop_getend() - paduprop_getstart();
+  size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
+  std::cout << "chunk: " << chunk << std::endl;
   pTensor4<double> T(dim, dim, dim, dim);
   pTensor3<double> H(dim, dim, dim);
   pMatrix<double>  J(dim, dim);
@@ -100,10 +100,6 @@ int main(int argc, char* argv[]) {
     cv0[i][i] = 0.0000001;
   
   cv0[4][4] = 0.000001;
-  if(paduprop_getrank() == 0) {
-    outfile << "cv0 at ts = 0\n";
-    outfile << cv0 << std::endl;
-  }
 
   for (size_t i = 0; i < tsteps; ++i) {
     // Save mean in trajectory matrix
@@ -118,9 +114,19 @@ int main(int argc, char* argv[]) {
     propagateAD(x, cv0, sys, J, H, T, drivers, degree);
   }
   if(paduprop_getrank() == 0) {  
-    outfile << "cv0 at ts = " << tsteps << std::endl;
-    outfile << cv0 << std::endl;
-    outfile.close();
+    double compare, diff;
+    std::ifstream infile;
+    infile.open("solution.txt");
+    infile >> compare;
+    diff = compare - cv0.norm();
+    std::cout << std::setprecision(16) << compare << std::endl;
+    std::cout << std::setprecision(16) << cv0.norm() << std::endl;
+    std::cout << std::setprecision(16) << compare - cv0.norm() << std::endl;
+    infile.close();
+    if(diff > 1e-15) {
+      cerr << "ERROR: Covariance not correct." << endl;
+      exit(1);
+    }
   }
 
   // Output trajectory
