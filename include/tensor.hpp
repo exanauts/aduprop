@@ -44,7 +44,7 @@ template <typename T> class pTensor3 {
   
   };
   cd1 operator[] (int i) {
-    return cd1(data+i*d1*d2, d1);
+    return cd1(data+i*d2*d3, d3);
   }
   friend std::ostream& operator<< <> ( std::ostream&, pTensor3<T>& );  
   
@@ -202,12 +202,12 @@ template <typename T> class pTensor4 {
     size_t &d2;
     cd1(T *ptr_, size_t &d1_, size_t &d2_) : ptr(ptr_), d1(d1_), d2(d2_) {}; 
     cd2 operator[] (int i) {
-      return cd2(ptr+i*d1*d2, d1);
+      return cd2(ptr+i*d1*d2, d2);
     }
   
   };
   cd1 operator[] (int i) {
-    return cd1(data+i*d1*d2*d3, d1, d2);
+    return cd1(data+i*d2*d3*d4, d3, d4);
   }
   friend std::ostream& operator<< <> ( std::ostream&, pTensor4<T>& );  
   
