@@ -313,15 +313,15 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
         axic[k].gradient().value().value() = 1.0;
         integrate<t3s>(axic);
         for (size_t l = 0; l < dim; ++l) {
-          T[l][k][j][i] = axic[l].gradient().gradient().gradient();
+          T[l][k][j][i-start] = axic[l].gradient().gradient().gradient();
         }
       }
       for (size_t k = 0; k < dim; ++k) {
-        H[k][j][i] = axic[k].value().gradient().gradient();
+        // H[k][j][i] = axic[k].value().gradient().gradient();
       }
     }
     for (size_t j = 0; j < dim; ++j) {
-      J[j][i] = axic[j].value().value().gradient();
+      // J[j][i] = axic[j].value().value().gradient();
     }
   }
   prof.end("t3s_t2s_t1s_driver");
@@ -775,7 +775,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   // Obtain tensors
   switch(degree) {
     case 3:
-      drivers.t3s_t2s_t1s_driver(m0, J, H, T);
+      // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
+      drivers.t3s_t2s_t1s_driver(m0, J, H, T, start, end);
+      drivers.t2s_t1s_driver(m0, J, H);
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H);
@@ -825,19 +827,18 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
             for (size_t k = 0; k < dim; ++k) { 
               for (size_t l = start; l < end; ++l) { 
                 aux = 0;
-                aux += J[pn][i]*T[pm][j][k][l];
-                aux += J[pn][j]*T[pm][i][k][l];
-                aux += J[pn][k]*T[pm][i][j][l];
-                aux += J[pn][l]*T[pm][i][j][k];
+                aux += J[pn][i]*T[pm][j][k][l-start];
+                aux += J[pn][j]*T[pm][i][k][l-start];
+                aux += J[pn][k]*T[pm][i][j][l-start];
                 aux += H[pn][i][j]*H[pm][k][l];
                 aux += H[pn][i][k]*H[pm][j][l];
                 aux += H[pn][i][l]*H[pm][j][k];
                 aux += H[pn][j][k]*H[pm][i][l];
                 aux += H[pn][j][l]*H[pm][i][k];
                 aux += H[pn][k][l]*H[pm][i][j];
-                aux += T[pn][j][k][l]*J[pm][i];
-                aux += T[pn][i][k][l]*J[pm][j];
-                aux += T[pn][i][j][l]*J[pm][k];
+                aux += T[pn][j][k][l-start]*J[pm][i];
+                aux += T[pn][i][k][l-start]*J[pm][j];
+                aux += T[pn][i][j][l-start]*J[pm][k];
                 
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
                 aux *= (1.0/(24.0))*kurt;
@@ -855,7 +856,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
             for (size_t k = start; k < end; ++k) { 
               for (size_t l = 0; l < dim; ++l) { 
                 aux = 0;
-                aux += T[pn][i][j][k]*J[pm][l];
+                aux += T[pn][i][j][k-start]*J[pm][l];
+                aux += J[pn][l]*T[pm][i][j][k-start];
 
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
                 aux *= (1.0/(24.0))*kurt;
@@ -868,6 +870,18 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  double sum = 0;
+  for (size_t pn = 0; pn < dim; ++pn) { 
+    for (size_t pm = 0; pm < dim; ++pm) { 
+      for (size_t i = 0; i < dim; ++i) { 
+        for (size_t j = 0; j < dim; ++j) { 
+          sum += T[pn][pm][i][j];
+        }
+      }
+    }
+  }
+  MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  std::cout << std::setprecision(16) << "T sum " << sum << std::endl;
   MPI_Allreduce(MPI_IN_PLACE, cv_temp2.get_datap(), dim*dim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
   cv0 = cv_temp + cv_temp2;
