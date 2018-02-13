@@ -2,6 +2,7 @@
 #define ADUPROP_PARALLEL_HPP_
 
 #include <mpi.h>
+#include <fstream>
 
 int paduprop_init();
 int paduprop_destroy();

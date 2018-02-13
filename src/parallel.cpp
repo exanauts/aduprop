@@ -2,6 +2,14 @@
 
 int paduprop_init() {
   return MPI_Init(NULL, NULL);
+  std::ofstream sink("/dev/null");
+
+  if (paduprop_getrank() != 0) {
+    // Mute standard output
+    std::cout.rdbuf(sink.rdbuf());
+    // Optionally mute standard error
+    std::cerr.rdbuf(sink.rdbuf());      
+  }
 }
 int paduprop_destroy() {
   return MPI_Finalize();
