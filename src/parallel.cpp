@@ -1,15 +1,16 @@
 #include "parallel.hpp"
 
+std::ofstream paduprop_sink("/dev/null");
 int paduprop_init() {
-  return MPI_Init(NULL, NULL);
-  std::ofstream sink("/dev/null");
+  int ierr = MPI_Init(NULL, NULL);
 
   if (paduprop_getrank() != 0) {
     // Mute standard output
-    std::cout.rdbuf(sink.rdbuf());
+    std::cout.rdbuf(paduprop_sink.rdbuf());
     // Optionally mute standard error
-    std::cerr.rdbuf(sink.rdbuf());      
+    std::cerr.rdbuf(paduprop_sink.rdbuf());      
   }
+  return ierr;
 }
 int paduprop_destroy() {
   return MPI_Finalize();
