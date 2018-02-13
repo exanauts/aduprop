@@ -4,7 +4,6 @@ CFLAGS+= -I$(PWD)
 
 run:
 	./power
-	diff output.txt solution.txt
 
 build: user.hpp main.o
 	$(CXX) -o power main.o $(LDLIBS)
