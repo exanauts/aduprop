@@ -4,7 +4,7 @@ CFLAGS = -g -O0 -Wall
 # CFLAGS = -g -O0 -Wall -DDBUG
 MATH_LIBS = -llapack -lblas
 CODI_DIR = $(HOME)/git/CoDiPack
-ADUPROP_DIR = $(HOME)/git/aduprop/aduprop
+ADUPROP_DIR = $(HOME)/git/aduprop
 
 # DON'T EDIT BELOW THIS LINE
 
