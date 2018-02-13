@@ -101,11 +101,13 @@ ad(System &sys_) : prof("AD") {
   prof.activate("t1s_adlinsolve");
   prof.activate("t2s_adlinsolve");
   prof.activate("t3s_adlinsolve");
+  paduprop_init();
   
 }
 
 ~ad() {
   std::cout << prof << std::endl;
+  paduprop_destroy();
 }
 
 template <class T> void adlinsolve(pMatrix<T> &J, pVector<T> &y) {
@@ -294,8 +296,10 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
   if(end == 0) end = dim;
   pVector<t3s> axic(dim);
   for (size_t i = start; i < end; ++i) {
-    cout << "Computing tensor " << (double) i*(double) 100.0/(double) dim
+    if(paduprop_getrank() == 0) {
+    cout << "Computing tensor " << (double) (i-start)*(double) 100.0/(double) (end-start)
       << "\% done." << endl;
+    }
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
         for (size_t l = 0; l < dim; ++l) {

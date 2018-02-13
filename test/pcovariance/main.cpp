@@ -18,8 +18,6 @@
 #include "parallel.hpp"
 
 int main(int argc, char* argv[]) {
-  
-  paduprop_init();
 
   // activate timer in propagateAD
   
@@ -92,9 +90,12 @@ int main(int argc, char* argv[]) {
   // We should only alocate if we're using all of these.
   size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
   std::cout << "chunk: " << chunk << std::endl;
-  pTensor4<double> T(dim, dim, dim, dim);
+  pTensor4<double> T(dim, dim, dim, chunk);
   pTensor3<double> H(dim, dim, dim);
   pMatrix<double>  J(dim, dim);
+  std::cout << "n: " << dim << std::endl;
+  // std::cout << "T: " << T[dim-1][dim-1][dim-1][chunk-1] << std::endl;
+  // exit(0);
 
   for (size_t i = 0; i < sys.dimension; ++i) 
     cv0[i][i] = 0.0000001;
@@ -133,7 +134,6 @@ int main(int argc, char* argv[]) {
   
   std::cout << global_prof << std::endl;
 
-  paduprop_destroy();
   return 0;
 }
 

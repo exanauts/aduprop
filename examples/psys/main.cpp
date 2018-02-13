@@ -17,7 +17,6 @@
 
 int main(int argc, char* argv[]) {
   // Options parser
-
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
   bool external_init = false;
@@ -226,7 +225,9 @@ int main(int argc, char* argv[]) {
 
     // Where do we put this???
     // We should only alocate if we're using all of these.
-    pTensor4<double> T(dim, dim, dim, dim);
+    size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
+    std::cout << "chunk: " << chunk << std::endl;
+    pTensor4<double> T(dim, dim, dim, chunk);
     pTensor3<double> H(dim, dim, dim);
     pMatrix<double>  J(dim, dim);
 
@@ -248,7 +249,7 @@ int main(int argc, char* argv[]) {
       // Propagate
       std::cout << "Step: " << i << ". Time: " << sys.deltat * i
         << "." << std::endl;
-      propagateAD(x, cv0, sys, J, H, T, drivers);
+      propagateAD(x, cv0, sys, J, H, T, drivers, 3);
     }
   }
 
