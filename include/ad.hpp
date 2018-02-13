@@ -745,10 +745,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   size_t dim = sys.dim();
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
-  std::cout << "start: " << start << std::endl;
-  std::cout << "end: " << end << std::endl;
-  // std::cout << "start: " << start << " " << addleft << std::endl;
-  // std::cout << "end: " << end << " " << addright << std::endl;
   
   // THIS WILL BE AN ENUM THAT WE PASS
   // 1: Jacobian
@@ -884,9 +880,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
-  MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  std::cout << std::setprecision(16) << "T sum " << sum << std::endl;
-  MPI_Allreduce(MPI_IN_PLACE, cv_temp2.get_datap(), dim*dim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  paduprop_sum(cv_temp2);
 
   cv0 = cv_temp + cv_temp2;
   global_prof.end("propagateAD");

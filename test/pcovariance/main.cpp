@@ -89,13 +89,9 @@ int main(int argc, char* argv[]) {
   // Where do we put this???
   // We should only alocate if we're using all of these.
   size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
-  std::cout << "chunk: " << chunk << std::endl;
   pTensor4<double> T(dim, dim, dim, chunk);
   pTensor3<double> H(dim, dim, dim);
   pMatrix<double>  J(dim, dim);
-  std::cout << "n: " << dim << std::endl;
-  // std::cout << "T: " << T[dim-1][dim-1][dim-1][chunk-1] << std::endl;
-  // exit(0);
 
   for (size_t i = 0; i < sys.dimension; ++i) 
     cv0[i][i] = 0.0000001;
@@ -120,9 +116,9 @@ int main(int argc, char* argv[]) {
     infile.open("solution.txt");
     infile >> compare;
     diff = compare - cv0.norm();
-    std::cout << std::setprecision(16) << compare << std::endl;
-    std::cout << std::setprecision(16) << cv0.norm() << std::endl;
-    std::cout << std::setprecision(16) << diff << std::endl;
+    std::cout << std::setprecision(16) << "Sol: " << compare << ". " << std::endl;
+    std::cout << std::setprecision(16) << "cv0 norm: " << cv0.norm() << "." << std::endl;
+    std::cout << std::setprecision(16) << "Diff: " << diff << "." << std::endl;
     infile.close();
     if(abs(diff) > 1e-15) {
       cerr << "ERROR: Covariance not correct." << endl;

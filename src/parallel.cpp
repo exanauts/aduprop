@@ -53,3 +53,10 @@ int paduprop_getcommsize() {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   return size;
 }
+int paduprop_sum(pMatrix<double> &mat) {
+  size_t nrows = mat.nrows();
+  size_t ncols = mat.ncols();
+  size_t size = nrows*ncols;
+  double *ptr = mat.get_datap();
+  return MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+}

@@ -3,6 +3,8 @@
 
 #include <mpi.h>
 #include <fstream>
+#include "alg.hpp"
+using namespace alg;
 
 int paduprop_init();
 int paduprop_destroy();
@@ -11,5 +13,6 @@ size_t paduprop_getend(size_t dim);
 
 int paduprop_getrank();
 int paduprop_getcommsize();
+int paduprop_sum(pMatrix<double>&);
 
 #endif  // ADUPROP_PARALLEL_HPP_
