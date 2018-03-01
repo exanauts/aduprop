@@ -35,10 +35,13 @@ original variable.
 
 using namespace std;
 using namespace alg;
+using namespace codi;
 
 typedef codi::RealForwardGen<double> t1s;
+typedef codi::RealReverseGen<double> a1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
+typedef codi::RealReverseGen<t2s> a3s;
 
 perf global_prof("global");
 
@@ -67,6 +70,7 @@ private:
   pMatrix<double> tmp_pJ;
   System *sys;
   perf prof;
+  codi::ExternalFunctionHelper<a1s> *eh;
 
 public:
 ad(System &sys_) : prof("AD") {
@@ -228,7 +232,34 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
     for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
   prof.end("t1s_driver");
-  //for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
+}
+
+void a1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
+  prof.begin("a1s_driver");
+  size_t dim = xic.dim();
+  pVector<a1s> axic(dim);
+  for (size_t i = 0; i < dim; ++i) {
+    a1s::TapeType tape;// = a1s::getGlobalTape();
+    tape.setActive();
+    eh = new codi::ExternalFunctionHelper<a1s>;
+    for(size_t j = 0; j < dim; j++) {
+      tape.registerInput(axic[i]);
+    }
+    integrate<a1s>(axic);
+    tape.registerOutput(axic[i]);
+    // tape.setPassive();
+    axic[i].setGradient(1.0);
+    tape.evaluate();
+    for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
+    tape.reset();
+    delete eh;
+  }
+  // set all first order directions on the adjoint value
+  // DH::setDerivativesReverse(cRev, 1, 1.0);
+  // cout << "r0s: " << cRev << std::endl;
+  // cout << "r6s: " << DH::derivative(aRev, 6, 0) << std::endl;
+  // for (size_t j = 0; j < dim; ++j) J[j][i] = DH::derivative(axic[j], 1, 0);
+  prof.end("a1s_driver");
 }
 
 
@@ -319,6 +350,55 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
     }
   }
   prof.end("t3s_t2s_t1s_driver");
+}
+
+/*!
+   \brief "Driver for accumulating 3rd order tensor using AD. Go over all 
+   Cartesian basis vectors of the tangents t1_xic, t2_xic and t3_xic 
+   and collect one tensor projection after the other."
+   \param xic "Initial conditions"
+   \param dim "Dimension of the state"
+   \param J "tensor"
+   \pre "Input system and state"
+   \post "tensor"
+*/
+void a3s_t2s_t1s_driver(const pVector<double> &xic,
+    pMatrix<double> &J, pTensor3<double> &H, pTensor4<double> &T) {
+  prof.begin("a3s_t2s_t1s_driver");
+  size_t dim = xic.dim();
+  pVector<a3s> axic(dim);
+  for (size_t i = 0; i < dim; ++i) {
+    cout << "Computing tensor " << (double) i*(double) 100.0/(double) dim
+      << "\% done." << endl;
+    for (size_t j = 0; j < dim; ++j) {
+      for (size_t k = 0; k < dim; ++k) {
+        for (size_t l = 0; l < dim; ++l) {
+          axic[l].value().value().value()          = xic[l];
+          axic[l].gradient().value().value()       = 0.0;
+          axic[l].value().gradient().gradient()    = 0.0;
+          axic[l].gradient().gradient().gradient() = 0.0;
+          axic[l].value().value().gradient()       = 0.0;
+          axic[l].gradient().value().gradient()    = 0.0;
+          axic[l].value().gradient().value()       = 0.0;
+          axic[l].gradient().gradient().value()    = 0.0;
+        }
+        axic[i].value().value().gradient() = 1.0;
+        axic[j].value().gradient().value() = 1.0;
+        axic[k].gradient().value().value() = 1.0;
+        integrate<a3s>(axic);
+        for (size_t l = 0; l < dim; ++l) {
+          T[l][k][j][i] = axic[l].gradient().gradient().gradient();
+        }
+      }
+      for (size_t k = 0; k < dim; ++k) {
+        H[k][j][i] = axic[k].value().gradient().gradient();
+      }
+    }
+    for (size_t j = 0; j < dim; ++j) {
+      J[j][i] = axic[j].value().value().gradient();
+    }
+  }
+  prof.end("a3s_t2s_t1s_driver");
 }
 
 /*!
@@ -480,6 +560,40 @@ template <> void ad::adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
   }
   prof.end("t1s_adlinsolve");
 }
+
+void a1s_adlinsolve_primal(const a1s::Real* x, size_t m, a1s::Real* y, size_t n, codi::DataStore* d) {
+  std::cout << "m: " << m << std::endl;
+  std::cout << "n: " << n << std::endl;
+
+}
+
+void a1s_adlinsolve_dual(const a1s::Real* x, a1s::Real* x_b, size_t m, const a1s::Real* y, const a1s::Real* y_b, size_t n, codi::DataStore* d) {
+  std::cout << "dm: " << m << std::endl;
+  std::cout << "dn: " << n << std::endl;
+
+}
+
+template <> void ad::adlinsolve<a1s>(pMatrix<a1s> &a1s_J, pVector<a1s> &a1s_y) {
+  prof.begin("a1s_adlinsolve");
+  size_t dim = a1s_y.dim();
+  std::cout << "dim: " << dim << std::endl;
+  for(int i = 0; i < dim; ++i) {
+    for(int j = 0; j < dim; ++j) {
+      eh->addInput(a1s_J[i][j]);
+    }
+  }
+  // for(int i = 0; i < dim; ++i) {
+  //   eh.addInput(a1s_y[i]);
+  // }
+  for(int i = 0; i < dim; ++i) {
+    eh->addOutput(a1s_y[i]);
+  }
+  eh->callPrimalFunc(a1s_adlinsolve_primal);
+  eh->addToTape(a1s_adlinsolve_dual);
+
+  prof.end("a1s_adlinsolve");
+}
+
 
 
 template <> void ad::adlinsolve<t2s>(pMatrix<t2s> &t2s_J, pVector<t2s> &t2s_y) {
@@ -761,6 +875,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   switch(degree) {
     case 3:
       drivers.t3s_t2s_t1s_driver(m0, J, H, T);
+      // drivers.a3s_t2s_t1s_driver(m0, J, H, T);
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H);
@@ -772,6 +887,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       std::cout << "Invalid option" << std::endl;
       exit(-1);
   }
+  J.zeros();
+  drivers.a1s_driver(m0, J);
   
   // Propagate mean
   drivers.integrate(m0);

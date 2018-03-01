@@ -200,12 +200,16 @@ void LUsolve(pMatrix<double> &A, pVector<double> &b) {
 
 template class pVector<double>;
 template class pVector<t1s>;
+template class pVector<a1s>;
 template class pVector<t2s>;
 template class pVector<t3s>;
+template class pVector<a3s>;
 template class pMatrix<double>;
 template class pMatrix<t1s>;
+template class pMatrix<a1s>;
 template class pMatrix<t2s>;
 template class pMatrix<t3s>;
+template class pMatrix<a3s>;
 
 } //  End of namespace
 

@@ -15,8 +15,11 @@ namespace alg {
 
 // First, second and third order AD datatype
 typedef codi::RealForwardGen<double> t1s;
+typedef codi::RealReverseGen<double> a1s;
 typedef codi::RealForwardGen<t1s> t2s;
 typedef codi::RealForwardGen<t2s> t3s;
+// adjoint third order type
+typedef codi::RealReverseGen<t2s> a3s;
 
 // Passive vector definition
 
