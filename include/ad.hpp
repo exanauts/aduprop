@@ -862,8 +862,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                 if(kurt != 0) {
                   aux += T[pn][i][j][k-start]*J[pm][l];
                   aux += J[pn][l]*T[pm][i][j][k-start];
-                  
-                  kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
                   aux *= (1.0/(24.0))*kurt;
                   aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
                   cv_temp2[pn][pm] += aux;
