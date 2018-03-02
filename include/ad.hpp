@@ -880,7 +880,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  global_prof.begin("reduction");
   paduprop_sum(cv_temp2);
+  global_prof.end("reduction");
 
   cv0 = cv_temp + cv_temp2;
   global_prof.end("propagateAD");
