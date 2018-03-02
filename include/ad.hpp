@@ -827,22 +827,24 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
             for (size_t k = 0; k < dim; ++k) { 
               for (size_t l = start; l < end; ++l) { 
                 aux = 0;
-                aux += J[pn][i]*T[pm][j][k][l-start];
-                aux += J[pn][j]*T[pm][i][k][l-start];
-                aux += J[pn][k]*T[pm][i][j][l-start];
-                aux += H[pn][i][j]*H[pm][k][l];
-                aux += H[pn][i][k]*H[pm][j][l];
-                aux += H[pn][i][l]*H[pm][j][k];
-                aux += H[pn][j][k]*H[pm][i][l];
-                aux += H[pn][j][l]*H[pm][i][k];
-                aux += H[pn][k][l]*H[pm][i][j];
-                aux += T[pn][j][k][l-start]*J[pm][i];
-                aux += T[pn][i][k][l-start]*J[pm][j];
-                aux += T[pn][i][j][l-start]*J[pm][k];
-                
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
-                aux *= (1.0/(24.0))*kurt;
-                cv_temp2[pn][pm] += aux;
+                if(kurt != 0) {
+                  aux += J[pn][i]*T[pm][j][k][l-start];
+                  aux += J[pn][j]*T[pm][i][k][l-start];
+                  aux += J[pn][k]*T[pm][i][j][l-start];
+                  aux += H[pn][i][j]*H[pm][k][l];
+                  aux += H[pn][i][k]*H[pm][j][l];
+                  aux += H[pn][i][l]*H[pm][j][k];
+                  aux += H[pn][j][k]*H[pm][i][l];
+                  aux += H[pn][j][l]*H[pm][i][k];
+                  aux += H[pn][k][l]*H[pm][i][j];
+                  aux += T[pn][j][k][l-start]*J[pm][i];
+                  aux += T[pn][i][k][l-start]*J[pm][j];
+                  aux += T[pn][i][j][l-start]*J[pm][k];
+                  
+                  aux *= (1.0/(24.0))*kurt;
+                  cv_temp2[pn][pm] += aux;
+                }
               }
             }
           }
@@ -856,13 +858,16 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
             for (size_t k = start; k < end; ++k) { 
               for (size_t l = 0; l < dim; ++l) { 
                 aux = 0;
-                aux += T[pn][i][j][k-start]*J[pm][l];
-                aux += J[pn][l]*T[pm][i][j][k-start];
-
                 kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
-                aux *= (1.0/(24.0))*kurt;
-                aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
-                cv_temp2[pn][pm] += aux;
+                if(kurt != 0) {
+                  aux += T[pn][i][j][k-start]*J[pm][l];
+                  aux += J[pn][l]*T[pm][i][j][k-start];
+                  
+                  kurt = cv0[i][j]*cv0[k][l] + cv0[i][l]*cv0[j][k] + cv0[i][k]*cv0[l][j];
+                  aux *= (1.0/(24.0))*kurt;
+                  aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*cv0[i][j]*cv0[k][l];
+                  cv_temp2[pn][pm] += aux;
+                }
               }
             }
           }
@@ -870,21 +875,13 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
-  double sum = 0;
-  for (size_t pn = 0; pn < dim; ++pn) { 
-    for (size_t pm = 0; pm < dim; ++pm) { 
-      for (size_t i = 0; i < dim; ++i) { 
-        for (size_t j = 0; j < dim; ++j) { 
-          sum += T[pn][pm][i][j];
-        }
-      }
-    }
-  }
   global_prof.begin("reduction");
   paduprop_sum(cv_temp2);
+  
   global_prof.end("reduction");
 
   cv0 = cv_temp + cv_temp2;
+  // cv0.cutoff(0.20);
   global_prof.end("propagateAD");
 }
 

@@ -9,6 +9,8 @@
 
 #include <codi.hpp>
 #include <cassert>
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
 #include "tensor.hpp"
 
 namespace alg {
@@ -206,6 +208,54 @@ template <typename T> class pMatrix {
     }
     return sqrt(res);
   }
+  T maxnorm() {
+    T res = 0;
+    for (size_t i = 0 ; i < rows; ++i) {
+      for (size_t j = 0 ; j < cols; ++j) {
+        if(fabs(data[i*cols + j]) > res) {
+          res = fabs(data[i*cols + j]);
+        }
+      }
+    }
+    return res;
+  }
+  size_t thres(T in) {
+    size_t res = 0;
+    for (size_t i = 0 ; i < rows; ++i) {
+      for (size_t j = 0 ; j < cols; ++j) {
+        if(fabs(data[i*cols + j]) > in) res++;
+      }
+    }
+    return res;
+  }
+  size_t cutoff(double rate) {
+    pMatrix<double> tmp(rows, cols);
+    size_t n = rows*cols;
+    
+    std::vector<double> vect(n);
+    for(size_t i = 0; i < n; ++i) vect[i] = fabs(data[i]); 
+    
+    std::sort(vect.begin(), vect.end());
+    
+    double del = rate * (double) (n-1);
+    size_t el = (size_t) del;
+    std::cout << "del: " << del << std::endl;
+    std::cout << "el: " << el << std::endl;
+    
+    double thres = vect[el];
+    std::cout << "vect[el]: " << vect[el] << std::endl;
+    size_t count = 0;
+    
+    for (size_t i = 0 ; i < n; ++i) {
+        if(fabs(data[i]) < thres) {
+          data[i] = 0;
+          count++;
+        }
+    }
+    std::cout << "count: " << count << std::endl;
+    return count;
+  }
+  
   pVector<T> operator*(const pVector<T>& b) {
     assert(this->cols == b.dim());
     pVector<T> res(rows);
