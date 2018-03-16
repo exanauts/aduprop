@@ -742,12 +742,12 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     pMatrix<double>& J, pTensor3<double>& H, pTensor4<double>& T,
     ad& drivers, int degree = 1) {
   global_prof.begin("propagateAD");
-  //size_t dim = sys.dim();
-  const size_t dim = 128;
+  size_t dim = sys.dim();
+  // const size_t dim = 128;
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
-  //size_t chunk = end-start;
-  const size_t chunk = 1;
+  size_t chunk = end-start;
+  // const size_t chunk = 1;
  
   // THIS WILL BE AN ENUM THAT WE PASS
   // 1: Jacobian
@@ -841,12 +841,18 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     }
 
     double aux, kurt;
+
+#ifdef __INTEL_COMPILER
+#define RESTRICT restrict
+#else
+#define RESTRICT __restrict__
+#endif
     
-    double * restrict ptr_cv0 = cv0.get_datap();
-    double * restrict ptr_cv_temp2 = cv_temp2.get_datap();
-    double * restrict ptr_J = J.get_datap();
-    double * restrict ptr_H = H.get_datap();
-    double * restrict ptr_T = T.get_datap();
+    double * RESTRICT ptr_cv0 = cv0.get_datap();
+    double * RESTRICT ptr_cv_temp2 = cv_temp2.get_datap();
+    double * RESTRICT ptr_J = J.get_datap();
+    double * RESTRICT ptr_H = H.get_datap();
+    double * RESTRICT ptr_T = T.get_datap();
 
     for (size_t pm = 0; pm < dim; ++pm) { 
       if(paduprop_getrank() == 0) {
