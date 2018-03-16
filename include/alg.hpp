@@ -219,6 +219,15 @@ template <typename T> class pMatrix {
     }
     return res;
   }
+  size_t nz() {
+    size_t res = 0;
+    for (size_t i = 0 ; i < rows; ++i) {
+      for (size_t j = 0 ; j < cols; ++j) {
+        if(data[i*cols + j] != 0.0) res++;
+      }
+    }
+    return res;
+  }
   size_t thres(T in) {
     size_t res = 0;
     for (size_t i = 0 ; i < rows; ++i) {
@@ -229,10 +238,10 @@ template <typename T> class pMatrix {
     return res;
   }
   size_t cutoff(double rate) {
-    pMatrix<double> tmp(rows, cols);
+    pMatrix<T> tmp(rows, cols);
     size_t n = rows*cols;
     
-    std::vector<double> vect(n);
+    std::vector<T> vect(n);
     for(size_t i = 0; i < n; ++i) vect[i] = fabs(data[i]); 
     
     std::sort(vect.begin(), vect.end());
@@ -242,7 +251,7 @@ template <typename T> class pMatrix {
     std::cout << "del: " << del << std::endl;
     std::cout << "el: " << el << std::endl;
     
-    double thres = vect[el];
+    T thres = vect[el];
     std::cout << "vect[el]: " << vect[el] << std::endl;
     size_t count = 0;
     

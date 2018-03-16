@@ -773,6 +773,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   // Obtain tensors
+  if(paduprop_getrank() == 0) {
+    std::cout << "Obtaining tensors" << std::endl;
+  }
   switch(degree) {
     case 3:
       // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
@@ -789,7 +792,13 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       std::cout << "Invalid option" << std::endl;
       exit(-1);
   }
+  if(paduprop_getrank() == 0) {
+    std::cout << "Done with tensors" << std::endl;
+  }
   
+  if(paduprop_getrank() == 0) {
+    std::cout << "Propagating mean" << std::endl;
+  }
   // Propagate mean
   drivers.integrate(m0);
 
@@ -801,6 +810,10 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
         }
       }
     }
+  }
+
+  if(paduprop_getrank() == 0) {
+    std::cout << "Propagating covariance" << std::endl;
   }
 
   // Propagate covariance
@@ -817,11 +830,23 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   if (degree > 2) {
+    if(paduprop_getrank() == 0) {
+      std::cout << "Propagating covariance 3rd order part1" << std::endl;
+      std::cout << "NZ: " << cv0.nz() << std::endl;
+      std::cout << "Entries: " << dim*dim << std::endl;
+      std::cout << "Percent NZ: " << (cv0.nz()*100)/(dim*dim) << std::endl;
+    }
 
     double aux, kurt;
 
     for (size_t pn = 0; pn < dim; ++pn) { 
+      if(paduprop_getrank() == 0) {
+        std::cout << "pn: " << pn << std::endl;
+      }
       for (size_t pm = 0; pm < dim; ++pm) { 
+        if(paduprop_getrank() == 0) {
+          std::cout << "pm: " << pm << std::endl;
+        }
         for (size_t i = 0; i < dim; ++i) { 
           for (size_t j = 0; j < dim; ++j) { 
             for (size_t k = 0; k < dim; ++k) { 
@@ -851,6 +876,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
         }
       }
     }
+    if(paduprop_getrank() == 0) {
+      std::cout << "Propagating covariance 3rd order part2" << std::endl;
+    }
     for (size_t pn = 0; pn < dim; ++pn) { 
       for (size_t pm = 0; pm < dim; ++pm) { 
         for (size_t i = 0; i < dim; ++i) { 
@@ -873,13 +901,22 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  if(paduprop_getrank() == 0) {
+    std::cout << "Done with covariance" << std::endl;
+  }
   global_prof.begin("reduction");
+  if(paduprop_getrank() == 0) {
+    std::cout << "Start reduction" << std::endl;
+  }
   paduprop_sum(cv_temp2);
+  if(paduprop_getrank() == 0) {
+    std::cout << "Done with reduction" << std::endl;
+  }
   
   global_prof.end("reduction");
 
   cv0 = cv_temp + cv_temp2;
-  // cv0.cutoff(0.20);
+  cv0.cutoff(0.90);
   global_prof.end("propagateAD");
 }
 
