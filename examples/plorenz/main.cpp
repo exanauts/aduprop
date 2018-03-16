@@ -14,7 +14,7 @@
 // AD library used
 // Rudimentary linear solver interface
 #include "ad.hpp"
-#include "cxxopts.hpp"
+//#include "cxxopts.hpp"
 #include "parallel.hpp"
 
 int main(int argc, char* argv[]) {
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   global_prof.activate("reduction");
 
   // Variable declaration
-  size_t tsteps = 2;
+  size_t tsteps = 1;
   // pVector<double> xold, x, F;
   // pVector<double> x0;
   // pMatrix<double> TMAT;

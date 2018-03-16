@@ -14,7 +14,7 @@ using namespace alg;
 
 typedef struct System {
 public:
-  const size_t dimension = 16; /* Number of variables */
+  const size_t dimension = 128; /* Number of variables */
   const double F = 1.5; /* Forcing constant */
   const double h = 0.01;
   
