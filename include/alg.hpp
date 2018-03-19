@@ -200,45 +200,44 @@ template <typename T> class pMatrix {
   }
 
   T norm() {
+    size_t n = rows*cols;
     T res = 0;
-    for (size_t i = 0 ; i < rows; ++i) {
-      for (size_t j = 0 ; j < cols; ++j) {
-        res+=(data[i*cols + j])*(data[i*cols + j]);
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      res+=data[i]*data[i];
     }
     return sqrt(res);
   }
+  
   T maxnorm() {
+    size_t n = rows*cols;
     T res = 0;
-    for (size_t i = 0 ; i < rows; ++i) {
-      for (size_t j = 0 ; j < cols; ++j) {
-        if(fabs(data[i*cols + j]) > res) {
-          res = fabs(data[i*cols + j]);
-        }
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > res) {
+        res = fabs(data[i]);
       }
     }
     return res;
   }
+  
   size_t nz() {
+    size_t n = rows*cols;
     size_t res = 0;
-    for (size_t i = 0 ; i < rows; ++i) {
-      for (size_t j = 0 ; j < cols; ++j) {
-        if(data[i*cols + j] != 0.0) res++;
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      if(data[i] != 0.0) res++;
     }
     return res;
   }
+  
   size_t thres(T in) {
+    size_t n = rows*cols;
     size_t res = 0;
-    for (size_t i = 0 ; i < rows; ++i) {
-      for (size_t j = 0 ; j < cols; ++j) {
-        if(fabs(data[i*cols + j]) > in) res++;
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > in) res++;
     }
     return res;
   }
+  
   size_t cutoff(double rate) {
-    pMatrix<T> tmp(rows, cols);
     size_t n = rows*cols;
     
     std::vector<T> vect(n);
@@ -248,11 +247,8 @@ template <typename T> class pMatrix {
     
     double del = rate * (double) (n-1);
     size_t el = (size_t) del;
-    std::cout << "del: " << del << std::endl;
-    std::cout << "el: " << el << std::endl;
     
     T thres = vect[el];
-    std::cout << "vect[el]: " << vect[el] << std::endl;
     size_t count = 0;
     
     for (size_t i = 0 ; i < n; ++i) {
@@ -261,7 +257,6 @@ template <typename T> class pMatrix {
           count++;
         }
     }
-    std::cout << "count: " << count << std::endl;
     return count;
   }
   
