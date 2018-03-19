@@ -13,6 +13,12 @@
 #include <vector>       // std::vector
 #include "tensor.hpp"
 
+#ifdef __INTEL_COMPILER
+#define RESTRICT restrict
+#else
+#define RESTRICT __restrict__
+#endif
+
 namespace alg {
 
 // First, second and third order AD datatype
@@ -108,7 +114,7 @@ template <typename T> class pVector {
 
  private:
   size_t n;
-  T* data = NULL;
+  T* RESTRICT data = NULL;
 };
 
 template <typename T> inline size_t pVector<T>::dim() const {
