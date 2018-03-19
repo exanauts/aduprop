@@ -309,22 +309,24 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
     }
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
-        for (size_t l = 0; l < dim; ++l) {
-          axic[l].value().value().value()          = xic[l];
-          axic[l].gradient().value().value()       = 0.0;
-          axic[l].value().gradient().gradient()    = 0.0;
-          axic[l].gradient().gradient().gradient() = 0.0;
-          axic[l].value().value().gradient()       = 0.0;
-          axic[l].gradient().value().gradient()    = 0.0;
-          axic[l].value().gradient().value()       = 0.0;
-          axic[l].gradient().gradient().value()    = 0.0;
-        }
-        axic[i].value().value().gradient() = 1.0;
-        axic[j].value().gradient().value() = 1.0;
-        axic[k].gradient().value().value() = 1.0;
-        integrate<t3s>(axic);
-        for (size_t l = 0; l < dim; ++l) {
-          T[l][k][j][i-start] = axic[l].gradient().gradient().gradient();
+        if(H[k][j][i] != 0.0) {
+          for (size_t l = 0; l < dim; ++l) {
+            axic[l].value().value().value()          = xic[l];
+            axic[l].gradient().value().value()       = 0.0;
+            axic[l].value().gradient().gradient()    = 0.0;
+            axic[l].gradient().gradient().gradient() = 0.0;
+            axic[l].value().value().gradient()       = 0.0;
+            axic[l].gradient().value().gradient()    = 0.0;
+            axic[l].value().gradient().value()       = 0.0;
+            axic[l].gradient().gradient().value()    = 0.0;
+          }
+          axic[i].value().value().gradient() = 1.0;
+          axic[j].value().gradient().value() = 1.0;
+          axic[k].gradient().value().value() = 1.0;
+          integrate<t3s>(axic);
+          for (size_t l = 0; l < dim; ++l) {
+            T[l][k][j][i-start] = axic[l].gradient().gradient().gradient();
+          }
         }
       }
       for (size_t k = 0; k < dim; ++k) {
@@ -767,6 +769,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   cv_temp.zeros();
   
   pMatrix<double>  cv_temp2(dim, dim);
+  pTensor3<double> H_tmp(H.get_d1(), H.get_d1(), H.get_d3());
   cv_temp2.zeros();
   
   switch(degree) {
@@ -782,6 +785,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       exit(-1);
   }
 
+  double cutrate = 1.0 - 1.0/(double) dim;
+  // double cutrate = 0.4;
   // Obtain tensors
   if(paduprop_getrank() == 0) {
     std::cout << "Obtaining tensors" << std::endl;
@@ -789,8 +794,15 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   switch(degree) {
     case 3:
       // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
-      drivers.t3s_t2s_t1s_driver(m0, J, H, T, start, end);
       drivers.t2s_t1s_driver(m0, J, H);
+      // H.cutoff(0.7);
+      std::cout << "H nz: " << H.nz() << std::endl;
+      H_tmp=H;
+      std::cout << "Cutrate: " << cutrate << std::endl;
+      H_tmp.cutoff(cutrate);
+      std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
+      drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
+      // T.zeros();
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H);
@@ -929,7 +941,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   global_prof.end("reduction");
 
   cv0 = cv_temp + cv_temp2;
-  //cv0.cutoff(0.90);
+  cv0.cutoff(cutrate);
   global_prof.end("propagateAD");
 }
 
