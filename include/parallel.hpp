@@ -14,5 +14,6 @@ size_t paduprop_getend(size_t dim);
 int paduprop_getrank();
 int paduprop_getcommsize();
 int paduprop_sum(pMatrix<double>&);
+int paduprop_gather(pTensor3<double> &ten);
 
 #endif  // ADUPROP_PARALLEL_HPP_

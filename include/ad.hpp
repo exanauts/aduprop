@@ -254,11 +254,14 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
    \post "Hessian"
 */
 void t2s_t1s_driver(const pVector<double> &xic,
-    pMatrix<double> &J, pTensor3<double> &H) {
+    pMatrix<double> &J, pTensor3<double> &H, size_t start = 0, size_t end = 0) {
   prof.begin("t2s_t1s_driver");
   size_t dim = xic.dim();
+  
+  // no end argument is set, hence pick dim as end
+  if(end == 0) end = dim;
   pVector<t2s> axic(dim);
-  for (size_t i = 0; i < dim; ++i) {
+  for (size_t i = start; i < end; ++i) {
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
         axic[k].value().value()       = xic[k];
@@ -278,7 +281,7 @@ void t2s_t1s_driver(const pVector<double> &xic,
       // }
     }
     for (size_t j = 0; j < dim; ++j) {
-      J[j][i] = axic[j].value().gradient();
+      // J[j][i] = axic[j].value().gradient();
     }
   }
   prof.end("t2s_t1s_driver");
@@ -794,7 +797,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   switch(degree) {
     case 3:
       // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
-      drivers.t2s_t1s_driver(m0, J, H);
+      drivers.t2s_t1s_driver(m0, J, H, start, end);
+      paduprop_gather(H);
       // H.cutoff(0.7);
       std::cout << "H nz: " << H.nz() << std::endl;
       H_tmp=H;
@@ -802,6 +806,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       H_tmp.cutoff(cutrate);
       std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
       drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
+      drivers.t1s_driver(m0, J);
       // T.zeros();
       break;
     case 2:
@@ -882,12 +887,12 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_J[pn+i*dim]*ptr_T[pm*dim*dim*chunk+j*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+j*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+k*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+l-start];
-                  aux += ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l];
-                  aux += ptr_H[pn*dim*dim+i*dim+k]*ptr_H[pm*dim*dim+j*dim+l];
-                  aux += ptr_H[pn*dim*dim+i*dim+l]*ptr_H[pm*dim*dim+j*dim+k];
-                  aux += ptr_H[pn*dim*dim+j*dim+k]*ptr_H[pm*dim*dim+i*dim+l];
-                  aux += ptr_H[pn*dim*dim+j*dim+l]*ptr_H[pm*dim*dim+i*dim+k];
-                  aux += ptr_H[pn*dim*dim+k*dim+l]*ptr_H[pm*dim*dim+i*dim+j];
+                  aux += ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim];
+                  aux += ptr_H[pn+i*dim+k*dim*dim]*ptr_H[pm+j*dim+l*dim*dim];
+                  aux += ptr_H[pn+i*dim+l*dim*dim]*ptr_H[pm+j*dim+k*dim*dim];
+                  aux += ptr_H[pn+j*dim+k*dim*dim]*ptr_H[pm+i*dim+l*dim*dim];
+                  aux += ptr_H[pn+j*dim+l*dim*dim]*ptr_H[pm+i*dim+k*dim*dim];
+                  aux += ptr_H[pn+k*dim+l*dim*dim]*ptr_H[pm+i*dim+j*dim*dim];
                   aux += ptr_T[pn*dim*dim*chunk+j*dim*chunk+k*chunk+l-start]*ptr_J[pm+i*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+k*chunk+l-start]*ptr_J[pm+j*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+l-start]*ptr_J[pm+k*dim];
@@ -916,7 +921,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+k-start]*ptr_J[pm+dim*l];
                   aux += ptr_J[pn+dim*l]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+k-start];
                   aux *= (1.0/(24.0))*kurt;
-                  aux -= (1.0/2.0)*(ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
+                  aux -= (1.0/2.0)*(ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
                 }
                 ptr_cv_temp2[pn+dim*pm] += aux;
               }
