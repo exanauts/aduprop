@@ -925,20 +925,20 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
         }
       }
     }
+    if(paduprop_getrank() == 0) {
+      std::cout << "Done with covariance" << std::endl;
+    }
+    global_prof.begin("reduction");
+    if(paduprop_getrank() == 0) {
+      std::cout << "Start reduction" << std::endl;
+    }
+    paduprop_sum(cv_temp2);
+    if(paduprop_getrank() == 0) {
+      std::cout << "Done with reduction" << std::endl;
+    }
+
+    global_prof.end("reduction");
   }
-  if(paduprop_getrank() == 0) {
-    std::cout << "Done with covariance" << std::endl;
-  }
-  global_prof.begin("reduction");
-  if(paduprop_getrank() == 0) {
-    std::cout << "Start reduction" << std::endl;
-  }
-  paduprop_sum(cv_temp2);
-  if(paduprop_getrank() == 0) {
-    std::cout << "Done with reduction" << std::endl;
-  }
-  
-  global_prof.end("reduction");
 
   cv0 = cv_temp + cv_temp2;
   cv0.cutoff(cutrate);
