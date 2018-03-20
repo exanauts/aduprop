@@ -29,22 +29,29 @@ template <typename T> class pTensor3 {
     class cd2 {
     public:
       T *ptr;
-      cd2(T *ptr_) : ptr(ptr_) {}; 
+      size_t &d2;
+      size_t &d3;
+      // cd2(T *ptr_) : ptr(ptr_) {}; 
+      cd2(T *ptr_, size_t &d2_, size_t &d3_) : ptr(ptr_), d2(d2_), d3(d3_) {}; 
       T& operator[] (int i) {
-        return *(ptr+i);
+        return *(ptr+i*d2*d3);
       }
       
     };
     T *ptr;
-    size_t &d1;
-    cd1(T *ptr_, size_t &d1_) : ptr(ptr_), d1(d1_) {}; 
+    // size_t &d1;
+    size_t &d2;
+    size_t &d3;
+    // cd1(T *ptr_, size_t &d1_) : ptr(ptr_), d1(d1_) {}; 
+    cd1(T *ptr_, size_t &d2_, size_t &d3_) : ptr(ptr_), d2(d2_), d3(d3_) {}; 
     cd2 operator[] (int i) {
-      return cd2(ptr+i*d1);
+      return cd2(ptr+i*d2, d2, d3);
     }
   
   };
   cd1 operator[] (int i) {
-    return cd1(data+i*d2*d3, d3);
+    // return cd1(data+i*d2*d3, d3);
+    return cd1(data+i, d2, d3);
   }
   friend std::ostream& operator<< <> ( std::ostream&, pTensor3<T>& );  
   
