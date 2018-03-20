@@ -35,6 +35,13 @@ original variable.
 #include <stdlib.h>
 #include "parallel.hpp"
 //#include "linsolve.hpp"
+//
+#ifdef __INTEL_COMPILER
+#define RESTRICT restrict
+#else
+#define RESTRICT __restrict__
+#endif
+    
 
 using namespace std;
 using namespace alg;
@@ -859,12 +866,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
     double aux, kurt;
 
-#ifdef __INTEL_COMPILER
-#define RESTRICT restrict
-#else
-#define RESTRICT __restrict__
-#endif
-    
     double * RESTRICT ptr_cv0 = cv0.get_datap();
     double * RESTRICT ptr_cv_temp2 = cv_temp2.get_datap();
     double * RESTRICT ptr_J = J.get_datap();
