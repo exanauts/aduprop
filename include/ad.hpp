@@ -810,7 +810,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       // T.zeros();
       break;
     case 2:
-      drivers.t2s_t1s_driver(m0, J, H);
+      drivers.t2s_t1s_driver(m0, J, H, start, end);
+      paduprop_gather(H);
       drivers.t1s_driver(m0, J);
       break;
     case 1:
