@@ -87,6 +87,12 @@ int paduprop_sum(pMatrix<double> &mat) {
   return MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
+int paduprop_sum(pVector<double> &vec) {
+  size_t size = vec.dim();
+  double *ptr = vec.get_datap();
+  return MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+}
+
 int paduprop_gather(pTensor3<double> &ten) {
   size_t dim = ten.get_d1();
   size_t start = paduprop_getstart(dim);
@@ -104,6 +110,54 @@ int paduprop_gather(pTensor3<double> &ten) {
   }
   int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
                   &ten[0][0][0], recvcounts, displs, MPI_DOUBLE,
+                  MPI_COMM_WORLD);
+  delete [] recvcounts;
+  delete [] displs;
+  delete [] sendbuf;
+  return ierr;
+}
+
+int paduprop_gather(pMatrix<double> &mat) {
+  size_t dim = mat.nrows();
+  size_t start = paduprop_getstart(dim);
+  size_t end = paduprop_getend(dim);
+  size_t size = (end-start)*dim;
+  double *sendbuf = new double[size];
+  for(size_t i = 0; i < size; ++i) sendbuf[i] = *(&mat[0][start] + i);
+  int *recvcounts = new int[paduprop_getcommsize()];
+  int *displs = new int[paduprop_getcommsize()];
+  int count = 0;
+  for(int i = 0; i < paduprop_getcommsize(); ++i) {
+    displs[i] = count;
+    recvcounts[i] = (paduprop_getend(dim,i) - paduprop_getstart(dim,i))*dim;
+    count += recvcounts[i];
+  }
+  int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
+                  &mat[0][0], recvcounts, displs, MPI_DOUBLE,
+                  MPI_COMM_WORLD);
+  delete [] recvcounts;
+  delete [] displs;
+  delete [] sendbuf;
+  return ierr;
+}
+
+int paduprop_gather(pVector<double> &vec) {
+  size_t dim = vec.dim();
+  size_t start = paduprop_getstart(dim);
+  size_t end = paduprop_getend(dim);
+  size_t size = end-start;
+  double *sendbuf = new double[size];
+  for(size_t i = 0; i < size; ++i) sendbuf[i] = vec[start+i];
+  int *recvcounts = new int[paduprop_getcommsize()];
+  int *displs = new int[paduprop_getcommsize()];
+  int count = 0;
+  for(int i = 0; i < paduprop_getcommsize(); ++i) {
+    displs[i] = count;
+    recvcounts[i] = (paduprop_getend(dim,i) - paduprop_getstart(dim,i));
+    count += recvcounts[i];
+  }
+  int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
+                  &vec[0], recvcounts, displs, MPI_DOUBLE,
                   MPI_COMM_WORLD);
   delete [] recvcounts;
   delete [] displs;
