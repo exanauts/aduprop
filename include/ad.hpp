@@ -832,7 +832,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   drivers.integrate(m0);
 
   if (degree > 1) {
-    for (size_t p = 0; p < dim; ++p) {
+    for (size_t p = start; p < end; ++p) {
+    // for (size_t p = 0; p < dim; ++p) {
       for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
           m0[p] += (1.0/2.0)*H[p][i][j]*cv0[i][j];
@@ -840,6 +841,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  paduprop_gather(m0);
 
   if(paduprop_getrank() == 0) {
     std::cout << "Propagating covariance" << std::endl;
@@ -847,8 +849,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
   // Propagate covariance
 
-  for (size_t pn = 0; pn < dim; ++pn) {
-    for (size_t pm = 0; pm < dim; ++pm) {
+  for (size_t pm = start; pm < end; ++pm) {
+    for (size_t pn = 0; pn < dim; ++pn) {
       for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
           cv_temp[pn][pm] += 0.5*((J[pn][j]*J[pm][i] +
@@ -857,6 +859,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  paduprop_gather(cv_temp);
 
   if (degree > 2) {
     if(paduprop_getrank() == 0) {
