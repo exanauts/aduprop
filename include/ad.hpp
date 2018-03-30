@@ -794,6 +794,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   if(paduprop_getrank() == 0) {
     std::cout << "Obtaining tensors" << std::endl;
   }
+  global_prof.begin("propagateH");
   switch(degree) {
     case 3:
       // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
@@ -821,6 +822,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       std::cout << "Invalid option" << std::endl;
       exit(-1);
   }
+  global_prof.end("propagateH");
   if(paduprop_getrank() == 0) {
     std::cout << "Done with tensors" << std::endl;
   }
@@ -829,6 +831,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     std::cout << "Propagating mean" << std::endl;
   }
   // Propagate mean
+  global_prof.begin("propagateMU");
   drivers.integrate(m0);
 
   if (degree > 1) {
@@ -840,12 +843,14 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       }
     }
   }
+  global_prof.end("propagateMU");
 
   if(paduprop_getrank() == 0) {
     std::cout << "Propagating covariance" << std::endl;
   }
 
   // Propagate covariance
+  global_prof.begin("propagateCOV");
 
   for (size_t pn = 0; pn < dim; ++pn) {
     for (size_t pm = 0; pm < dim; ++pm) {
@@ -949,6 +954,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
   cv0 = cv_temp + cv_temp2;
   // cv0.cutoff(cutrate);
+  global_prof.end("propagateCOV");
   global_prof.end("propagateAD");
 }
 
