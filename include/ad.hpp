@@ -312,7 +312,7 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
     }
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
-        if(H[k][j][i] != 0.0) {
+        // if(H[k][j][i] != 0.0) {
           for (size_t l = 0; l < dim; ++l) {
             axic[l].value().value().value()          = xic[l];
             axic[l].gradient().value().value()       = 0.0;
@@ -330,7 +330,7 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
           for (size_t l = 0; l < dim; ++l) {
             T[l][k][j][i-start] = axic[l].gradient().gradient().gradient();
           }
-        }
+        // }
       }
       for (size_t k = 0; k < dim; ++k) {
         // H[k][j][i] = axic[k].value().gradient().gradient();
@@ -803,7 +803,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       std::cout << "H nz: " << H.nz() << std::endl;
       H_tmp=H;
       std::cout << "Cutrate: " << cutrate << std::endl;
-      H_tmp.cutoff(cutrate);
+      // H_tmp.cutoff(cutrate);
       std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
       drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
       drivers.t1s_driver(m0, J);
@@ -811,6 +811,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H);
+      drivers.t1s_driver(m0, J);
       break;
     case 1:
       drivers.t1s_driver(m0, J);
@@ -946,7 +947,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   cv0 = cv_temp + cv_temp2;
-  cv0.cutoff(cutrate);
+  // cv0.cutoff(cutrate);
   global_prof.end("propagateAD");
 }
 
