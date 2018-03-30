@@ -3,7 +3,7 @@ include ../../Makefile.inc
 CFLAGS+= -I$(PWD)
 
 run:
-	mpiexec -n 2 ./power
+	mpiexec -n 4 ./power
 
 build: user.hpp main.o
 	$(CXX) -o power main.o $(LDLIBS)
