@@ -273,7 +273,8 @@ void t2s_t1s_driver(const pVector<double> &xic,
       axic[j].gradient().value() = 1.0;
       integrate<t2s>(axic);
       for (size_t k = 0; k < dim; ++k) {
-        H[k][j][i] = axic[k].gradient().gradient();
+        H[k][j][i-start] = axic[k].gradient().gradient();
+        // H[k][j][i] = axic[k].gradient().gradient();
       }
       // This should give you the Jacobian too
       // for(size_t k = 0; k < dim ; ++k) {
@@ -766,14 +767,19 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   // 2: Jacobian + Hessian
   // 3: Jacobian + Hessian + Tensor-3
   // In this case we do not allocate for all elements.
+  
+  pVector<double>  m0_temp(dim);
+  m0_temp.zeros();
 
   // CV_TEMP
   pMatrix<double>  cv_temp(dim, dim);
   cv_temp.zeros();
   
   pMatrix<double>  cv_temp2(dim, dim);
-  pTensor3<double> H_tmp(H.get_d1(), H.get_d1(), H.get_d3());
+  cv_temp2.resize(dim, dim);
   cv_temp2.zeros();
+  
+  pTensor3<double> H_tmp;
   
   switch(degree) {
     case 3:
@@ -798,8 +804,20 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   switch(degree) {
     case 3:
       // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
-      drivers.t2s_t1s_driver(m0, J, H, start, end);
-      paduprop_gather(H);
+      H_tmp.resize(H.get_d1(), H.get_d2(), H.get_d3());
+      // drivers.t2s_t1s_driver(m0, J, H, start, end);
+      drivers.t2s_t1s_driver(m0, J, H);
+      // for(size_t i = 0; i < dim; ++i) {
+      //   for(size_t j = 0; j < dim; ++j) {
+      //     for(size_t k = 0; k < dim; ++k) {
+      //       std::cout << " " << H[k][i][j] ;
+      //     }
+      //   }  
+      // }
+      // std::cout << std::endl;
+      // MPI_Finalize();
+      // exit(1);
+      // paduprop_gather(H);
       // H.cutoff(0.7);
       std::cout << "H nz: " << H.nz() << std::endl;
       H_tmp=H;
@@ -812,7 +830,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H, start, end);
-      paduprop_gather(H);
       drivers.t1s_driver(m0, J);
       break;
     case 1:
@@ -834,8 +851,20 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   global_prof.begin("propagateMU");
   drivers.integrate(m0);
 
-  if (degree > 1) {
-    for (size_t p = start; p < end; ++p) {
+  if (degree == 2) {
+    for (size_t p = 0; p < dim; ++p) {
+      for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = start; j < end; ++j) {
+          m0_temp[p] += (1.0/2.0)*H[p][i][j-start]*cv0[i][j];
+        }
+      }
+    }
+    paduprop_sum(m0_temp);
+    m0 = m0 + m0_temp;
+  }
+  
+  if (degree > 2) {
+    for (size_t p = 0; p < dim; ++p) {
     // for (size_t p = 0; p < dim; ++p) {
       for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
@@ -843,8 +872,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
         }
       }
     }
+    // paduprop_gather(m0);
   }
-  paduprop_gather(m0);
   global_prof.end("propagateMU");
 
   if(paduprop_getrank() == 0) {
@@ -897,12 +926,24 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_J[pn+i*dim]*ptr_T[pm*dim*dim*chunk+j*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+j*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+k*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+l-start];
-                  aux += ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim];
-                  aux += ptr_H[pn+i*dim+k*dim*dim]*ptr_H[pm+j*dim+l*dim*dim];
-                  aux += ptr_H[pn+i*dim+l*dim*dim]*ptr_H[pm+j*dim+k*dim*dim];
-                  aux += ptr_H[pn+j*dim+k*dim*dim]*ptr_H[pm+i*dim+l*dim*dim];
-                  aux += ptr_H[pn+j*dim+l*dim*dim]*ptr_H[pm+i*dim+k*dim*dim];
-                  aux += ptr_H[pn+k*dim+l*dim*dim]*ptr_H[pm+i*dim+j*dim*dim];
+                  // aux += ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim];
+                  // aux += ptr_H[pn+i*dim+k*dim*dim]*ptr_H[pm+j*dim+l*dim*dim];
+                  // aux += ptr_H[pn+i*dim+l*dim*dim]*ptr_H[pm+j*dim+k*dim*dim];
+                  // aux += ptr_H[pn+j*dim+k*dim*dim]*ptr_H[pm+i*dim+l*dim*dim];
+                  // aux += ptr_H[pn+j*dim+l*dim*dim]*ptr_H[pm+i*dim+k*dim*dim];
+                  // aux += ptr_H[pn+k*dim+l*dim*dim]*ptr_H[pm+i*dim+j*dim*dim];
+                  aux += ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l];
+                  aux += ptr_H[pn*dim*dim+i*dim+k]*ptr_H[pm*dim*dim+j*dim+l];
+                  aux += ptr_H[pn*dim*dim+i*dim+l]*ptr_H[pm*dim*dim+j*dim+k];
+                  aux += ptr_H[pn*dim*dim+j*dim+k]*ptr_H[pm*dim*dim+i*dim+l];
+                  aux += ptr_H[pn*dim*dim+j*dim+l]*ptr_H[pm*dim*dim+i*dim+k];
+                  aux += ptr_H[pn*dim*dim+k*dim+l]*ptr_H[pm*dim*dim+i*dim+j];
+                  // aux += H[pn][i][j]*H[pm][k][l];
+                  // aux += H[pn][i][k]*H[pm][j][l];
+                  // aux += H[pn][i][l]*H[pm][j][k];
+                  // aux += H[pn][j][k]*H[pm][i][l];
+                  // aux += H[pn][j][l]*H[pm][i][k];
+                  // aux += H[pn][k][l]*H[pm][i][j];
                   aux += ptr_T[pn*dim*dim*chunk+j*dim*chunk+k*chunk+l-start]*ptr_J[pm+i*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+k*chunk+l-start]*ptr_J[pm+j*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+l-start]*ptr_J[pm+k*dim];
@@ -931,7 +972,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+k-start]*ptr_J[pm+dim*l];
                   aux += ptr_J[pn+dim*l]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+k-start];
                   aux *= (1.0/(24.0))*kurt;
-                  aux -= (1.0/2.0)*(ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
+                  // aux -= (1.0/2.0)*(ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
+                  aux -= (1.0/2.0)*(ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
+                  // aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
                 }
                 ptr_cv_temp2[pn+dim*pm] += aux;
               }

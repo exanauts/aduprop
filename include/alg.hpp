@@ -161,6 +161,7 @@ template <typename T> class pMatrix {
   T& get(const size_t i, const size_t j);
   T* get_datap() const;
   void zeros();
+  void resize(const size_t nrows, const size_t ncols);
   size_t nrows() const;
   size_t ncols() const;
   void display();
@@ -194,6 +195,7 @@ template <typename T> class pMatrix {
     }
     for (size_t i = 0; i < rows*cols; ++i) data[i] = other.data[i];
   }
+  
   pMatrix& operator=(const pMatrix &other) {
     if (other.cols != cols || other.rows != rows) {
       if (data != NULL) delete [] data;
@@ -310,6 +312,15 @@ template <typename T> class pMatrix {
 template <typename T> inline void pMatrix<T>::zeros() {
   for (size_t i = 0; i < cols*rows; ++i) {
     data[i] = 0.0;
+  }
+}
+  
+template <typename T> inline void pMatrix<T>::resize(const size_t nrows, const size_t ncols) {
+  if (cols != ncols || rows != nrows) {
+    if (data != NULL) delete [] data;
+    rows = nrows;
+    cols = ncols;
+    data = new T[rows*cols];
   }
 }
 
