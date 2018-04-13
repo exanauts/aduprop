@@ -34,6 +34,8 @@ original variable.
 #include <mpi.h>
 #include <stdlib.h>
 #include "parallel.hpp"
+#include "eigen_codi.hpp"
+#include <Eigen/Dense>
 //#include "linsolve.hpp"
 //
 #ifdef __INTEL_COMPILER
@@ -45,6 +47,7 @@ original variable.
 
 using namespace std;
 using namespace alg;
+using namespace Eigen;
 
 typedef codi::RealForwardGen<double> t1s;
 typedef codi::RealForwardGen<t1s> t2s;
@@ -434,9 +437,14 @@ template <class T> void integrate(pVector<T> &x) {
 #endif
     yold = y;
     Jold = J;
+    Matrix<T, 14, 14> eigJ;
+    eigJ= Map<Matrix<T,14,14> >(J.get_datap());
+    Matrix<T, 14, 1> eigy;
+    eigy= Map<Matrix<T,14,1> >(y.get_datap());
+    eigy=eigJ.fullPivLu().solve(eigy);
     adlinsolve<T>(J, y);
     pVector<T> res(dim);
-    res = Jold*y - yold;
+    res = Jold * y - yold;
 #ifdef DBUG
     cout << "Norm(y): " << y.norm() << endl << " y: " << y << endl;
     cout << "|Ax - b| " << res.norm() << endl;
