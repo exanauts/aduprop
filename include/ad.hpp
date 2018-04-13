@@ -35,8 +35,13 @@ original variable.
 #include <stdlib.h>
 #include "parallel.hpp"
 #ifdef EIGEN
-#include "eigen_codi.hpp"
 #include <Eigen/Dense>
+#endif
+#ifdef EIGEN_SPARSE
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <Eigen/SparseLU> 
 #endif
 //#include "linsolve.hpp"
 //
@@ -50,6 +55,9 @@ original variable.
 using namespace std;
 using namespace alg;
 #ifdef EIGEN
+using namespace Eigen;
+#endif
+#ifdef EIGEN_SPARSE
 using namespace Eigen;
 #endif
 
@@ -434,7 +442,13 @@ template <class T> void integrate(pVector<T> &x) {
   Map<Matrix<T, Dynamic, 1> > eigymap(y.get_datap(), y.dim());
   Map<Matrix<T, Dynamic, Dynamic> > eigJmap(J.get_datap(), J.nrows(), J.ncols());
 #endif
-  
+#ifdef EIGEN_SPARSE
+  Map<Matrix<T, Dynamic, 1> > eigymap(y.get_datap(), y.dim());
+  SparseMatrix<T> sJ(y.dim(), y.dim());
+  std::vector<Eigen::Triplet<T> > tripletList;
+  tripletList.reserve(y.dim()*y.dim());
+  SparseLU<SparseMatrix<T> >  solver;
+#endif
   do {
     iteration = iteration + 1;
     sys->jac_beuler<T>(x, xold, J);
@@ -445,8 +459,21 @@ template <class T> void integrate(pVector<T> &x) {
 #endif
     yold = y;
     Jold = J;
-#ifdef EIGEN
-    eigymap=eigJmap.fullPivLu().solve(eigymap);
+#ifdef EIGEN_SPARSE
+    for(size_t i = 0; i < J.nrows(); ++i) {
+      for (size_t j = 0; j < J.ncols(); ++j) {
+        if(J[i][j] != 0.0) {
+          tripletList.push_back(Eigen::Triplet<T>(i,j, J[i][j]));
+        }
+      }
+    }
+    sJ.setFromTriplets(tripletList.begin(), tripletList.end());
+    tripletList.clear();
+    solver.analyzePattern(sJ); 
+    solver.compute(sJ);
+    eigymap = solver.solve(eigymap);
+#elif EIGEN
+    eigymap = eigJmap.fullPivLu().solve(eigymap);
 #else
     adlinsolve<T>(J, y);
 #endif
