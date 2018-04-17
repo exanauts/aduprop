@@ -448,6 +448,19 @@ template <class T> void integrate(pVector<T> &x) {
   std::vector<Eigen::Triplet<T> > tripletList;
   tripletList.reserve(y.dim()*y.dim());
   SparseLU<SparseMatrix<T> >  solver;
+#ifdef EIGEN_SPARSE
+  sys->jac_beuler<T>(x, xold, J);
+  for(size_t i = 0; i < J.nrows(); ++i) {
+    for (size_t j = 0; j < J.ncols(); ++j) {
+      if(J[i][j] != 0.0) {
+        tripletList.push_back(Eigen::Triplet<T>(i,j, J[i][j]));
+      }
+    }
+  }
+  sJ.setFromTriplets(tripletList.begin(), tripletList.end());
+  tripletList.clear();
+  solver.analyzePattern(sJ); 
+#endif
 #endif
   do {
     iteration = iteration + 1;
@@ -469,7 +482,6 @@ template <class T> void integrate(pVector<T> &x) {
     }
     sJ.setFromTriplets(tripletList.begin(), tripletList.end());
     tripletList.clear();
-    solver.analyzePattern(sJ); 
     solver.compute(sJ);
     eigymap = solver.solve(eigymap);
 #elif EIGEN
