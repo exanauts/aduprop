@@ -22,6 +22,9 @@ int main(int argc, char* argv[]) {
   // activate timer in propagateAD
   
   global_prof.activate("propagateAD");
+  global_prof.activate("propagateCOV");
+  global_prof.activate("propagateH");
+  global_prof.activate("propagateMU");
   global_prof.activate("reduction");
 
   // Variable declaration
@@ -52,8 +55,10 @@ int main(int argc, char* argv[]) {
   // Where do we put this???
   // We should only alocate if we're using all of these.
   size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
-  pTensor4<double> T(dim, dim, dim, chunk);
-  pTensor3<double> H(dim, dim, dim);
+  //pTensor4<double> T(dim, dim, dim, chunk);
+  //pTensor3<double> H(dim, dim, dim);
+  pTensor4<double> T;
+  pTensor3<double> H(dim, dim, chunk);
   pMatrix<double>  J(dim, dim);
 
   for (size_t i = 0; i < sys.dimension; ++i) 
@@ -69,7 +74,7 @@ int main(int argc, char* argv[]) {
 
     // Propagate
     std::cout << "Step: " << i << "." << std::endl;
-    int degree = 3;
+    int degree = 2;
     propagateAD(x, cv0, sys, J, H, T, drivers, degree);
   }
   if(paduprop_getrank() == 0) {  
