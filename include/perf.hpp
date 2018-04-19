@@ -12,11 +12,11 @@
 // E.g. __rdtsc() or MPI_Wtime()
 #ifdef MPI_VERSION
 #define ADUPROP_TIMER MPI_Wtime()
+#define ADUPROP_TIMER_TYPE double
 #else
 #define ADUPROP_TIMER __rdtsc()
+#define ADUPROP_TIMER_TYPE uint64_t 
 #endif
-// double for MPI_Wtime and uint64_t for __rdtsc()
-#define ADUPROP_TIMER_TYPE double
 
 class cycle_counter
 {
