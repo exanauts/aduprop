@@ -489,7 +489,7 @@ template <class T> void integrate(pVector<T> &x) {
     adlinsolve<T>(J, y);
 #endif
     pVector<T> res(dim);
-    res = Jold * y + yold;
+    res = Jold * y - yold;
 #ifdef DBUG
     cout << "Norm(y): " << y.norm() << endl << " y: " << y << endl;
     cout << "|Ax - b| " << res.norm() << endl;
