@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
   bool external_init = false;
-  bool propagate_moments = true;
+  bool propagate_moments = false;
 
   bool TWO_BUS = false;
   
@@ -229,10 +229,10 @@ int main(int argc, char* argv[]) {
     pTensor4<double> T(dim, dim, dim, dim);
     pTensor3<double> H(dim, dim, dim);
     pMatrix<double>  J(dim, dim);
-
+    
     for (size_t i = 0; i < sys.dimension; ++i) 
       cv0[i][i] = 0.0000001;
-    
+   
     cv0[4][4] = 0.000001;
 
     for (size_t i = 0; i < tsteps; ++i) {
