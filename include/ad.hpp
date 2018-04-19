@@ -31,7 +31,6 @@ original variable.
 #include "perf.hpp"
 #include "alg.hpp"
 #include "user.hpp"
-#include <mpi.h>
 #include <stdlib.h>
 #include "parallel.hpp"
 #ifdef EIGEN
@@ -873,11 +872,11 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       // exit(1);
       // paduprop_gather(H);
       // H.cutoff(0.7);
-      std::cout << "H nz: " << H.nz() << std::endl;
+      // std::cout << "H nz: " << H.nz() << std::endl;
       H_tmp=H;
-      std::cout << "Cutrate: " << cutrate << std::endl;
+      // std::cout << "Cutrate: " << cutrate << std::endl;
       // H_tmp.cutoff(cutrate);
-      std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
+      // std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
       drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
       drivers.t1s_driver(m0, J);
       // T.zeros();
@@ -951,10 +950,10 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
   if (degree > 2) {
     if(paduprop_getrank() == 0) {
-      std::cout << "Propagating covariance 3rd order part1" << std::endl;
-      std::cout << "NZ: " << cv0.nz() << std::endl;
-      std::cout << "Entries: " << dim*dim << std::endl;
-      std::cout << "Percent NZ: " << (cv0.nz()*100)/(dim*dim) << std::endl;
+      // std::cout << "Propagating covariance 3rd order part1" << std::endl;
+      // std::cout << "NZ: " << cv0.nz() << std::endl;
+      // std::cout << "Entries: " << dim*dim << std::endl;
+      // std::cout << "Percent NZ: " << (cv0.nz()*100)/(dim*dim) << std::endl;
     }
 
     double aux, kurt;
@@ -967,7 +966,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
 
     for (size_t pm = 0; pm < dim; ++pm) { 
       if(paduprop_getrank() == 0) {
-        std::cout << "pm: " << pm << std::endl;
+        // std::cout << "pm: " << pm << std::endl;
       }
       for (size_t pn = 0; pn < dim; ++pn) { 
         for (size_t i = 0; i < dim; ++i) { 

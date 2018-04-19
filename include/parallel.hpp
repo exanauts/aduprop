@@ -1,9 +1,11 @@
 #ifndef ADUPROP_PARALLEL_HPP_
 #define ADUPROP_PARALLEL_HPP_
-
+#ifdef MPI_VERSION
 #include <mpi.h>
+#endif
 #include <fstream>
 #include "alg.hpp"
+#include <cstring>
 using namespace alg;
 
 int paduprop_init();

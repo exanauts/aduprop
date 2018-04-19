@@ -2,7 +2,11 @@
 
 std::ofstream paduprop_sink("/dev/null");
 int paduprop_init() {
+#ifdef MPI_VERSION
   int ierr = MPI_Init(NULL, NULL);
+#else
+  int ierr = 0;
+#endif
 
   if (paduprop_getrank() != 0) {
     // Mute standard output
@@ -13,12 +17,15 @@ int paduprop_init() {
   return ierr;
 }
 int paduprop_destroy() {
+#ifdef MPI_VERSION
   return MPI_Finalize();
+#else
+  return 0;
+#endif
 }
 size_t paduprop_getstart(size_t dim) {
-  int rank; int commsize;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  int commsize = paduprop_getcommsize();
+  int rank = paduprop_getrank();
   size_t chunk = dim/commsize;
   size_t remain = dim%commsize;
   size_t addleft = 0;
@@ -30,8 +37,7 @@ size_t paduprop_getstart(size_t dim) {
 }
 
 size_t paduprop_getstart(size_t dim, int rank) {
-  int commsize;
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  int commsize = paduprop_getcommsize();
   size_t chunk = dim/commsize;
   size_t remain = dim%commsize;
   size_t addleft = 0;
@@ -43,9 +49,8 @@ size_t paduprop_getstart(size_t dim, int rank) {
 }
 
 size_t paduprop_getend(size_t dim) {
-  int rank; int commsize;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  int commsize = paduprop_getcommsize();
+  int rank = paduprop_getrank();
   size_t chunk = dim/commsize;
   size_t remain = dim%commsize;
   size_t addright = 0;
@@ -57,8 +62,7 @@ size_t paduprop_getend(size_t dim) {
 }
 
 size_t paduprop_getend(size_t dim, int rank) {
-  int commsize;
-  MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+  int commsize = paduprop_getcommsize();
   size_t chunk = dim/commsize;
   size_t remain = dim%commsize;
   size_t addright = 0;
@@ -71,12 +75,20 @@ size_t paduprop_getend(size_t dim, int rank) {
 
 int paduprop_getrank() {
   int rank;
+#ifdef MPI_VERSION
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#else
+  rank = 0;
+#endif
   return rank;
 }
 int paduprop_getcommsize() {
   int size;
+#ifdef MPI_VERSION
   MPI_Comm_size(MPI_COMM_WORLD, &size);
+#else
+  size = 1;
+#endif
   return size;
 }
 int paduprop_sum(pMatrix<double> &mat) {
@@ -84,16 +96,25 @@ int paduprop_sum(pMatrix<double> &mat) {
   size_t ncols = mat.ncols();
   size_t size = nrows*ncols;
   double *ptr = mat.get_datap();
-  return MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  int ierr = 0;
+#ifdef MPI_VERSION
+  ierr = MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+  return ierr;
 }
 
 int paduprop_sum(pVector<double> &vec) {
   size_t size = vec.dim();
   double *ptr = vec.get_datap();
-  return MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  int ierr = 0;
+#ifdef MPI_VERSION
+  ierr = MPI_Allreduce(MPI_IN_PLACE, ptr, size, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+  return ierr;
 }
 
 int paduprop_gather(pTensor3<double> &ten) {
+  int ierr = 0;
   size_t dim = ten.get_d1();
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
@@ -108,9 +129,14 @@ int paduprop_gather(pTensor3<double> &ten) {
     recvcounts[i] = (paduprop_getend(dim,i) - paduprop_getstart(dim,i))*dim*dim;
     count += recvcounts[i];
   }
-  int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
+#ifdef MPI_VERSION
+  ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
                   &ten[0][0][0], recvcounts, displs, MPI_DOUBLE,
                   MPI_COMM_WORLD);
+#else
+  std::memcpy (sendbuf, &ten[0][0][0], recvcounts[0] * sizeof(double));
+#endif
+  
   delete [] recvcounts;
   delete [] displs;
   delete [] sendbuf;
@@ -118,6 +144,7 @@ int paduprop_gather(pTensor3<double> &ten) {
 }
 
 int paduprop_gather(pMatrix<double> &mat) {
+  int ierr = 0;
   size_t dim = mat.nrows();
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
@@ -132,9 +159,13 @@ int paduprop_gather(pMatrix<double> &mat) {
     recvcounts[i] = (paduprop_getend(dim,i) - paduprop_getstart(dim,i))*dim;
     count += recvcounts[i];
   }
-  int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
+#ifdef MPI_VERSION
+  ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
                   &mat[0][0], recvcounts, displs, MPI_DOUBLE,
                   MPI_COMM_WORLD);
+#else
+  std::memcpy (sendbuf, &mat[0][0], recvcounts[0] * sizeof(double));
+#endif
   delete [] recvcounts;
   delete [] displs;
   delete [] sendbuf;
@@ -142,6 +173,7 @@ int paduprop_gather(pMatrix<double> &mat) {
 }
 
 int paduprop_gather(pVector<double> &vec) {
+  int ierr = 0;
   size_t dim = vec.dim();
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
@@ -156,9 +188,13 @@ int paduprop_gather(pVector<double> &vec) {
     recvcounts[i] = (paduprop_getend(dim,i) - paduprop_getstart(dim,i));
     count += recvcounts[i];
   }
-  int ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
+  #ifdef MPI_VERSION
+  ierr = MPI_Allgatherv(sendbuf, size, MPI_DOUBLE,
                   &vec[0], recvcounts, displs, MPI_DOUBLE,
                   MPI_COMM_WORLD);
+  #else
+  std::memcpy (sendbuf, &vec[0], recvcounts[0] * sizeof(double));
+  #endif
   delete [] recvcounts;
   delete [] displs;
   delete [] sendbuf;

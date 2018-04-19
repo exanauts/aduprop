@@ -4,11 +4,17 @@
 
 #include <map>
 #include <iostream>
+#ifdef MPI_VERSION
 #include <mpi.h>
+#endif
 
 
 // E.g. __rdtsc() or MPI_Wtime()
+#ifdef MPI_VERSION
 #define ADUPROP_TIMER MPI_Wtime()
+#else
+#define ADUPROP_TIMER __rdtsc()
+#endif
 // double for MPI_Wtime and uint64_t for __rdtsc()
 #define ADUPROP_TIMER_TYPE double
 
