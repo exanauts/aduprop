@@ -116,10 +116,10 @@ void expandComplex(int i, int j, double a, double b,
 
 class System {
 public:
-  int nbuses;
-  int nbranches;
-  int ngens;
-  int nloads;
+  size_t nbuses;
+  size_t nbranches;
+  size_t ngens;
+  size_t nloads;
 
   double deltat; // step size for beuler
   size_t dimension;

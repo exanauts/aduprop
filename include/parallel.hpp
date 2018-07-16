@@ -1,6 +1,6 @@
 #ifndef ADUPROP_PARALLEL_HPP_
 #define ADUPROP_PARALLEL_HPP_
-#ifdef MPI_VERSION
+#ifdef ADUPROP_MPI
 #include <mpi.h>
 #endif
 #include <fstream>

@@ -28,6 +28,7 @@ original variable.
 #ifndef ADUPROP_AD_HPP_
 #define ADUPROP_AD_HPP_
 #include <iostream>
+#include <cstdlib> 
 #include "perf.hpp"
 #include "alg.hpp"
 #include "user.hpp"
@@ -172,14 +173,16 @@ void fdJ_driver(const pVector<double> &xic, pMatrix<double> &J) {
    \pre "Input system and state"
    \post "Hessian"
 */
-void fdH_driver(const pVector<double> &xic, pTensor3<double> &H) {
+void fdH_driver(const pVector<double> &xic, pTensor3<double> &H, size_t start = 0, size_t end =0) {
   size_t dim = xic.dim();
+  // no end argument is set, hence pick dim as end
+  if(end == 0) end = dim;
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
   pMatrix<double> Jpert1(dim, dim);
   pMatrix<double> Jpert2(dim, dim);
   double pert = 1e-8;
-  for (size_t i = 0; i < dim; ++i) {
+  for (size_t i = start; i < end; ++i) {
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
     for (size_t j = 0; j < dim; ++j) xpert2[j] = xic[j];
     xpert1[i] += pert/2.0;
@@ -188,7 +191,7 @@ void fdH_driver(const pVector<double> &xic, pTensor3<double> &H) {
     t1s_driver(xpert2, Jpert2);
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
-        H[j][k][i] = (Jpert1[j][k] - Jpert2[j][k])/pert;
+        H[j][k][i-start] = (Jpert1[j][k] - Jpert2[j][k])/pert;
       }
     }
   }
@@ -204,15 +207,16 @@ void fdH_driver(const pVector<double> &xic, pTensor3<double> &H) {
    \pre "Input system and state"
    \post "Tensor"
 */
-void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
+void fdT_driver(const pVector<double> &xic, pTensor4<double> &T, size_t start = 0, size_t end = 0) {
   size_t dim = xic.dim();
+  if(end == 0) end = dim;
   pVector<double> xpert1(dim);
   pVector<double> xpert2(dim);
   pMatrix<double> J(dim, dim);
   pTensor3<double> Hpert1(dim, dim, dim);
   pTensor3<double> Hpert2(dim, dim, dim);
   double pert = 1e-8;
-  for (size_t i = 0; i < dim; ++i) {
+  for (size_t i = start; i < end; ++i) {
     cout << "Computing tensor. "
       << (double) i*(double) 100.0/(double) dim << "\% done." << endl;
     for (size_t j = 0; j < dim; ++j) xpert1[j] = xic[j];
@@ -224,7 +228,7 @@ void fdT_driver(const pVector<double> &xic, pTensor4<double> &T) {
     for (size_t j = 0; j < dim; ++j) {
       for (size_t k = 0; k < dim; ++k) {
         for (size_t l = 0; l < dim; ++l) {
-          T[j][k][l][i] = (Hpert1[j][k][l] - Hpert2[j][k][l])/pert;
+          T[j][k][l][i-start] = (Hpert1[j][k][l] - Hpert2[j][k][l])/pert;
         }
       }
     }
@@ -847,7 +851,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       exit(-1);
   }
 
-  double cutrate = 1.0 - 1.0/(double) dim;
+  // double cutrate = 1.0 - 1.0/(double) dim;
   // double cutrate = 0.4;
   // Obtain tensors
   if(paduprop_getrank() == 0) {

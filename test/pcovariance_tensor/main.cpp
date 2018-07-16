@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 2;
+  size_t tsteps = 2;
   size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;

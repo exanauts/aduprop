@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   // jacobian test
   if (test_jac) {
     drivers.jactest(xold);
+    exit(0);
   }
 
   std::cout << "Computing sensitivities at x:" << std::endl;

@@ -4,13 +4,13 @@
 
 #include <map>
 #include <iostream>
-#ifdef MPI_VERSION
+#ifdef ADUPROP_MPI
 #include <mpi.h>
 #endif
 
 
 // E.g. __rdtsc() or MPI_Wtime()
-#ifdef MPI_VERSION
+#ifdef ADUPROP_MPI
 #define ADUPROP_TIMER MPI_Wtime()
 #define ADUPROP_TIMER_TYPE double
 #else
