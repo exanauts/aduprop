@@ -9,6 +9,6 @@ main.o: $(HEADERS) main.cpp
 	$(CXX) $(CFLAGS) -c main.cpp
 
 clean:
-	$(RM) *.o plorenz output.txt 
+	$(RM) *.o plorenz datas data_cov1 data_cov2 data_cov3 
 
 
