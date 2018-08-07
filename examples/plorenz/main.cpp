@@ -55,6 +55,13 @@ int main(int argc, char* argv[]) {
   // pVector<double> x0;
   // pMatrix<double> TMAT;
   System sys;
+  if (argc < 3)
+  {
+    std::cout << "plorenz [options] [dimension N] [forcing F] [timesteps]" << std::endl;
+    std::cout << "Example: mpiexec -n 2 ./plorenz --tensor1 7 4.4 40000" << std::endl;
+    std::cout << "--tensorX: Use x-th (= 1,2 or 3) order derivatives" << std::endl;
+    return 1;
+  }
   sys.dimension = atoi(argv[1]);
   sys.F = atof(argv[2]);
   size_t tsteps = atoi(argv[3]);
@@ -75,9 +82,10 @@ int main(int argc, char* argv[]) {
   size_t end = paduprop_getend(dim);
    x = xold;
   // jacobian test
-  if (test_jac) {
-    drivers.jactest(xold);
-    exit(0);
+   if (test_jac)
+   {
+     drivers.jactest(xold);
+     return 0;
   }
   if (test_tensor1) {
     pMatrix<double> J(dim, dim);
@@ -97,10 +105,9 @@ int main(int argc, char* argv[]) {
     cout << "norm(J - J_fd)" << endl << diff << endl;
     if(diff > 1e-4) {
       cerr << "ERROR: HC and AD Jacobian differ." << endl;
-      exit(1);
+      return 1;
     }
-    paduprop_destroy();
-    exit(0);
+    return 0;
   }
   if (test_tensor2) {
     pMatrix<double> J(dim, dim);
@@ -122,10 +129,9 @@ int main(int argc, char* argv[]) {
     cout << "norm(H - H_fd)" << endl << sqrt(diff) << endl;
     if(diff > 1e-4) {
       cerr << "ERROR: HC and AD Hessian differ." << endl;
-      exit(1);
+      return 1;
     }
-    paduprop_destroy();
-    exit(0);
+    return 0;
   }
   if (test_tensor3) {
     pMatrix<double>  J(dim, dim);
@@ -149,10 +155,9 @@ int main(int argc, char* argv[]) {
     cout << "norm(T - T_fd)" << endl << sqrt(diff) << endl;
     if(diff > 1e-5) {
       cerr << "ERROR: HC and AD tensor differ." << endl;
-      exit(1);
+      return 1;
     }
-    paduprop_destroy();
-    exit(0);
+    return 0;
   }
   // Co-variance
   pMatrix<double> cv0(sys.dimension, sys.dimension);
@@ -172,7 +177,7 @@ int main(int argc, char* argv[]) {
   if (tensor3)
   {
     T=pTensor4<double>(dim, dim, dim, chunk);
-    H=pTensor3<double>(dim, dim, chunk);
+    H=pTensor3<double>(dim, dim, dim);
   }
 
   for (size_t i = 0; i < sys.dimension; ++i) 
@@ -180,6 +185,27 @@ int main(int argc, char* argv[]) {
   
   cv0[sys.dim()][sys.dimension] = 0.000001;
 
+  std::ofstream xfile;
+  std::ofstream covfile;
+  if (paduprop_getrank() == 0)
+  {
+    xfile.open("datas");
+    if (tensor2)
+    {
+      covfile.open("data_cov2");
+    }
+    else
+    {
+      if (tensor3)
+      {
+        covfile.open("data_cov3");
+      }
+      else
+      {
+        covfile.open("data_cov1");
+      }
+    }
+  }
   for (size_t i = 0; i < tsteps; ++i) {
     // Save mean in trajectory matrix
     // for (size_t j = 0; j < sys.dimension; ++j) {
@@ -187,22 +213,32 @@ int main(int argc, char* argv[]) {
     // }
 
     // Propagate
-    std::cout << "Step: " << i << "." << std::endl;
+    if (paduprop_getrank() == 0)
+    {
+      std::cout << "Step: " << i << "." << std::endl;
+    }
     int degree = 1;
     if(tensor1) degree = 1;
     if(tensor2) degree = 2;
     if(tensor3) degree = 3;
     propagateAD(x, cv0, sys, J, H, T, drivers, degree);
-    std::cout << "X: " << i*sys.h << " " << x << std::endl; 
-    std::cout << "COV: " << i*sys.h << " ";
-    for(size_t j = 0; j < cv0.nrows() ; j++)
+    if (paduprop_getrank() == 0)
     {
-      std::cout << cv0[j][j] << " ";
+      // xfile << "X: " << i * sys.h << " " << x << std::endl;
+      // covfile << "COV: " << i * sys.h << " ";
+      for (size_t j = 0; j < cv0.nrows(); j++)
+      {
+        xfile << x[j] << " ";
+        covfile << cv0[j][j] << " ";
+      }
+      xfile << std::endl;
+      covfile << std::endl;
     }
-    std::cout << std::endl;
   }
-  cout << cv0;
+  // cout << cv0;
   if(paduprop_getrank() == 0) {  
+    xfile.close();
+    covfile.close();
     double compare, diff;
     std::ifstream infile;
     infile.open("solution.txt");
@@ -214,7 +250,5 @@ int main(int argc, char* argv[]) {
     infile.close();
   }
   std::cout << global_prof << std::endl;
-
-  return 0;
 }
 
