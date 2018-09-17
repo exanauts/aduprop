@@ -43,8 +43,6 @@ original variable.
 #include <Eigen/Sparse>
 #include <Eigen/SparseLU> 
 #endif
-//#include "linsolve.hpp"
-//
 #ifdef __INTEL_COMPILER
 #define RESTRICT restrict
 #else
@@ -161,7 +159,6 @@ void fdJ_driver(const pVector<double> &xic, pMatrix<double> &J) {
     integrate<double>(xpert2);
     for (size_t j = 0; j < dim; ++j) J[j][i] = (xpert1[j] - xpert2[j])/pert;
   }
-  //integrate<double>(xic);
 }
 
 /*!
@@ -258,7 +255,6 @@ void t1s_driver(const pVector<double> &xic, pMatrix<double> &J) {
     for (size_t j = 0; j < dim; ++j) J[j][i] = axic[j].getGradient();
   }
   prof.end("t1s_driver");
-  //for (size_t i = 0; i < dim; i++) xic[i] = axic[i].getValue();
 }
 
 
@@ -292,15 +288,7 @@ void t2s_t1s_driver(const pVector<double> &xic,
       integrate<t2s>(axic);
       for (size_t k = 0; k < dim; ++k) {
         H[k][j][i-start] = axic[k].gradient().gradient();
-        // H[k][j][i] = axic[k].gradient().gradient();
       }
-      // This should give you the Jacobian too
-      // for(size_t k = 0; k < dim ; ++k) {
-      //   J[j][k] = axic[k].gradient().value();
-      // }
-    }
-    for (size_t j = 0; j < dim; ++j) {
-      // J[j][i] = axic[j].value().gradient();
     }
   }
   prof.end("t2s_t1s_driver");
@@ -330,33 +318,28 @@ void t3s_t2s_t1s_driver(const pVector<double> &xic,
       << "\% done." << endl;
     }
     for (size_t j = 0; j < dim; ++j) {
-      for (size_t k = 0; k < dim; ++k) {
-        // if(H[k][j][i] != 0.0) {
-          for (size_t l = 0; l < dim; ++l) {
-            axic[l].value().value().value()          = xic[l];
-            axic[l].gradient().value().value()       = 0.0;
-            axic[l].value().gradient().gradient()    = 0.0;
-            axic[l].gradient().gradient().gradient() = 0.0;
-            axic[l].value().value().gradient()       = 0.0;
-            axic[l].gradient().value().gradient()    = 0.0;
-            axic[l].value().gradient().value()       = 0.0;
-            axic[l].gradient().gradient().value()    = 0.0;
-          }
-          axic[i].value().value().gradient() = 1.0;
-          axic[j].value().gradient().value() = 1.0;
-          axic[k].gradient().value().value() = 1.0;
-          integrate<t3s>(axic);
-          for (size_t l = 0; l < dim; ++l) {
-            T[l][k][j][i-start] = axic[l].gradient().gradient().gradient();
-          }
-        // }
+      for (size_t k = 0; k < dim; ++k)
+      {
+        for (size_t l = 0; l < dim; ++l)
+        {
+          axic[l].value().value().value() = xic[l];
+          axic[l].gradient().value().value() = 0.0;
+          axic[l].value().gradient().gradient() = 0.0;
+          axic[l].gradient().gradient().gradient() = 0.0;
+          axic[l].value().value().gradient() = 0.0;
+          axic[l].gradient().value().gradient() = 0.0;
+          axic[l].value().gradient().value() = 0.0;
+          axic[l].gradient().gradient().value() = 0.0;
+        }
+        axic[i].value().value().gradient() = 1.0;
+        axic[j].value().gradient().value() = 1.0;
+        axic[k].gradient().value().value() = 1.0;
+        integrate<t3s>(axic);
+        for (size_t l = 0; l < dim; ++l)
+        {
+          T[l][k][j][i - start] = axic[l].gradient().gradient().gradient();
+        }
       }
-      for (size_t k = 0; k < dim; ++k) {
-        // H[k][j][i] = axic[k].value().gradient().gradient();
-      }
-    }
-    for (size_t j = 0; j < dim; ++j) {
-      // J[j][i] = axic[j].value().value().gradient();
     }
   }
   prof.end("t3s_t2s_t1s_driver");
@@ -405,7 +388,6 @@ void jactest(const pVector<double> &xold) {
     }
   }
 
-  // for (size_t i = 0; i < dim; ++i) xold_hc[i]=xold[i];
   cout << "HC Jacobian" << endl;
   sys->jac_beuler<double>(x_hc, xold_hc, Jhc);
   cout << Jhc;
@@ -553,7 +535,6 @@ template <> void ad::adlinsolve<t1s>(pMatrix<t1s> &t1s_J, pVector<t1s> &t1s_y) {
   LUsolve(pJ, t1_py);
   // That's it, we have the tangents t1_x in t1_py of the LS Ax=b
   // Put x and t1_x back into the t1s type
-  // cout << "New x and step" << endl;
   for (size_t i = 0; i < dim; ++i) {
     t1s_y[i] = py[i];
     t1s_y[i].setGradient(t1_py[i]);
@@ -627,7 +608,6 @@ template <> void ad::adlinsolve<t2s>(pMatrix<t2s> &t2s_J, pVector<t2s> &t2s_y) {
   }
   LUsolve(pJ, t2_t1_py);
   // Put x and t1_x back into the t1s type
-  // cout << "New x and step" << endl;
 
   for (size_t i = 0; i < dim; ++i) t2s_y[i] = py[i];
   for (size_t i = 0; i < dim; ++i) t2s_y[i].gradient().gradient() = t2_t1_py[i];
@@ -813,11 +793,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     ad& drivers, int degree = 1) {
   global_prof.begin("propagateAD");
   size_t dim = sys.dim();
-  // const size_t dim = 128;
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
   size_t chunk = end-start;
-  // const size_t chunk = 1;
  
   // THIS WILL BE AN ENUM THAT WE PASS
   // 1: Jacobian
@@ -851,8 +829,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
       exit(-1);
   }
 
-  // double cutrate = 1.0 - 1.0/(double) dim;
-  // double cutrate = 0.4;
   // Obtain tensors
   if(paduprop_getrank() == 0) {
     std::cout << "Obtaining tensors" << std::endl;
@@ -860,30 +836,11 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   global_prof.begin("propagateH");
   switch(degree) {
     case 3:
-      // drivers.t3s_t2s_t1s_driver(m0, J, H, T);
       H_tmp.resize(H.get_d1(), H.get_d2(), H.get_d3());
-      // drivers.t2s_t1s_driver(m0, J, H, start, end);
       drivers.t2s_t1s_driver(m0, J, H);
-      // for(size_t i = 0; i < dim; ++i) {
-      //   for(size_t j = 0; j < dim; ++j) {
-      //     for(size_t k = 0; k < dim; ++k) {
-      //       std::cout << " " << H[k][i][j] ;
-      //     }
-      //   }  
-      // }
-      // std::cout << std::endl;
-      // MPI_Finalize();
-      // exit(1);
-      // paduprop_gather(H);
-      // H.cutoff(0.7);
-      // std::cout << "H nz: " << H.nz() << std::endl;
       H_tmp=H;
-      // std::cout << "Cutrate: " << cutrate << std::endl;
-      // H_tmp.cutoff(cutrate);
-      // std::cout << "H_tmp nz: " << H_tmp.nz() << std::endl;
       drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
       drivers.t1s_driver(m0, J);
-      // T.zeros();
       break;
     case 2:
       drivers.t2s_t1s_driver(m0, J, H, start, end);
@@ -922,14 +879,12 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   
   if (degree > 2) {
     for (size_t p = 0; p < dim; ++p) {
-    // for (size_t p = 0; p < dim; ++p) {
       for (size_t i = 0; i < dim; ++i) {
         for (size_t j = 0; j < dim; ++j) {
           m0[p] += (1.0/2.0)*H[p][i][j]*cv0[i][j];
         }
       }
     }
-    // paduprop_gather(m0);
   }
   global_prof.end("propagateMU");
 
@@ -953,12 +908,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   paduprop_gather(cv_temp);
 
   if (degree > 2) {
-    if(paduprop_getrank() == 0) {
-      // std::cout << "Propagating covariance 3rd order part1" << std::endl;
-      // std::cout << "NZ: " << cv0.nz() << std::endl;
-      // std::cout << "Entries: " << dim*dim << std::endl;
-      // std::cout << "Percent NZ: " << (cv0.nz()*100)/(dim*dim) << std::endl;
-    }
 
     double aux, kurt;
 
@@ -969,9 +918,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
     double * RESTRICT ptr_T = T.get_datap();
 
     for (size_t pm = 0; pm < dim; ++pm) { 
-      if(paduprop_getrank() == 0) {
-        // std::cout << "pm: " << pm << std::endl;
-      }
       for (size_t pn = 0; pn < dim; ++pn) { 
         for (size_t i = 0; i < dim; ++i) { 
           for (size_t j = 0; j < dim; ++j) { 
@@ -983,24 +929,12 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_J[pn+i*dim]*ptr_T[pm*dim*dim*chunk+j*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+j*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+k*chunk+l-start];
                   aux += ptr_J[pn+k*dim]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+l-start];
-                  // aux += ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim];
-                  // aux += ptr_H[pn+i*dim+k*dim*dim]*ptr_H[pm+j*dim+l*dim*dim];
-                  // aux += ptr_H[pn+i*dim+l*dim*dim]*ptr_H[pm+j*dim+k*dim*dim];
-                  // aux += ptr_H[pn+j*dim+k*dim*dim]*ptr_H[pm+i*dim+l*dim*dim];
-                  // aux += ptr_H[pn+j*dim+l*dim*dim]*ptr_H[pm+i*dim+k*dim*dim];
-                  // aux += ptr_H[pn+k*dim+l*dim*dim]*ptr_H[pm+i*dim+j*dim*dim];
                   aux += ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l];
                   aux += ptr_H[pn*dim*dim+i*dim+k]*ptr_H[pm*dim*dim+j*dim+l];
                   aux += ptr_H[pn*dim*dim+i*dim+l]*ptr_H[pm*dim*dim+j*dim+k];
                   aux += ptr_H[pn*dim*dim+j*dim+k]*ptr_H[pm*dim*dim+i*dim+l];
                   aux += ptr_H[pn*dim*dim+j*dim+l]*ptr_H[pm*dim*dim+i*dim+k];
                   aux += ptr_H[pn*dim*dim+k*dim+l]*ptr_H[pm*dim*dim+i*dim+j];
-                  // aux += H[pn][i][j]*H[pm][k][l];
-                  // aux += H[pn][i][k]*H[pm][j][l];
-                  // aux += H[pn][i][l]*H[pm][j][k];
-                  // aux += H[pn][j][k]*H[pm][i][l];
-                  // aux += H[pn][j][l]*H[pm][i][k];
-                  // aux += H[pn][k][l]*H[pm][i][j];
                   aux += ptr_T[pn*dim*dim*chunk+j*dim*chunk+k*chunk+l-start]*ptr_J[pm+i*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+k*chunk+l-start]*ptr_J[pm+j*dim];
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+l-start]*ptr_J[pm+k*dim];
@@ -1029,9 +963,7 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
                   aux += ptr_T[pn*dim*dim*chunk+i*dim*chunk+j*chunk+k-start]*ptr_J[pm+dim*l];
                   aux += ptr_J[pn+dim*l]*ptr_T[pm*dim*dim*chunk+i*dim*chunk+j*chunk+k-start];
                   aux *= (1.0/(24.0))*kurt;
-                  // aux -= (1.0/2.0)*(ptr_H[pn+i*dim+j*dim*dim]*ptr_H[pm+k*dim+l*dim*dim])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
                   aux -= (1.0/2.0)*(ptr_H[pn*dim*dim+i*dim+j]*ptr_H[pm*dim*dim+k*dim+l])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
-                  // aux -= (1.0/2.0)*(H[pn][i][j]*H[pm][k][l])*ptr_cv0[i+dim*j]*ptr_cv0[k+dim*l];
                 }
                 ptr_cv_temp2[pn+dim*pm] += aux;
               }
@@ -1056,7 +988,6 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   cv0 = cv_temp + cv_temp2;
-  // cv0.cutoff(cutrate);
   global_prof.end("propagateCOV");
   global_prof.end("propagateAD");
 }
