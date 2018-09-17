@@ -1,5 +1,5 @@
-CXX = clang++
-CFLAGS = -g -O0 -Wall 
+CXX = mpicxx
+CFLAGS = -DAUPROP_MPI -g -O0 -Wall 
 # DEBUG
 # CFLAGS = -g -O0 -Wall -DDBUG
 MATH_LIBS = -llapack -lblas
