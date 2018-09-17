@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     
     double diff = (H - H_fd).norm();
     diff = diff*diff;
-    MPI_Allreduce(MPI_IN_PLACE, &diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    paduprop_sum(diff);
     cout << "norm(H - H_fd)" << endl << sqrt(diff) << endl;
     if(diff > 1e-4) {
       cerr << "ERROR: HC and AD Hessian differ." << endl;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     drivers.fdT_driver(x, T_fd, start, end);
     double diff = (T - T_fd).norm();
     diff = diff*diff;
-    MPI_Allreduce(MPI_IN_PLACE, &diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    paduprop_sum(diff);
     cout << "norm(T - T_fd)" << endl << sqrt(diff) << endl;
     if(diff > 1e-5) {
       cerr << "ERROR: HC and AD tensor differ." << endl;

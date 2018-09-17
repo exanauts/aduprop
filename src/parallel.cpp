@@ -91,6 +91,13 @@ int paduprop_getcommsize() {
 #endif
   return size;
 }
+int paduprop_sum(double &v) {
+  int ierr = 0;
+#ifdef MPI_VERSION
+  ierr = MPI_Allreduce(MPI_IN_PLACE, &v, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#endif
+  return ierr;
+}
 int paduprop_sum(pMatrix<double> &mat) {
   size_t nrows = mat.nrows();
   size_t ncols = mat.ncols();
