@@ -24,11 +24,13 @@ int main(int argc, char* argv[]) {
   bool propagate_moments = false;
 
   bool TWO_BUS = false;
+  int tsteps = 200;
   
   options.add_options()
     ("x0", "Read initial conditions from x0.hdf5", cxxopts::value<bool>(external_init))
     ("m,moments", "Propagate moments with AD", cxxopts::value<bool>(propagate_moments))
-    ("o,output", "Output trajectory (integration)", cxxopts::value<std::string>());
+    ("o,output", "Output trajectory (integration)", cxxopts::value<std::string>())
+    ("t,timesteps", "Number of time steps", cxxopts::value<int>(tsteps));
 
   auto result = options.parse(argc, argv);
 
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  int tsteps = 200;
+  //int tsteps = 200;
   size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;
