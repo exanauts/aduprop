@@ -14,7 +14,8 @@
 #define ADUPROP_TIMER MPI_Wtime()
 #define ADUPROP_TIMER_TYPE double
 #else
-#define ADUPROP_TIMER __rdtsc()
+uint64_t sometimer() { return 0;}
+#define ADUPROP_TIMER sometimer()
 #define ADUPROP_TIMER_TYPE uint64_t 
 #endif
 
