@@ -18,19 +18,10 @@ template <typename T> pVector<T>::pVector() {
   n = 0;
 }
 
-// template <> pVector<double>::pVector(const size_t nvals) {
-//    data = reinterpret_cast<double*>(malloc(nvals*sizeof(double)));
-//    n = nvals;
-//  }
-
 template <typename T> pVector<T>::pVector(const size_t nvals) {
   data = new T[nvals];
   n = nvals;
 }
-
-// template <> pVector<double>::~pVector() {
-//   if (data != NULL) free(data);
-// }
 
 template <typename T> pVector<T>::~pVector() {
   if (data != NULL) {
@@ -85,24 +76,11 @@ template <typename T> pMatrix<T>::pMatrix() {
   rows = 0;
 }
 
-// template <> pMatrix<double>::pMatrix(const size_t nrows, const size_t ncols) {
-//   data = reinterpret_cast<double*>(malloc(ncols*nrows*sizeof(double)));
-//   cols = ncols;
-//   rows = nrows;
-// }
-
 template <typename T> pMatrix<T>::pMatrix(const size_t nrows, const size_t ncols) {
   data = new T[ncols*nrows];
   cols = ncols;
   rows = nrows;
 }
-
-// template <> pMatrix<double>::~pMatrix() {
-//   if (data != NULL) {
-//     // free(data);
-//     data = NULL;
-//   }
-// }
 
 template <typename T> void pMatrix<T>::alloc(const size_t nrows, const size_t ncols) {
   assert(rows == 0);

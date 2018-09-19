@@ -7,6 +7,7 @@
 #ifndef USER_HPP
 #define USER_HPP
 #include <iostream>
+#include <alg.hpp>
 
 using namespace std;
 
@@ -14,15 +15,15 @@ using namespace alg;
 
 typedef struct System {
 public:
-  const size_t dimension = 16; /* Number of variables */
-  const double F = 1.5; /* Forcing constant */
-  const double h = 0.01;
+  size_t dimension = 7; /* Number of variables */
+  double F = 2.0; /* Forcing constant */
+  const double h = 0.001;
   
 void ic(pVector<double> &x) {
   // Initial values for state array.
   for(size_t i = 0; i < dimension ; ++i) x[i] = F;
   // initial perturbation
-  x[0] = 0.01;
+  x[0] += 0.01;
 }
 
 size_t dim() { return dimension; }

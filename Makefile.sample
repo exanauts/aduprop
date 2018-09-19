@@ -1,10 +1,11 @@
-CXX = clang++
-CFLAGS = -g -O0 -Wall 
+CXX = mpicxx
+CFLAGS = -DAUPROP_MPI -g -O0 -Wall 
 # DEBUG
 # CFLAGS = -g -O0 -Wall -DDBUG
 MATH_LIBS = -llapack -lblas
 CODI_DIR = $(HOME)/git/CoDiPack
 ADUPROP_DIR = $(HOME)/git/aduprop
+EIGEN_DIR = $(ADUPROP_DIR)/eigen/install/include/eigen3
 
 # DON'T EDIT BELOW THIS LINE
 
@@ -14,7 +15,7 @@ endif
 
 INCLUDE_DIR = $(ADUPROP_DIR)/include
 SRC_DIR = $(ADUPROP_DIR)/src
-CFLAGS += -std=c++11 -I$(CODI_DIR)/include -I$(INCLUDE_DIR)
+CFLAGS += -std=c++11 -I$(CODI_DIR)/include -I$(EIGEN_DIR) -I$(INCLUDE_DIR) 
 CFLAGS += -I$(ADUPROP_DIR)/CONTRIB
 LDLIBS = -L$(ADUPROP_DIR) -laduprop $(MATH_LIBS)
 AR = ar

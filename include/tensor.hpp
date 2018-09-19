@@ -44,7 +44,7 @@ template <typename T> class pTensor3 {
   
   };
   cd1 operator[] (int i) {
-    return cd1(data+i*d1*d2, d1);
+    return cd1(data+i*d2*d3, d3);
   }
   friend std::ostream& operator<< <> ( std::ostream&, pTensor3<T>& );  
   
@@ -97,21 +97,79 @@ template <typename T> class pTensor3 {
   }
   
   T norm() {
+    size_t n = d1*d2*d3;
     T res = 0;
-    for(size_t i = 0 ; i < d1 ; ++i) {
-      for(size_t j = 0 ; j < d2 ; ++j) {
-        for(size_t k = 0 ; k < d3 ; ++k) {
-          res+=(data[i*d2*d3 + j*d3 + k] * data[i*d2*d3 + j*d3 + k]);
-        }
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      res+=data[i]*data[i];
     }
     return sqrt(res);
   }
   
+  T maxnorm() {
+    size_t n = d1*d2*d3;
+    T res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > res) {
+        res = fabs(data[i]);
+      }
+    }
+    return res;
+  }
+  
+  size_t nz() {
+    size_t n = d1*d2*d3;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(data[i] != 0.0) res++;
+    }
+    return res;
+  }
+  
+  size_t thres(T in) {
+    size_t n = d1*d2*d3;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > in) res++;
+    }
+    return res;
+  }
+  
+  size_t cutoff(double rate) {
+    size_t n = d1*d2*d3;
+    
+    std::vector<T> vect(n);
+    for(size_t i = 0; i < n; ++i) vect[i] = fabs(data[i]); 
+    
+    std::sort(vect.begin(), vect.end());
+    
+    double del = rate * (double) (n-1);
+    size_t el = (size_t) del;
+    
+    T thres = vect[el];
+    size_t count = 0;
+    
+    for (size_t i = 0 ; i < n; ++i) {
+        if(fabs(data[i]) < thres) {
+          data[i] = 0;
+          count++;
+        }
+    }
+    return count;
+  }
   
   void zeros() {
     for (size_t i = 0; i < d3*d2*d1; ++i) {
       data[i] = 0.0;
+    }
+  }
+  
+  void resize(const size_t d1, const size_t d2, const size_t d3) {
+    if(d1 != this->d1 || d2 != this->d2 || d3 != this->d3) {
+      if(data != NULL) delete [] data;
+      this->d1=d1;
+      this->d2=d2;
+      this->d3=d3;
+      data = new T[d1*d2*d3];
     }
   }
   
@@ -202,12 +260,12 @@ template <typename T> class pTensor4 {
     size_t &d2;
     cd1(T *ptr_, size_t &d1_, size_t &d2_) : ptr(ptr_), d1(d1_), d2(d2_) {}; 
     cd2 operator[] (int i) {
-      return cd2(ptr+i*d1*d2, d1);
+      return cd2(ptr+i*d1*d2, d2);
     }
   
   };
   cd1 operator[] (int i) {
-    return cd1(data+i*d1*d2*d3, d1, d2);
+    return cd1(data+i*d2*d3*d4, d3, d4);
   }
   friend std::ostream& operator<< <> ( std::ostream&, pTensor4<T>& );  
   
@@ -265,20 +323,65 @@ template <typename T> class pTensor4 {
   }
   
   T norm() {
+    size_t n = d1*d2*d3*d4;
     T res = 0;
-    for(size_t i = 0 ; i < d1 ; ++i) {
-      for(size_t j = 0 ; j < d2 ; ++j) {
-        for(size_t k = 0 ; k < d3 ; ++k) {
-          for(size_t l = 0 ; l < d4 ; ++l) {
-            res+=(data[i*d2*d3*d4 + j*d3*d4 + k*d4 + l] * data[i*d2*d3*d4 + j*d3*d4 + k*d4 + l]);
-          }
-        }
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      res+=data[i]*data[i];
     }
     return sqrt(res);
   }
   
+  T maxnorm() {
+    size_t n = d1*d2*d3*d4;
+    T res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > res) {
+        res = fabs(data[i]);
+      }
+    }
+    return res;
+  }
   
+  size_t nz() {
+    size_t n = d1*d2*d3*d4;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(data[i] != 0.0) res++;
+    }
+    return res;
+  }
+  
+  size_t thres(T in) {
+    size_t n = d1*d2*d3*d4;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > in) res++;
+    }
+    return res;
+  }
+  
+  size_t cutoff(double rate) {
+    size_t n = d1*d2*d3*d4;
+    
+    std::vector<T> vect(n);
+    for(size_t i = 0; i < n; ++i) vect[i] = fabs(data[i]); 
+    
+    std::sort(vect.begin(), vect.end());
+    
+    double del = rate * (double) (n-1);
+    size_t el = (size_t) del;
+    
+    T thres = vect[el];
+    size_t count = 0;
+    
+    for (size_t i = 0 ; i < n; ++i) {
+        if(fabs(data[i]) < thres) {
+          data[i] = 0;
+          count++;
+        }
+    }
+    return count;
+  }
   void zeros() {
     for (size_t i = 0; i < d4*d3*d2*d1; ++i) {
       data[i] = 0.0;

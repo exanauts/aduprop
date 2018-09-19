@@ -2,15 +2,16 @@ include ../../Makefile.inc
 
 CFLAGS+= -I$(PWD)
 
-.PHONY: clean
+run:
+	mpiexec -n 4 ./power
 
-power: user.hpp main.o $(HEADERS) 
+build: user.hpp main.o
 	$(CXX) -o power main.o $(LDLIBS)
 
-main.o: main.cpp
+main.o: $(HEADERS) main.cpp
 	$(CXX) $(CFLAGS) -c main.cpp
 
 clean:
-	$(RM) *.o power
+	$(RM) *.o power output.txt 
 
 

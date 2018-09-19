@@ -15,6 +15,7 @@
 // Rudimentary linear solver interface
 #include "ad.hpp"
 #include "cxxopts.hpp"
+#include "parallel.hpp"
 
 int main(int argc, char* argv[]) {
 
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
 
   // Variable declaration
   int nbuses, nbranches, ngen, nload;
-  size_t tsteps = 20;
+  size_t tsteps = 2;
   size_t dim;
   pVector<double> xold, x, F;
   pVector<double> x0;
@@ -87,7 +88,8 @@ int main(int argc, char* argv[]) {
 
   // Where do we put this???
   // We should only alocate if we're using all of these.
-  pTensor4<double> T(dim, dim, dim, dim);
+  size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
+  pTensor4<double> T(dim, dim, dim, chunk);
   pTensor3<double> H(dim, dim, dim);
   pMatrix<double>  J(dim, dim);
 
@@ -108,21 +110,25 @@ int main(int argc, char* argv[]) {
     int degree = 3;
     propagateAD(x, cv0, sys, J, H, T, drivers, degree);
   }
+  if(paduprop_getrank() == 0) {  
+    double compare, diff;
+    std::ifstream infile;
+    infile.open("solution.txt");
+    infile >> compare;
+    diff = compare - cv0.norm();
+    std::cout << std::setprecision(16) << "Sol: " << compare << ". " << std::endl;
+    std::cout << std::setprecision(16) << "cv0 norm: " << cv0.norm() << "." << std::endl;
+    std::cout << std::setprecision(16) << "Diff: " << diff << "." << std::endl;
+    infile.close();
+    if(abs(diff) > 1e-15) {
+      cerr << "ERROR: Covariance not correct." << endl;
+      exit(1);
+    }
+  }
+
+  // Output trajectory
   
   std::cout << global_prof << std::endl;
-  double compare, diff;
-  std::ifstream infile;
-  infile.open("solution.txt");
-  infile >> compare;
-  diff = compare - cv0.norm();
-  std::cout << std::setprecision(16) << compare << std::endl;
-  std::cout << std::setprecision(16) << cv0.norm() << std::endl;
-  std::cout << std::setprecision(16) << compare - cv0.norm() << std::endl;
-  infile.close();
-  if(abs(diff) > 1e-15) {
-    cerr << "ERROR: Covariance not correct." << endl;
-    exit(1);
-  }
 
   return 0;
 }

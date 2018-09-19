@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
     J.zeros();
     H.zeros();
     drivers.t2s_t1s_driver(x, J, H);
+    drivers.t1s_driver(x, J);
     std::cout << "Hessian and Jacobian using 2nd order AD" << std::endl;
     std::cout << "-----------------" << std::endl;
     std::cout << "J" << std::endl << J << std::endl;
@@ -117,6 +118,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Tensor, Hessian and Jacobian using 3rd order AD" << std::endl;
     std::cout << "-----------------" << std::endl;
     drivers.t3s_t2s_t1s_driver(x, J, H, T);
+    drivers.t2s_t1s_driver(x, J, H);
+    drivers.t1s_driver(x, J);
     std::cout << "J" << std::endl << J << std::endl;
     std::cout << "H" << std::endl << H << std::endl;
     std::cout << "T" << std::endl << T << std::endl;

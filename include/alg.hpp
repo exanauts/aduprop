@@ -9,7 +9,15 @@
 
 #include <codi.hpp>
 #include <cassert>
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
 #include "tensor.hpp"
+
+#ifdef __INTEL_COMPILER
+#define RESTRICT restrict
+#else
+#define RESTRICT __restrict__
+#endif
 
 namespace alg {
 
@@ -106,7 +114,7 @@ template <typename T> class pVector {
 
  private:
   size_t n;
-  T* data = NULL;
+  T* RESTRICT data = NULL;
 };
 
 template <typename T> inline size_t pVector<T>::dim() const {
@@ -153,6 +161,7 @@ template <typename T> class pMatrix {
   T& get(const size_t i, const size_t j);
   T* get_datap() const;
   void zeros();
+  void resize(const size_t nrows, const size_t ncols);
   size_t nrows() const;
   size_t ncols() const;
   void display();
@@ -186,6 +195,7 @@ template <typename T> class pMatrix {
     }
     for (size_t i = 0; i < rows*cols; ++i) data[i] = other.data[i];
   }
+  
   pMatrix& operator=(const pMatrix &other) {
     if (other.cols != cols || other.rows != rows) {
       if (data != NULL) delete [] data;
@@ -198,14 +208,66 @@ template <typename T> class pMatrix {
   }
 
   T norm() {
+    size_t n = rows*cols;
     T res = 0;
-    for (size_t i = 0 ; i < rows; ++i) {
-      for (size_t j = 0 ; j < cols; ++j) {
-        res+=(data[i*cols + j])*(data[i*cols + j]);
-      }
+    for (size_t i = 0 ; i < n; ++i) {
+      res+=data[i]*data[i];
     }
     return sqrt(res);
   }
+  
+  T maxnorm() {
+    size_t n = rows*cols;
+    T res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > res) {
+        res = fabs(data[i]);
+      }
+    }
+    return res;
+  }
+  
+  size_t nz() {
+    size_t n = rows*cols;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(data[i] != 0.0) res++;
+    }
+    return res;
+  }
+  
+  size_t thres(T in) {
+    size_t n = rows*cols;
+    size_t res = 0;
+    for (size_t i = 0 ; i < n; ++i) {
+      if(fabs(data[i]) > in) res++;
+    }
+    return res;
+  }
+  
+  size_t cutoff(double rate) {
+    size_t n = rows*cols;
+    
+    std::vector<T> vect(n);
+    for(size_t i = 0; i < n; ++i) vect[i] = fabs(data[i]); 
+    
+    std::sort(vect.begin(), vect.end());
+    
+    double del = rate * (double) (n-1);
+    size_t el = (size_t) del;
+    
+    T thres = vect[el];
+    size_t count = 0;
+    
+    for (size_t i = 0 ; i < n; ++i) {
+        if(fabs(data[i]) < thres) {
+          data[i] = 0;
+          count++;
+        }
+    }
+    return count;
+  }
+  
   pVector<T> operator*(const pVector<T>& b) {
     assert(this->cols == b.dim());
     pVector<T> res(rows);
@@ -250,6 +312,15 @@ template <typename T> class pMatrix {
 template <typename T> inline void pMatrix<T>::zeros() {
   for (size_t i = 0; i < cols*rows; ++i) {
     data[i] = 0.0;
+  }
+}
+  
+template <typename T> inline void pMatrix<T>::resize(const size_t nrows, const size_t ncols) {
+  if (cols != ncols || rows != nrows) {
+    if (data != NULL) delete [] data;
+    rows = nrows;
+    cols = ncols;
+    data = new T[rows*cols];
   }
 }
 

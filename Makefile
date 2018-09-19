@@ -15,12 +15,15 @@ test: lib
 
 # LIBRARY
 
-lib: alg.o $(HEADERS) 
-	$(AR) $(AROPT) libaduprop.a alg.o
+lib: alg.o parallel.o $(HEADERS) 
+	$(AR) $(AROPT) libaduprop.a alg.o parallel.o
 
 alg.o: $(SRC_DIR)/alg.cpp $(HEADERS)
 	$(CXX) $(CFLAGS) -c $(SRC_DIR)/alg.cpp
 
+parallel.o: $(SRC_DIR)/parallel.cpp $(HEADERS)
+	$(CXX) $(CFLAGS) -c $(SRC_DIR)/parallel.cpp
+	
 # DOCUMENTATION
 
 doc: $(HEADERS) doc/Doxyfile.in doc/mainpage.md
@@ -33,7 +36,7 @@ clean:
 
 cleanall:
 	- $(RM) *.o libaduprop.a
-	- cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done ; rm *.log
+	- cd test ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done ; $(RM) *.log
 	- cd examples ; for i in `ls -d */` ; do cd $$i ; make clean ; cd .. ; done
 
 # BUILD EXAMPLES
