@@ -836,10 +836,8 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   global_prof.begin("propagateH");
   switch(degree) {
     case 3:
-      H_tmp.resize(H.get_d1(), H.get_d2(), H.get_d3());
       drivers.t2s_t1s_driver(m0, J, H);
-      H_tmp=H;
-      drivers.t3s_t2s_t1s_driver(m0, J, H_tmp, T, start, end);
+      drivers.t3s_t2s_t1s_driver(m0, J, H, T, start, end);
       drivers.t1s_driver(m0, J);
       break;
     case 2:
@@ -988,6 +986,9 @@ void propagateAD(pVector<double>& m0, pMatrix<double>& cv0, System& sys,
   }
 
   cv0 = cv_temp + cv_temp2;
+  // Here would be the cutoff of the covariance matrix according to a 
+  // 0 <= cutoff rate <= 1 set before.
+  // Example: cv0.cutoff(cutrate);
   global_prof.end("propagateCOV");
   global_prof.end("propagateAD");
 }
