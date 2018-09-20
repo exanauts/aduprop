@@ -92,4 +92,5 @@ if [ $failed -ne 0 ]
 then
   echo
   echo $failed test\(s\) FAILED see $LOGFILE for more details.
+  exit 1
 fi

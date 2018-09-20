@@ -1,0 +1,25 @@
+stages:
+  - build
+  - tests
+
+
+before_script:
+  - apt-get update -qq
+  - apt-get install -y libblas-dev liblapack-dev 
+  - apt-get install -y libmpich-dev mpich
+  - apt-get install -y libhdf5-dev
+  - git clone https://github.com/SciCompKL/CoDiPack.git
+  - cp Makefile-gitlab-ci.inc Makefile.inc
+
+build_aduprop:
+  stage: build
+  script:
+    - cat Makefile.inc
+    - make lib
+
+test_aduprop:
+  stage: tests
+  dependencies:
+    - build_aduprop
+  script:
+    - make test
