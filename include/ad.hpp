@@ -34,10 +34,10 @@ original variable.
 #include "user.hpp"
 #include <stdlib.h>
 #include "parallel.hpp"
-#ifdef EIGEN
+#ifdef ADUPROP_EIGEN
 #include <Eigen/Dense>
 #endif
-#ifdef EIGEN_SPARSE
+#ifdef ADUPROP_EIGEN_SPARSE
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -52,10 +52,10 @@ original variable.
 
 using namespace std;
 using namespace alg;
-#ifdef EIGEN
+#ifdef ADUPROP_EIGEN
 using namespace Eigen;
 #endif
-#ifdef EIGEN_SPARSE
+#ifdef ADUPROP_EIGEN_SPARSE
 using namespace Eigen;
 #endif
 
@@ -423,17 +423,17 @@ template <class T> void integrate(pVector<T> &x) {
   xold = x;
   sys->residual_beuler<T>(x, xold, y);
   J.zeros();
-#ifdef EIGEN
+#ifdef ADUPROP_EIGEN
   Map<Matrix<T, Dynamic, 1> > eigymap(y.get_datap(), y.dim());
   Map<Matrix<T, Dynamic, Dynamic> > eigJmap(J.get_datap(), J.nrows(), J.ncols());
 #endif
-#ifdef EIGEN_SPARSE
+#ifdef ADUPROP_EIGEN_SPARSE
   Map<Matrix<T, Dynamic, 1> > eigymap(y.get_datap(), y.dim());
   SparseMatrix<T> sJ(y.dim(), y.dim());
   std::vector<Eigen::Triplet<T> > tripletList;
   tripletList.reserve(y.dim()*y.dim());
   SparseLU<SparseMatrix<T> >  solver;
-#ifdef EIGEN_SPARSE
+#ifdef ADUPROP_EIGEN_SPARSE
   sys->jac_beuler<T>(x, xold, J);
   for(size_t i = 0; i < J.nrows(); ++i) {
     for (size_t j = 0; j < J.ncols(); ++j) {
@@ -457,7 +457,7 @@ template <class T> void integrate(pVector<T> &x) {
 #endif
     yold = y;
     Jold = J;
-#ifdef EIGEN_SPARSE
+#ifdef ADUPROP_EIGEN_SPARSE
     for(size_t i = 0; i < J.nrows(); ++i) {
       for (size_t j = 0; j < J.ncols(); ++j) {
         if(J[i][j] != 0.0) {
@@ -469,7 +469,7 @@ template <class T> void integrate(pVector<T> &x) {
     tripletList.clear();
     solver.compute(sJ);
     eigymap = solver.solve(eigymap);
-#elif EIGEN
+#elif ADUPROP_EIGEN
     eigymap = eigJmap.fullPivLu().solve(eigymap);
 #else
     adlinsolve<T>(J, y);
