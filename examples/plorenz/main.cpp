@@ -16,11 +16,12 @@
 #include "ad.hpp"
 #include "cxxopts.hpp"
 #include "parallel.hpp"
+#include "mc.hpp"
 
 int main(int argc, char* argv[]) {
   // Options parser
 
- 
+
   // activate timer in propagateAD
   
   global_prof.activate("propagateAD");
@@ -30,6 +31,7 @@ int main(int argc, char* argv[]) {
   global_prof.activate("reduction");
   cxxopts::Options options("UQ Power", "Perform UQ on power system with AD");
 
+  bool do_mc = false;
   bool test_jac = false;
   bool test_tensor1  = false;
   bool test_tensor2  = false;
@@ -40,6 +42,7 @@ int main(int argc, char* argv[]) {
 
   options.add_options()
     ("test_jac", "Test inner jacobian", cxxopts::value<bool>(test_jac))
+    ("mc", "Monte Carlo", cxxopts::value<bool>(do_mc))
     ("test_tensor1", "Compute AD and HC jacobian for 1 ts", cxxopts::value<bool>(test_tensor1))
     ("test_tensor2", "Compute AD and HC hessian for 1 ts", cxxopts::value<bool>(test_tensor2))
     ("test_tensor3", "Compute AD and HC tensor of order 3 for 1 ts",
@@ -80,12 +83,12 @@ int main(int argc, char* argv[]) {
   size_t chunk = paduprop_getend(dim) - paduprop_getstart(dim);
   size_t start = paduprop_getstart(dim);
   size_t end = paduprop_getend(dim);
-   x = xold;
+  x = xold;
   // jacobian test
-   if (test_jac)
-   {
-     drivers.jactest(xold);
-     return 0;
+  if (test_jac)
+  {
+    drivers.jactest(xold);
+    return 0;
   }
   if (test_tensor1) {
     pMatrix<double> J(dim, dim);
@@ -183,7 +186,14 @@ int main(int argc, char* argv[]) {
   for (size_t i = 0; i < sys.dimension; ++i) 
     cv0[i][i] = 0.0000001;
   
-  cv0[sys.dim()][sys.dimension] = 0.000001;
+  //cv0[sys.dim()][sys.dimension] = 0.000001;
+  if (do_mc)
+  {
+    size_t samples=1000;
+    mc mc_integration(samples, sys); 
+    mc_integration.integrate(x, cv0, tsteps);
+    return 0;
+  }
 
   std::ofstream xfile;
   std::ofstream covfile;
@@ -234,6 +244,18 @@ int main(int argc, char* argv[]) {
       xfile << std::endl;
       covfile << std::endl;
     }
+      // xfile << "X: " << i * sys.h << " " << x << std::endl;
+      // covfile << "COV: " << i * sys.h << " ";
+      for (size_t j = 0; j < cv0.nrows(); j++)
+      {
+        std::cout << x[j] << " ";
+      }
+      std::cout << std::endl;
+      for (size_t j = 0; j < cv0.nrows(); j++)
+      {
+        std::cout << cv0[j][j] << " ";
+      }
+      std::cout << std::endl;
   }
   // cout << cv0;
   if(paduprop_getrank() == 0) {  
