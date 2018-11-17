@@ -41,12 +41,17 @@ class mc {
             samples[i].alloc(dim);
         }
     }
-    void integrate(pVector<double> &mu0, pMatrix<double> &cv0, size_t tsteps) {
+    void integrate(pVector<double> &mu0, pMatrix<double> &cv0, size_t tsteps)
+    {
         /* Random number generator */
-        std::cout << "Starting MC" << std::endl;
+        std::cout << "Starting MC with " << mc_samples << " samples." << std::endl;
         pVector<double> mu(dim);
         pMatrix<double> cov(dim, dim);
         ad drivers(sys);
+        std::ofstream mufile;
+        std::ofstream covfile;
+        mufile.open("datas_mc");
+        covfile.open("data_cov_mc");
         for (size_t i = 0; i < dim; i++)
         {
             gsl_vector_set(gsl_mu, i, mu0[i]);
@@ -105,18 +110,19 @@ class mc {
                     cov[i][j] = gsl_matrix_get(gsl_cov, i, j);
                 }
             }
-    }
-    for (size_t i = 0; i < dim; i++)
-    {
-      std::cout << mu[i] << " ";
-    }
-    cout << std::endl;
-    for (size_t i = 0; i < dim; i++)
-    {
-      std::cout << cov[i][i] << " ";
-    }
-    cout << std::endl;
-
+            for (size_t i = 0; i < dim; i++)
+            {
+                mufile << mu[i] << " ";
+            }
+            mufile << std::endl;
+            for (size_t i = 0; i < dim; i++)
+            {
+                covfile << cov[i][i] << " ";
+            }
+            covfile << std::endl;
+        }
+        mufile.close();
+        covfile.close();
     }
     ~mc(){
         gsl_rng_free(r);
