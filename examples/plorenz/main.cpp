@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
   sys.dimension = atoi(argv[1]);
   sys.F = atof(argv[2]);
   size_t tsteps = atoi(argv[3]);
+  size_t samples = atoi(argv[4]);
   size_t dim = sys.dim();
 
   pVector<double> xold(dim);
@@ -188,8 +189,7 @@ int main(int argc, char* argv[]) {
   
   //cv0[sys.dim()][sys.dimension] = 0.000001;
   if (do_mc)
-  {
-    size_t samples=1000;
+  
     mc mc_integration(samples, sys); 
     mc_integration.integrate(x, cv0, tsteps);
     return 0;

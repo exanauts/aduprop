@@ -6,10 +6,35 @@
 # ARG2: forcing
 # ARG3: timesteps
 
-./plorenz --tensor1 $1 $2 $3 | grep 'COV: ' | sed 's/[COV:|\[|,]//g' | sed 's/\]//' | awk '{$1=""; print $0}' > data_cov1
 
-./plorenz --tensor2 $1 $2 $3 | grep 'COV: ' | sed 's/[COV:|\[|,]//g' | sed 's/\]//' | awk '{$1=""; print $0}' > data_cov2
+time env OMP_NUM_THREADS=1 ./plorenz --tensor1 6 10 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor2 6 10 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor3 6 10 40000
 
-./plorenz --tensor3 $1 $2 $3 | grep 'COV: ' | sed 's/[COV:|\[|,]//g' | sed 's/\]//' | awk '{$1=""; print $0}' > data_cov3
+./plot.sh
 
-./plorenz $1 $2 $3 | grep 'X: ' | sed 's/[X:|\[|,]//g' | sed 's/\]//' | awk '{$1=""; print $0}' > datas
+cp *.png figures/6_10
+
+time env OMP_NUM_THREADS=1 ./plorenz --tensor1 6 3.6 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor2 6 3.6 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor3 6 3.6 40000
+
+./plot.sh
+
+cp *.png figures/6_3_6
+
+time env OMP_NUM_THREADS=1 ./plorenz --tensor1 7 2.0 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor2 7 2.0 40000
+time env OMP_NUM_THREADS=1 ./plorenz --tensor3 7 2.0 40000
+
+./plot.sh
+
+cp *.png figures/7_2_0
+
+time ./plorenz --tensor1 7 4.4 40000
+time ./plorenz --tensor2 7 4.4 40000
+time ./plorenz --tensor3 7 4.4 40000
+
+./plot.sh
+
+cp *.png figures/7_4_4
